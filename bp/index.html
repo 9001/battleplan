@@ -1,0 +1,343 @@
+<!DOCTYPE html><html lang="en"><head>
+<!--
+
+	battleplan <ed@irc.rizon.net>, MIT-licensed
+	https://dootnode.org/ed/c95/json/bp.html
+
+-->
+<meta charset="utf-8">
+<title>cket list</title>
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+
+
+html, body {
+	color: #ccc;
+	background: #222;
+	font-family: sans-serif;
+}
+#topnav {
+	color: #fff;
+	background: #333;
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	width: 100%;
+}
+#bmenu {
+	color: #fff;
+	background: #079;
+	text-decoration: none;
+	border: 1px solid #000;
+	cursor: pointer;
+	position: fixed;
+	padding: .3em .6em;
+	top: 0;
+	right: 0;
+	font-size: 1.3em;
+	font-weight: bold;
+}
+#topleft {
+	margin-right: 2em;
+	height: 2.4em;
+}
+#site {
+	padding-top: 2.5em;
+}
+#tabh_row, #tabh_col, #vmenu, #vday, #vdl {
+	display: none;
+}
+a {
+	color: #0cf;
+}
+#tabh_row a {
+	width: 32%;
+}
+#brow_prev:before {
+	content: '« ';
+}
+#brow_next:after {
+	content: ' »';
+}
+#vmenu, #vday {
+	background: #024;
+	position: fixed;
+	overflow: scroll;
+	top: 0;
+	left: 0;
+	right: 0;
+	width: 100%;
+	height: 100%;
+	padding: 0 0 2em 0;
+}
+#vmenu a,
+#vday a {
+	color: #fff;
+	display: block;
+	text-align: center;
+	text-decoration: none;
+	padding: .7em 0;
+}
+#vmenu a:hover,
+#vday a:hover {
+	background: #246;
+}
+#vdl {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	width: 100%;
+	height: 100%;
+	background: #024;
+	color: #fff;
+	font-size: 1.5em;
+	padding: 2em 0;
+	text-align: center;
+}
+td {
+	padding: .2em .5em;
+}
+td:nth-child(2) {
+	white-space: nowrap;
+}
+
+
+</style>
+</head><body>
+<div id="topnav">
+	<a href="#" id="bmenu">=</a>
+	<div id="topleft"></div>
+	<div id="topsub">
+		<div id="tabh_row"
+			><a href="#" id="brow_prev">//? <!-- jump to previous row -->
+			</a><a href="#" id="brow_list"> List rows
+			</a><a href="#" id="brow_next">//? <!-- jump to next row -->
+		</a></div>
+		<div id="tabh_col">
+			<!-- will be automatically populated with a cell jumplist which fits the device screen -->
+		</div>
+	</div>
+</div>
+<div id="site">
+	<div id="vmenu">
+		<a href="#" id="bmenu_cancel">Cancel</a>
+		<a href="#" id="bmenu_day">Change day (now: #)</a>
+		<a href="#" id="bmenu_chk">View added booths</a>
+		<a href="#" id="bmenu_cirkan">View all circles (sort: kanji)</a>
+		<a href="#" id="bmenu_cirrom">View all circles (sort: romaji)</a>
+		<a href="#" id="bmenu_row">View all booths (sort: row)</a>
+		<a href="#" id="bmenu_import">Import your list</a>
+		<a href="#" id="bmenu_export">Export your list</a>
+		<a href="#" id="bmenu_dload">Download DB: Day #</a>
+	</div>
+	<div id="vday">
+		<a href="#" id="bmenu_day1">土 / 1</a>
+		<a href="#" id="bmenu_day2">日 / 2</a>
+		<a href="#" id="bmenu_day3">月 / 3</a>
+	</div>
+	<div id="vtab">
+		<table>
+			<thead>
+				<tr>
+					<td>#</td> <!-- rating -->
+					<td>loc</td> <!-- day/row/col -->
+					<td>kanji</td>
+					<td>romaji</td>
+				</tr>
+			</thead>
+			<tbody id="tb"></tbody>
+		</table>
+	</div>
+	<div id="vdl">
+		Downloading day # ...
+	</div>
+</div>
+<script>
+
+// だけど僕はそのままの
+
+var DAYS = ['土','日','月'];
+var HALLS = ['e1','e2','e3','e6','e5','e4','w1a','w1b','w2a','w2b'];
+var ROWS = [
+	'ＡＢＣＤＥＦＧＨＩＪＫＬ',
+	'ＭＮＯＰＱＲＳＴＵＶＷＸＹＺ',
+	'アイウエオカキクケコサ',
+	'シスセソタチツテトナニヌネ',
+	'ノハパヒピフプヘペホポマ',
+	'ミムメモヤユヨラリルレロ',
+	'れにぬねのはひふへほまみむめも',
+	'やゆよらりる',
+	'あくけこさしすせそたちつてとな',
+	'いうえおかき'
+];
+var active_day = -1;
+var dbday = [];
+var dbsel = [];
+
+
+function ebi(elm_id) {
+	return document.getElementById(elm_id);
+}
+
+
+function hide_modals(e) {
+	if (e !== undefined)
+		e.preventDefault();
+	
+	ebi('vmenu').style.display = 'none';
+	ebi('vday').style.display = 'none';
+	ebi('vdl').style.display = 'none';
+}
+function show_menu(e) {
+	e.preventDefault();
+	ebi('vmenu').style.display = 'block';
+}
+function show_chday(e) {
+	e.preventDefault();
+	hide_modals();
+	ebi('vday').style.display = 'block';
+}
+function ev_chday(e) {
+	e.preventDefault();
+	hide_modals();
+	var words = this.innerHTML.split(' ');
+	var nday = parseInt(words[words.length-1]);
+	load_day(nday);
+}
+
+
+function load_day(day) {
+	var loaded;
+	
+	if (day === undefined)
+	{
+		loaded = localStorage.getItem('activeday');
+		if (loaded == null)
+			active_day = 2;
+		else
+			active_day = parseInt(loaded);
+	}
+	else
+		active_day = day;
+	
+	localStorage.setItem('activeday', active_day);
+	ebi('bmenu_day').innerHTML = 'Change day (now: ' + active_day + ')';
+	ebi('bmenu_dload').innerHTML = 'Download DB: Day ' + active_day;
+	ebi('vdl').innerHTML = 'downloading database for day ' + active_day + ' ...';
+	
+	loaded = localStorage.getItem('day' + active_day);
+	if (loaded == null)
+	{
+		warn([
+			"<strong>== Day " + active_day + " database not downloaded ==</strong>",
+			"Use the menu button top right;",
+			"optionally change to another day first,",
+			"then press «<u>Download DB</u>» to continue"
+		]);
+		return false;
+	}
+	dbday = JSON.parse(loaded);
+	load_sel();
+	return true;
+}
+function load_sel() {
+	loaded = localStorage.getItem('sel' + active_day);
+	if (loaded == null)
+	{
+		dbsel = [];
+		inf([
+			"<strong>== Loaded day " + active_day + " ==</strong>",
+			"Start adding some booths:",
+			"Select «<u>View all (by ...)</u>» in the menu"
+		]);
+	}
+	else
+		dbsel = JSON.parse(loaded);
+	
+	return true;
+}
+function save_sel() {
+	localStorage.setItem('sel' + active_day, JSON.stringify(dbsel));
+}
+function showmsg(color, lines) {
+	var s1 = '<tr><td colspan="4" style="color:#' + color + '">';
+	var s2 = '</td></tr>';
+	lines.unshift('&nbsp;');
+	ebi('tb').innerHTML = s1 + lines.join(s2+s1) + s2;
+	hide_modals();
+}
+function warn(lines) { showmsg('fc0', lines); }
+function inf(lines) { showmsg('ad6', lines); }
+
+
+function dl_done(v) {
+	if (this.status != 200)
+	{
+		alert('** ERROR ' + this.status + ' FROM SERVER **\n\n' + this.responseText);
+		return;
+	}
+	localStorage.setItem('day' + active_day, this.responseText);
+	return load_day();
+	
+	hide_modals();
+	inf([
+		"<strong>== Downloaded day " + active_day + " ==</strong>",
+		"You may have any number of days downloaded;",
+		"Select any day (this or another one) to continue"
+	]);
+}
+function dl_error() {
+	alert('error');
+}
+function ev_dload() {
+	var url = 'lkrxy' + active_day + '.json';
+	var req = new XMLHttpRequest();
+	req.onload = dl_done;
+	req.onerror = dl_error;
+	req.open('GET', url, true);
+	req.send();
+
+	hide_modals();
+	ebi('vdl').display = 'block';
+}
+function ev_cir(sortfunc) {
+	inf(['loading']);
+	window.requestAnimationFrame(function() { window.requestAnimationFrame(function() {
+		var html = [];
+		var dbd = JSON.parse(JSON.stringify(dbday));
+		dbd.sort(sortfunc);
+		for (var a = 0; a < dbd.length; a++)
+		{
+			html.push('<tr><td>?</td><td>' + dbd[a].loc + '</td><td>' + dbd[a].kan + '</td><td>' + dbd[a].rom + '</td></tr>');
+		}
+		ebi('tb').innerHTML = html.join('\n');
+	})});
+}
+function ev_cirkan() {
+	ev_cir((a,b) => (a.kan.localeCompare(b.kan)));
+}
+function ev_cirrom() {
+	ev_cir((a,b) => (a.rom.localeCompare(b.rom)));
+}
+function ev_row() {
+	
+}
+
+ebi('bmenu').onclick = show_menu;
+ebi('bmenu_cancel').onclick = hide_modals;
+ebi('bmenu_day').onclick = show_chday;
+ebi('bmenu_day1').onclick = ev_chday;
+ebi('bmenu_day2').onclick = ev_chday;
+ebi('bmenu_day3').onclick = ev_chday;
+ebi('bmenu_dload').onclick = ev_dload;
+ebi('bmenu_cirkan').onclick = ev_cirkan;
+ebi('bmenu_cirrom').onclick = ev_cirrom;
+ebi('bmenu_row').onclick = ev_row;
+
+load_day();
+
+</script></body></html>
