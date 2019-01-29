@@ -17,7 +17,7 @@ html, body {
 	background: #222;
 	font-family: sans-serif;
 }
-input {
+#tabh_txt input {
 	color: #fc7;
 }
 #nojs {
@@ -426,8 +426,7 @@ h3 {
 		<div id="tabh_txt" class="viewctl"
 			><input id="trow_in" value="paste here" sample="paste here"
 			><input id="trow_out" value="parser out"
-			></input>
-		</div>
+			></div>
 		
 		<input id="tsrch" class="viewctl" value="stroemer" sample="stroemer" />
 		<div id="srchinfb" class="viewctl">
@@ -496,7 +495,7 @@ h3 {
 		<label for="raddnext">go to next booth</label><br />
 		
 		<label for="selskipmin">min. score</label>
-		<input name="selskipmin" id="selskipmin" size="2" />
+		<input name="selskipmin" id="selskipmin" size="2" defval="0" />
 	</div></div>
 	
 	<h3>navigate shopping list</h3>
@@ -574,24 +573,24 @@ h3 {
 	<div id="purgelist"></div>
 </div>
 <div id="vsrchcfg" class="modal">
-	<a href="#" class="bcancel">《 Apply</a>
+	<a href="#" class="bcancel" invoke="ev_tsch_input">《 Apply</a>
 	<div>
-		<input type="checkbox" id="csrch_regex">
-		<label for="csrch_regex">enable regex</label><br />
+		<input type="checkbox" id="csrch_regex" defval="0">
+		<label for="csrch_regex">regex query</label><br />
 		
-		<input type="checkbox" id="csrch_name_kan">
+		<input type="checkbox" id="csrch_name_kan" defval="1">
 		<label for="csrch_name_kan">search name (kanji)</label><br />
 		
-		<input type="checkbox" id="csrch_name_rom">
+		<input type="checkbox" id="csrch_name_rom" defval="1">
 		<label for="csrch_name_rom">search name (romaji)</label><br />
 		
-		<input type="checkbox" id="csrch_url_all">
+		<input type="checkbox" id="csrch_url_all" defval="0">
 		<label for="csrch_url_all">search URLs: All</label><br />
 		
-		<input type="checkbox" id="csrch_url_pixiv">
+		<input type="checkbox" id="csrch_url_pixiv" defval="0">
 		<label for="csrch_url_pixiv">search URLs: Pixiv</label><br />
 		
-		<input type="checkbox" id="csrch_url_twitter">
+		<input type="checkbox" id="csrch_url_twitter" defval="0">
 		<label for="csrch_url_twitter">search URLs: Twitter</label><br />
 	</div>
 </div>
@@ -769,17 +768,63 @@ if (addctx_exit_act == 'list')
 else
 	ebi('raddnext').checked = true;
 
-function cfg_int(name, defval, max_digits) {
+function cfg_int(name, maxlen) {
+	var obj = ebi(name);
+	obj.value = tv;
+	obj.setAttribute('maxlen', maxlen);
+	var defval = obj.getAttribute('defval');
+	
 	var tv = localStorage.getItem(name) || defval;
 	tv = parseInt(tv);
 	window[name] = tv;
-	var obj = ebi('selskipmin');
-	obj.value = tv;
-	obj.setAttribute('max_digits', max_digits);
+	obj.oninput = ev_cfg_int_edit;
+}
+function ev_cfg_int_edit(e) {
+	e.preventDefault();
+	var that = e.currentTarget;
+	var name = that.getAttribute('id');
+	var maxlen = parseInt(that.getAttribute('maxlen'), 10);
+	var tv = that.value;
+	if (tv.length > maxlen)
+		tv = tv.slice(-maxlen);
+	
+	tv = parseInt(tv, 10);
+	if (String(tv).length < 1)
+		tv = 0;
+	
+	that.value = tv;
+	window[name] = tv;
+	localStorage.setItem(name, tv);
+}
+function cfg_bool(name) {
+	var obj = ebi(name);
+	var tv = localStorage.getItem(name);
+	if (tv !== '0' && tv !== '1')
+		tv = obj.getAttribute('defval');
+	
+	tv = (tv === '1') ? true : false;
+	window[name] = tv;
+	obj.checked = tv;
+	obj.oninput = ev_cfg_bool_edit;
+}
+function ev_cfg_bool_edit(e) {
+	e.preventDefault();
+	var that = e.currentTarget;
+	var name = that.getAttribute('id');
+	var tv = that.checked;
+	window[name] = tv;
+	localStorage.setItem(name, tv);
 }
 
 var selskipmin;
 cfg_int('selskipmin', '0', 1);
+
+var csrch_opts = ebi('vsrchcfg').getElementsByTagName('input');
+for (var a = 0, aa = csrch_opts.length; a < aa; a++) {
+	var name = csrch_opts[a].getAttribute('id');
+	window[name] = 'global variable construction 101';
+	cfg_bool(name);
+}
 
 function ebi(elm_id) {
 	return document.getElementById(elm_id);
@@ -1806,10 +1851,62 @@ function ev_tsch_input(e) {
 		e.preventDefault();
 
 	var txt = ebi('tsrch').value.toLowerCase();
-	BOOTHS = dbday.filter(o => {
-		return o.kar.toLowerCase().indexOf(txt) !== -1 ||
-			o.rom.toLowerCase().indexOf(txt) !== -1;
-	});
+	
+	if (csrch_regex) {
+		var re = new RegExp(txt, 'u');
+		BOOTHS = dbday.filter(o => {
+			if (csrch_name_kan && re.exec(o.kar.toLowerCase()))
+				return true;
+			
+			if (csrch_name_rom && re.exec(o.rom.toLowerCase()))
+				return true;
+			
+			if (o.url)
+				for (var a = 0; a < o.url.length; a++) {
+					var lcu = o.url[a].toLowerCase();
+					if (!re.exec(lcu))
+						continue;
+					
+					if (csrch_url_all)
+						return true;
+					
+					if (csrch_url_pixiv && lcu.indexOf('pixiv.') !== -1)
+						return true;
+					
+					if (csrch_url_twitter && lcu.indexOf('twitter.') !== -1)
+						return true;
+				}
+			
+			return false;
+		});
+	}
+	else {
+		BOOTHS = dbday.filter(o => {
+			if (csrch_name_kan && o.kar.toLowerCase().indexOf(txt) !== -1)
+				return true;
+			
+			if (csrch_name_rom && o.rom.toLowerCase().indexOf(txt) !== -1)
+				return true;
+			
+			if (o.url)
+				for (var a = 0; a < o.url.length; a++) {
+					var lcu = o.url[a].toLowerCase();
+					if (lcu.indexOf(txt) === -1)
+						continue;
+					
+					if (csrch_url_all)
+						return true;
+					
+					if (csrch_url_pixiv && lcu.indexOf('pixiv.') !== -1)
+						return true;
+					
+					if (csrch_url_twitter && lcu.indexOf('twitter.') !== -1)
+						return true;
+				}
+			
+			return false;
+		});
+	}
 	BOOTHS.sort(locsort);
 	
 	var info = BOOTHS.length + ' results';
@@ -2467,24 +2564,8 @@ function open_addctx(loc) {
 	show_excl('addctx');
 }
 
-function ev_cfg_int_edit(e) {
-	if (e !== undefined)
-		e.preventDefault();
-
-}
-
 function ev_selskipmin_edit(e) {
-	selskipmin = ebi('selskipmin').value;
-	if (selskipmin.length > 1)
-		selskipmin = selskipmin.slice(-1);
-	
-	selskipmin = parseInt(selskipmin);
-	if (String(selskipmin).length != 1)
-		selskipmin = 0;
-	
-	ebi('selskipmin').value = selskipmin;
-	localStorage.setItem('selskipmin', selskipmin);
-	
+	ev_cfg_int_edit(e);
 	gen_navkeys();
 }
 
