@@ -6,7 +6,7 @@
 
 -->
 <meta charset="utf-8">
-<title>cket list</title>
+<title>battleplan</title>
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
@@ -42,6 +42,13 @@ html, body {
 #topleft {
 	margin-right: 2.5em;
 	height: 2.4em;
+}
+#topleft h1 {
+	font-size: 1.5em;
+	text-align: center;
+	margin: 0;
+	padding: .2em 0;
+	font-weight: normal;
 }
 #site {
 	padding-top: 2.5em;
@@ -164,6 +171,11 @@ td:nth-child(2) {
 #tb tr:hover td:nth-child(2) {
 	border-left: none;
 }
+#tb tr.done td {
+	color: #ad8;
+	background: repeating-linear-gradient(
+		45deg, #222, #222 10px, #2c2c2c 11px, #2c2c2c 20px);
+}
 #ladd_kan {
 	display: block;
 	font-size: 1.5em;
@@ -193,7 +205,26 @@ td:nth-child(2) {
 	display: inline-block;
 	padding: .2em .4em;
 	font-size: 2em;
-	margin: .2em;
+	margin: 0em;
+	border: .2em solid #222;
+}
+#vimport>*,
+#vexport>* {
+	margin: 1em;
+}
+#vimport>textarea,
+#vexport>textarea {
+	width: calc(100% - 3em);
+	display: block;
+	margin: 0 auto;
+	height: 12em;
+}
+#vimport>input {
+	width: calc(100% - 5em);
+	display: block;
+	margin: 0 auto;
+	background: #333;
+	padding: 1em 1.3em;
 }
 .toast {
 	position: fixed;
@@ -208,11 +239,22 @@ td:nth-child(2) {
 	background: #999;
 }
 .sc1 td, .sc2 td, .sc3 td, .sc4 td { color: #444; }
-.sc5 td { background: hsl(240,20%,20%); color: #777 }
-.sc6 td { background: hsl(280,70%,30%) }
-.sc7 td { background: hsl(  0,50%,30%) }
-.sc8 td { background: hsl( 30,70%,30%) }
-.sc9 td { background: hsl( 90,70%,30%) }
+.sc5 td, .modal a.sc5 { background: hsl(240,20%,20%); color: #888 }
+.sc6 td, .modal a.sc6 { background: hsl(  0,40%,30%); }
+.sc7 td, .modal a.sc7 { background: hsl( 30,70%,30%); color: #fff }
+.sc8 td, .modal a.sc8 { background: hsl( 90,70%,30%); color: #fff }
+.sc9 td, .modal a.sc9 { background: #fff; color: #000 }
+x.sc8 td { background: hsl(270,40%,40%); color: #fff }
+x.sc9 td { background: hsl( 90,70%,30%); color: #fff }
+#addctxscore>a.act {
+	border: .2em solid #fc0;
+	box-shadow: 0 0 .2em #000 inset;
+}
+.notyet {
+	color: #c55 !important;
+	text-decoration: line-through !important;
+	opacity: .5;
+}
 
 
 </style>
@@ -220,6 +262,7 @@ td:nth-child(2) {
 <div id="topnav">
 	<a href="#" id="bmenu">=</a>
 	<div id="topleft">
+		<h1 id="tabh_h1" class="viewctl"></h1>
 		<div id="tabh_row" class="viewctl"
 			><a href="#" id="brow_prev">//? <!-- jump to previous row -->
 			</a><a href="#" id="brow_list"> List rows
@@ -231,7 +274,7 @@ td:nth-child(2) {
 			<!-- will be automatically populated with a cell jumplist which fits the device screen -->
 		</div>
 		<div id="tabh_txt" class="viewctl"
-			><input id="trow_in" value="paste here"
+			><input id="trow_in" value="paste here" class="notyet"
 			><input id="trow_out" value="parser out"
 			></input>
 		</div>
@@ -241,7 +284,7 @@ td:nth-child(2) {
 	<a href="#" class="bcancel">《 Cancel</a>
 	<a href="#" id="bmenu_day">📆 Change day (now: #)</a>
 	<a href="#" id="bmenu_chk">📌 View added booths</a>
-	<a href="#" id="bmenu_srch">🔍 Search for circle</a>
+	<a href="#" class="notyet" id="bmenu_srch">🔍 Search for circle</a>
 	<a href="#" id="bmenu_cirkan">⭕語 View all circles (sort: kanji)</a>
 	<a href="#" id="bmenu_cirrom">⭕a View all circles (sort: romaji)</a>
 	<a href="#" id="bmenu_row">⽥ View all booths (sort: row)</a>
@@ -257,8 +300,8 @@ td:nth-child(2) {
 </div>
 <div id="vsrchtype" class="modal">
 	<a href="#" class="bcancel">《 Cancel</a>
-	<a href="#" id="bmenu_srchrow">Search by row/column</a>
-	<a href="#" id="bmenu_srchname">Search by circle name</a>
+	<a href="#" class="notyet" id="bmenu_srchrow">Search by row/column</a>
+	<a href="#" class="notyet" id="bmenu_srchname">Search by circle name</a>
 </div>
 <div id="vdl" class="modal">
 	Downloading day # ...
@@ -268,16 +311,29 @@ td:nth-child(2) {
 </div>
 <div id="addctx" class="modal">
 	<a href="#" class="bcancel">《 Cancel</a> <!-- ❮⫷ -->
-	<a href="#" id="badd_gotit">💯 Set "Purchased"</a> <!-- 🔔 -->
-	<a href="#" id="badd_urls">🔗 Manage URLs</a>
-	<a href="#" id="badd_rem">✘ Delete from list</a>
+	<a href="#" id="badd_done">💯 Set "Purchased"</a> <!-- 🔔 -->
+	<a href="#" class="notyet" id="badd_urls">🔗 Manage URLs</a>
+	<a href="#" class="notyet" id="badd_rem">✘ Delete from list</a>
 	<div id="addctxinf">
 		<span id="ladd_kan">// kanji</span>
 		<span id="ladd_loc">// location</span>
 		<span id="ladd_rom">// romaji</span>
 	</div>
 	<div id="addctxscore"></div>
-	<div id="addctxlink"></div>
+	<div id="addctxlinks"></div>
+</div>
+<div id="vexport" class="modal">
+	<a href="#" class="bcancel">《 Cancel</a> <!-- ❮⫷ -->
+	<p>select all the text below and copy it to some place safe, or...</p>
+	<a href="#" id="export_download">download export file</a>
+	<textarea id="export_text" readonly></textarea>
+</div>
+<div id="vimport" class="modal">
+	<a href="#" class="bcancel">《 Cancel</a> <!-- ❮⫷ -->
+	<p>paste your backup below and hit the text import button, or drop a backup file on the browser below</p>
+	<input id="import_file" type="file" />
+	<a href="#" id="bimport_text">text import</a>
+	<textarea id="timport_text"></textarea>
 </div>
 <div id="site">
 	<div id="vtab">
@@ -320,6 +376,7 @@ var dbday = [];
 var dbsel = [];
 var lol = window.requestAnimationFrame;
 var render = null;  // fp
+var empty_row_msg = '???';
 
 
 var ALLROWS = '';
@@ -355,24 +412,33 @@ function hidetoast(div) {
 }
 function nudgetoast(div) {
 	div.classList.remove('nudged');
+	if (div['bgcolor'])
+		div.style.background = '#' + div['bgcolor'];
 }
-function toast(html) {
+function toast(html, bgcolor) {
 	var div = document.createElement('div');
 	div.innerHTML = html;
 	div.onclick = hidetoast;
 	div.classList.add('toast');
 	div.classList.add('nudged');
+	if (bgcolor !== undefined)
+		div['bgcolor'] = bgcolor;
+	
 	document.body.appendChild(div);
 	setTimeout(function() { nudgetoast(div); }, 100);
 	setTimeout(function() { hidetoast(div); }, 3000);
 }
-function toast_tab(tab) {
+function toast_tab(tab, cname) {
 	var ncells = 0;
 	for (var a = 0; a < tab.length; a++)
 		if (ncells < tab[a].length)
 			ncells = tab[a].length;
 	
-	html = ['<table>'];
+	if (cname === undefined)
+		html = ['<table>'];
+	else
+		html = ['<table class="' + cname + '">'];
+
 	for (var a = 0; a < tab.length; a++)
 	{
 		html.push('<tr>');
@@ -381,7 +447,7 @@ function toast_tab(tab) {
 		{
 			if (b == len - 1 && len < ncells)
 				html.push('<td colspan="' +
-					((ncells-len)-1) + '">' +
+					((ncells-len)+1) + '">' +
 					tab[a][b] + '</td>');
 			else
 				html.push('<td>' + tab[a][b] + '</td>');
@@ -411,6 +477,32 @@ function locsort(a, b) {
 	if (nha > nhb) return 1;
 	return 0;
 }
+function push_file(filename, text) {
+  var elm = document.createElement('a');
+  elm.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+  elm.setAttribute('download', filename);
+
+  elm.style.display = 'none';
+  document.body.appendChild(elm);
+
+  elm.click();
+
+  document.body.removeChild(elm);
+}
+function iso8601ish() {
+	var pad = function(num) {
+		if (num < 10)
+			return '0' + num;
+		return num;
+	};
+	var d = new Date();
+	return d.getUTCFullYear() + '-' +
+		pad(d.getUTCMonth() + 1) +
+		pad(d.getUTCDate()) + '-' +
+		pad(d.getUTCHours()) +
+		pad(d.getUTCMinutes()) +
+		pad(d.getUTCSeconds());
+}
 
 
 var html = [];
@@ -429,7 +521,7 @@ for (var a = 0, aa = links.length; a<aa; a++)
 var html = [];
 for (var a = 1; a < 10; a++)
 {
-	html.push('<a href="#" id="badd_r' + a + '">' + a + '</a>');
+	html.push('<a href="#" class="sc' + a + '" id="badd_r' + a + '">' + a + '</a>');
 	if (a % 3 == 0)
 		html.push('<br />');
 }
@@ -538,7 +630,7 @@ function load_sel() {
 		inf([
 			"<strong>== Loaded day " + active_day + " ==</strong>",
 			"Start adding some booths:",
-			"Select «<u>View all (by ...)</u>» in the menu"
+			"Select «<u>View all booths</u>» in the menu"
 		]);
 	}
 	else
@@ -591,41 +683,28 @@ function ev_dload() {
 	show('vdl');
 }
 function ev_cir(sortfunc, only_faved) {
-	hide_viewctls();
 	inf(['loading']);
 	lol(function() { lol(function() {
 		var html = [];
-		var dbd = JSON.parse(JSON.stringify(dbday));
-		dbd.sort(sortfunc);
-		for (var a = 0; a < dbd.length; a++)
-		{
-			var score = '-';
-			for (var b = 0, bb = dbsel.length; b<bb; b++)
-				if (dbsel[b].loc == dbd[a].loc)
-				{
-					score = dbsel[b].sc;
-					break;
-				}
-			
-			if (only_faved && score === '-')
-				continue;
-
-			html.push('<tr class="sc' + score +
-				'"><td>' + score +
-				'</td><td>' + dbd[a].loc +
-				'</td><td>' + esc(dbd[a].kan) +
-				'</td><td>' + esc(dbd[a].rom) + '</td></tr>');
-		}
-		ebi('tb').innerHTML = html.join('\n');
+		empty_row_msg = 'nothing to display in this list';
+		BOOTHS = JSON.parse(JSON.stringify(dbday));
+		BOOTHS.sort(sortfunc);
+		draw_tbody(only_faved);
 	})});
 }
 function ev_cirkan() {
+	hide_viewctls();
+	ebi('tabh_h1').innerHTML = 'All circles';
+	show('tabh_h1');
 	render = function() { 
 		ev_cir((a,b) => (a.kan.localeCompare(b.kan)), false);
 	};
 	render();
 }
 function ev_cirrom() {
+	hide_viewctls();
+	ebi('tabh_h1').innerHTML = 'All circles';
+	show('tabh_h1');
 	render = function() {
 		ev_cir((a,b) => (a.rom.localeCompare(b.rom)), false);
 	};
@@ -700,39 +779,58 @@ function goto_row(row) {
 	// should be safe since everything until the int is identical
 	BOOTHS.sort((a,b) => (a.loc.localeCompare(b.loc)));
 	
-	draw_tbody();
+	empty_row_msg = 'row ' + row + ' empty on day ' + active_day;
+	draw_tbody(false);
 
 	ebi('site').style.paddingTop = '8em';  // ¯\_(ツ)_/¯
 	
-	var rows = ebi('tb').getElementsByTagName('tr');
-	for (var a = 0, aa = rows.length; a<aa; a++)
-		rows[a].onclick = ev_rowclick;
-	
-	draw_tabh();
+	draw_th();
 }
-function draw_tbody() {
+function draw_tbody(only_faved) {
 	var html = [];
 	for (var a = 0, aa = BOOTHS.length; a<aa; a++)
 	{
 		var loc = BOOTHS[a]['loc'];
+		var isdone = false;
 		var score = '-';
 		for (var b = 0, bb = dbsel.length; b<bb; b++)
 			if (loc == dbsel[b]['loc'])
 			{
 				score = dbsel[b]['sc'];
+				if (dbsel[b]['done'])
+					isdone = true;
+				
 				break;
 			}
 		
-		var ypos = loc.slice(3);
-		html.push('<tr id="c' + ypos + '" class="sc' + score + '"><td>' + score + '</td><td>' + BOOTHS[a]['loc'] + '</td><td>' + esc(BOOTHS[a]['kan']) + '</td><td>' + esc(BOOTHS[a]['rom']) + '</td></tr>');
+		if (only_faved && score === '-')
+			continue;
+		
+		var trclass = "sc" + score;
+		if (isdone)
+			trclass += ' done';
+		
+		//var ypos = loc.slice(3);
+		html.push('<tr id="c' +
+			loc + '" class="' +
+			trclass + '"><td>' +
+			score + '</td><td>' +
+			BOOTHS[a]['loc'] + '</td><td>' +
+			esc(BOOTHS[a]['kan']) + '</td><td>' +
+			esc(BOOTHS[a]['rom']) + '</td></tr>');
 	}
 	
 	if (html.length == 0)
-		html.push('<tr><td colspan="4">row ' + row + ' empty on day ' + active_day + '</td></tr>');
+		html.push('<tr><td colspan="4">' +
+			empty_row_msg + '</td></tr>');
 	
 	ebi('tb').innerHTML = html.join('\n');
+	
+	var rows = ebi('tb').getElementsByTagName('tr');
+	for (var a = 0, aa = rows.length; a<aa; a++)
+		rows[a].onclick = ev_rowclick;
 }
-function draw_tabh() {
+function draw_th() {
 	var co = ebi('tabh_col');
 	if (co.style.display == 'none')
 		return;
@@ -753,13 +851,13 @@ function draw_tabh() {
 		var sbooth = BOOTHS[a]['loc'].slice(3);
 		
 		// please don't look
-		var ypos = parseInt(sbooth.slice(0, 2), 10);
+		var ypos = parseInt(sbooth.slice(3, 5), 10);
 		if (ypos > 3)
 			ypos -= 3;
 		
 		var scrpos = '00' + ypos;
 		scrpos = scrpos.slice(-2);
-		scrpos = scrpos + sbooth.slice(2);
+		scrpos = sbooth.slice(0, 3) + scrpos + sbooth.slice(5);
 		// it's ok now
 		
 		if (a == 0)
@@ -780,13 +878,33 @@ function ev_rowclick(e) {
 		e.preventDefault();
 
 	var tds = this.getElementsByTagName('td');
+	var score = tds[0].innerHTML;
 	var booth = tds[1].innerHTML;
 	var kanji = tds[2].innerHTML;
 	var romaji = tds[3].innerHTML;
 	
+	var links = ebi('addctxscore').getElementsByTagName('a');
+	for (var a = 0; a < links.length; a++)
+		links[a].classList.remove('act');
+	
+	if (score !== '-')
+		links[parseInt(score)-1].classList.add('act');
+
 	ebi('ladd_kan').textContent = kanji;
 	ebi('ladd_rom').textContent = romaji;
 	ebi('ladd_loc').textContent = booth;
+	
+	if (this.classList.contains('done')) {
+		ebi('badd_done').textContent = '🔔 Set "Must Buy"';
+		ebi('badd_done').style.background =
+			'linear-gradient(90deg,#2c2c2c,#664422)';
+	}
+	else {
+		ebi('badd_done').textContent = '💚 Set "Purchased"';
+		ebi('badd_done').style.background =
+			'linear-gradient(90deg,#2c2c2c,#446622)';
+	}
+	
 	show('addctx');
 	ebi('trow_out').value = booth;
 }
@@ -819,11 +937,17 @@ function ev_score(e) {
 		['loc', loc],
 		[ebi('ladd_kan').textContent],
 		[ebi('ladd_rom').textContent]
-	]);
+	], 'sc' + score);
 	render();
 }
 function ev_added() {
-	ev_cir(locsort, true);
+	hide_viewctls();
+	ebi('tabh_h1').innerHTML = 'Shopping list';
+	show('tabh_h1');
+	render = function() {
+		ev_cir(locsort, true);
+	};
+	render();
 }
 function ev_trowin_focus(e) {
 	if (this.value == 'paste here')
@@ -832,6 +956,96 @@ function ev_trowin_focus(e) {
 function ev_trowin_blur(e) {
 	if (this.value == '')
 		this.value = 'paste here';
+}
+function ev_import(e) {
+	if (e !== undefined)
+		e.preventDefault();
+
+	hide_modals();
+	show('vimport');
+}
+function ev_export(e) {
+	if (e !== undefined)
+		e.preventDefault();
+
+	ebi('export_text').value = gen_export();
+	hide_modals();
+	show('vexport');
+}
+function gen_export() {
+	var ret = {};
+	var keys = ['sel1', 'sel2', 'sel3'];
+	for (var a = 1; a <= 3; a++) {
+		var kt = localStorage.getItem('sel'+a);
+		if (kt == null)
+			continue;
+		
+		ret['sel'+a] = JSON.parse(kt);
+	}
+	return JSON.stringify(ret).replace(/},{"loc":"/g, '},\n{"loc":"');
+}
+function ev_export_file(e) {
+	if (e !== undefined)
+		e.preventDefault();
+
+	var txt = gen_export();
+	push_file("battleplan-" + iso8601ish() + ".json", txt);
+}
+function import_text(txt) {
+	//alert(txt);
+	inf(['data is now importing', 'please watch warmly']);
+	lol(function() { lol(function() {
+		var iv = JSON.parse(txt);
+		for (var a = 1; a <= 3; a++) {
+			var k = 'sel' + a;
+			localStorage.removeItem(k);
+			if (iv[k])
+				localStorage.setItem(
+					k, JSON.stringify(iv[k]));
+		};
+		load_day(active_day);
+		ev_added();
+	})});
+}
+function ev_import_file(e) {
+	const file = this.files.item(0);
+	const reader = new FileReader();
+	reader.readAsText(file);
+	reader.onload = function(e2) {
+		import_text(reader.result);
+	};
+}
+function ev_import_text(e) {
+	if (e !== undefined)
+		e.preventDefault();
+
+	import_text(ebi('timport_text').value);
+}
+function ev_purchased(e) {
+	var loc = ebi('ladd_loc').textContent;
+	var entry = null;
+	for (var a = 0, aa = dbsel.length; a<aa; a++)
+		if (loc == dbsel[a]['loc'])
+		{
+			entry = dbsel[a];
+			break;
+		}
+	
+	var desc = ebi('ladd_loc').textContent + '<br />' +
+		ebi('ladd_kan').textContent + '<br />' +
+		ebi('ladd_rom').textContent;
+	
+	if (entry['done'])
+	{
+		delete entry['done'];
+		toast('NEED TO BUY ' + desc, '642');
+	}
+	else {
+		entry['done'] = 1;
+		toast('Purchased ' + desc, '472');
+	}
+	save_sel();
+	render();
 }
 
 ebi('bmenu').onclick = show_menu;
@@ -850,14 +1064,20 @@ ebi('brow_list').onclick = ev_listrows;
 ebi('brow_prev').onclick = ev_steprow;
 ebi('brow_next').onclick = ev_steprow;
 ebi('bmenu_chk').onclick = ev_added;
-window.onresize = draw_tabh;
 ebi('trow_in').onfocus = ev_trowin_focus;
 ebi('trow_in').onblur = ev_trowin_blur;
+ebi('bmenu_import').onclick = ev_import;
+ebi('bmenu_export').onclick = ev_export;
+ebi('export_download').onclick = ev_export_file;
+ebi('import_file').onchange = ev_import_file;
+ebi('bimport_text').onclick = ev_import_text;
+ebi('badd_done').onclick = ev_purchased;
 
 var t = ecn('bcancel');
 for (var a=0; a<t.length; a++)
 	t[a].onclick = hide_modals;
 
+window.onresize = draw_th;
 
 
 // state init
@@ -867,9 +1087,15 @@ hide_viewctls();
 // let's call this a unit test
 if (load_day())
 {
-	ev_row();
-	goto_row('Ａ');
+	//ev_row();
+	//goto_row('Ａ');
+	ev_added();
 }
 
 
+/*
+cat Documents/all-comiket-rows.txt | shuf | while IFS= read -r x; do printf '{"loc":"2%s01a","sc":"7"},\n' "$x"; done > ~/Downloads/battleplan-shuffled.json 
+
+while true; do for sc in 4 5 6 7 8 9 8 7 6 5; do IFS= read -r row; [ -z "$row" ] && break; printf '{"loc":"2%s01a","sc":"%s"},\n' "$row" "$sc"; done; [ -z "$row" ] && break; done < <(cat ~/Documents/all-comiket-rows.txt;) > ~/Downloads/battleplan-rainbow.json 
+*/
 </script></body></html>
