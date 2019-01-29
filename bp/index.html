@@ -423,6 +423,7 @@ canvas {
 	<a href="#" id="bmenu_day1">土 / 1</a>
 	<a href="#" id="bmenu_day2">日 / 2</a>
 	<a href="#" id="bmenu_day3">月 / 3</a>
+	<a href="#" id="dbg">debug</a>
 </div>
 <div id="vcirtype" class="modal">
 	<a href="#" class="bcancel">《 Cancel</a>
@@ -535,6 +536,47 @@ canvas {
 		<canvas id="map" class="viewctl"></canvas>
 	</div>
 </div>
+<script>
+function hcroak(msg) {
+	document.body.innerHTML = msg;
+	window.onerror = undefined;
+	throw 'fatal_err';
+}
+function croak(msg) {
+	document.body.textContent = msg;
+	window.onerror = undefined;
+	throw msg;
+}
+function esc(txt) {
+	return txt.replace(/[&"<>]/g, function(c) {
+		return {
+			'&': '&amp;',
+			'"': '&quot;',
+			'<': '&lt;',
+			'>': '&gt;'
+		}[c];
+	});
+}
+window.onerror = function(msg, url, lineNo, columnNo, error) {
+	window.onerror = undefined;
+	var html = ['<h1>you hit a bug!</h1><p>please screenshot this error and send me a copy arigathanks gozaimuch</p><p>',
+		esc(String(msg)), '</p><p>', esc(url + ' @' + lineNo + ':' + columnNo), '</p>'];
+	
+	if (error) {
+		var find = ['desc','stack','trace'];
+		for (var a = 0; a < find.length; a++)
+			if (String(error[find[a]]) !== 'undefined')
+				html.push('<h2>' + find[a] + '</h2>' + 
+					esc(String(error[find[a]])).replace(/\n/g, '<br />\n'));
+	}
+	document.body.style.fontSize = '0.8em';
+	hcroak(html.join('\n'));
+};
+
+//function funcAlpha(v) { alertt(v); }
+//function funcBeta(v) { funcAlpha(v); }
+//funcBeta('fug');
+</script>
 <script src="lz-string.min.js"></script>
 <script>
 
@@ -600,10 +642,6 @@ function tl(txt, from, to) {
 }
 
 
-function croak(msg) {
-	document.body.textContent = msg;
-	throw msg;
-}
 try {
 	active_row = localStorage.getItem('activerow');
 	if (active_row == null)
@@ -627,16 +665,6 @@ function ebi(elm_id) {
 function ecn(classname) {
 	return document.getElementsByClassName(classname);
 }
-function esc(txt) {
-	return txt.replace(/[&"<>]/g, function(c) {
-		return {
-			'&': '&amp;',
-			'"': '&quot;',
-			'<': '&lt;',
-			'>': '&gt;'
-		}[c];
-	});
-}
 
 
 function tab(tid) {
@@ -647,7 +675,7 @@ function tab(tid) {
 	try {
 		ebi(tid).classList.add('act');
 	}
-	catch { }
+	catch(ex) { }
 }
 function hidetoast(div) {
 	if (div === undefined)
@@ -1422,7 +1450,7 @@ function gen_export() {
 			if (kt != null)
 				ret['sel'+a] = JSON.parse(kt);
 		}
-		catch {
+		catch(ex) {
 			alert('failed to export Uncompressed selection db ' + a);
 		}
 		
@@ -1433,7 +1461,7 @@ function gen_export() {
 				ret['sel'+a] = JSON.parse(unpacked);
 			}
 		}
-		catch {
+		catch(ex) {
 			alert('failed to export Compressed selection db ' + a);
 		}
 	}
@@ -1474,7 +1502,7 @@ function import_text(txt) {
 		try {
 			iv = JSON.parse(txt);
 		}
-		catch (ex) {
+		catch(ex) {
 			json_err(ex, txt);
 		}
 		for (var a = 1; a <= 3; a++) {
@@ -1793,7 +1821,7 @@ function full_localstore() {
 			
 			html.push('<a href="#" skey="' + keys[a] + '">' + trait + ' day ' + keys[a].slice(keys[a].length-1) + ' (' + Math.round(len/1024) + ' KiB)</a>');
 		}
-		catch { }
+		catch(ex) { }
 	
 	if (html.length == 0)
 		html.push('<h1>actually nevermind you broke it</h1><p>check if your disk is full i guess</p>');
@@ -2087,6 +2115,13 @@ function ev_add_qnote(e) {
 	
 	ev_rowclick();
 }
+function ev_dbg(e) {
+	if (e !== undefined)
+		e.preventDefault();
+
+	v = prompt('give me javascript', 'localStorage.zsel2.length');
+	alert(eval(v));
+}
 
 
 ebi('bmenu').onclick = show_menu;
@@ -2136,6 +2171,7 @@ ebi('bmaphall_w12').onclick = ev_showmap
 ebi('bqnote').onclick = ev_add_qnote;
 ebi('tqnote').onfocus = ev_focus;
 ebi('tqnote').onblur = ev_blur;
+ebi('dbg').onclick = ev_dbg;
 
 
 var t = ecn('bcancel');
