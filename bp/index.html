@@ -674,10 +674,10 @@ var ROWS = [
 ];
 var sc_col = {
 	"-": "#000",
-	"1": "#444",
-	"2": "#444",
-	"3": "#444",
-	"4": "#444",
+	"1": "#111",
+	"2": "#111",
+	"3": "#111",
+	"4": "#111",
 	"5": "hsl(240,20%,20%)",
 	"6": "hsl(  0,40%,30%)",
 	"7": "hsl( 35,70%,30%)",
@@ -686,10 +686,10 @@ var sc_col = {
 };
 var sc_fcol = {
 	"-": "#351",
-	"1": "#666",
-	"2": "#666",
-	"3": "#666",
-	"4": "#666",
+	"1": "#444",
+	"2": "#444",
+	"3": "#444",
+	"4": "#444",
 	"5": "hsl(240,20%,40%)",
 	"6": "hsl(  0,40%,50%)",
 	"7": "hsl( 35,70%,50%)",
@@ -796,6 +796,12 @@ function ev_cfg_int_edit(e) {
 	window[name] = tv;
 	localStorage.setItem(name, tv);
 }
+function tint_bool(name, tv) {
+	var objs = document.getElementsByTagName('label');
+	for (var a = 0, aa = objs.length; a<aa; a++)
+		if (objs[a].getAttribute('for') == name)
+			objs[a].style.color = tv ? '#8d6' : '#d68';
+}
 function cfg_bool(name) {
 	var obj = ebi(name);
 	var tv = localStorage.getItem(name);
@@ -806,6 +812,7 @@ function cfg_bool(name) {
 	window[name] = tv;
 	obj.checked = tv;
 	obj.oninput = ev_cfg_bool_edit;
+	tint_bool(name, tv);
 }
 function ev_cfg_bool_edit(e) {
 	e.preventDefault();
@@ -813,7 +820,8 @@ function ev_cfg_bool_edit(e) {
 	var name = that.getAttribute('id');
 	var tv = that.checked;
 	window[name] = tv;
-	localStorage.setItem(name, tv);
+	localStorage.setItem(name, tv ? '1' : '0');
+	tint_bool(name, tv);
 }
 
 var selskipmin;
@@ -2308,7 +2316,7 @@ function show_map() {
 					ctx.fillStyle = sc_col[tsel['sc']];
 
 				if (tsel && tsel['done'])
-					ctx.fillStyle = '#231';
+					ctx.fillStyle = '#121';
 				
 				/*ctx.beginPath();
 				if (loc.slice(-1) == 'a') {
@@ -2335,6 +2343,7 @@ function show_map() {
 				}*/
 				
 				var triangles = true;
+				//triangles = false;
 				
 				if (fill) {
 					ctx.beginPath();
@@ -2354,8 +2363,9 @@ function show_map() {
 						// TODO:
 						//   need the booth order csv field
 						//   in order to fill the correct side
-						
 						var fill_top = loc.slice(-1) == 'a';
+						var fill_bottom = !fill_top;
+
 						if (fill_top) {
 							ctx.moveTo(x,    y);
 							ctx.lineTo(x+sz, y);
