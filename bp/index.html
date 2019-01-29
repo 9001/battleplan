@@ -71,7 +71,7 @@ input {
 	line-height: 1.2em;
 }
 #topleft a.act {
-	background: #444;
+	background: linear-gradient(0deg,#333,#555 50%,#666 50%,#333);
 }
 #site {
 	padding-top: 2.5em;
@@ -378,7 +378,7 @@ canvas {
 		<a href="#" id="tbmenu_map">🗺</a>
 		<a href="#" id="tbmenu_srch">🔍</a>
 		<a href="#" id="tbmenu_row">⽥</a> <!-- ⺇ -->
-		<a href="#" id="tbmenu_cir">⭕</a>
+		<!-- a href="#" id="tbmenu_cir">⭕</a -->
 		<a href="#" id="tbmenu_day">📆</a>
 	</div>
 	<div id="topsub">
@@ -566,6 +566,8 @@ var empty_row_msg = '???';
 var busted_localstore = false;
 var pending_day_db = null;
 var nfail = 0;
+var sortkey1 = 'loc';
+var sortkey2 = 'kan';
 
 
 var ALLROWS = '';
@@ -787,6 +789,8 @@ function hide_modals(e) {
 	var modals = ecn('modal');
 	for (var a = 0, aa = modals.length; a<aa; a++)
 		modals[a].style.display = 'none';
+	
+	show('vtab');
 }
 function hide_viewctls(e) {
 	if (e !== undefined)
@@ -802,15 +806,20 @@ function show(html_id) {
 	ebi(html_id).style.display = 'block';
 	ebi(html_id).scrollTop = 0;
 }
+function show_excl(html_id) {
+	hide_modals();
+	ebi('vtab').style.display = 'none';
+	show(html_id);
+}
 function show_menu(e) {
 	e.preventDefault();
 	hide_modals();
-	show('vmenu');
+	show_excl('vmenu');
 }
 function show_chday(e) {
 	e.preventDefault();
 	hide_modals();
-	show('vday');
+	show_excl('vday');
 }
 function ev_chday(e) {
 	e.preventDefault();
@@ -822,8 +831,6 @@ function ev_chday(e) {
 		load_day(nday);
 	})});
 }
-
-
 function load_day(day) {
 	var loaded;
 	
@@ -941,9 +948,11 @@ function showmsg(color, lines) {
 	lines.unshift('&nbsp;');
 	ebi('tb').innerHTML = s1 + lines.join(s2+s1) + s2;
 	hide_modals();
+	hide_viewctls();
 }
+function err(lines)  { showmsg('f75', lines); }
 function warn(lines) { showmsg('fc0', lines); }
-function inf(lines) { showmsg('ad6', lines); }
+function inf(lines)  { showmsg('ad6', lines); }
 
 
 function put_day_db(jsontxt) {
@@ -1021,7 +1030,7 @@ function refresh() {
 	})});
 }
 function ev_cir(sortfunc, only_faved) {
-	inf(['loading']);
+	inf(['drawing UI']);
 	lol(function() { lol(function() {
 		var html = [];
 		empty_row_msg = 'nothing to display in this list';
@@ -1065,7 +1074,7 @@ function ev_cirtype() {
 }
 function ev_listrows() {
 	hide_modals();
-	show('vrowlist');
+	show_excl('vrowlist');
 }
 function ev_jumprow(e) {
 	if (e !== undefined)
@@ -1166,6 +1175,7 @@ function draw_tbody(only_faved) {
 		rows[a].onmousedown = ev_mousedown;
 		rows[a].onmouseup = ev_mouseup;
 	}
+	draw_th();
 }
 function draw_th() {
 	var co = ebi('tabh_col');
@@ -1303,9 +1313,8 @@ function ev_rowclick(e, tgt) {
 		html.push('🔗 = added by circle<br />🔖 = added by (You)'); <!-- 🍆 -->
 	
 	ebi('addctxlinks').innerHTML = html.join('\n');
-	
-	show('addctx');
 	ebi('trow_out').value = loc;
+	show_excl('addctx');
 }
 function set_score(loc, score) {
 	for (var a = 0, aa = dbsel.length; a < aa; a++)
@@ -1343,11 +1352,11 @@ function ev_added() {
 	hide_viewctls();
 	tab('tbmenu_chk');
 	ebi('tabh_h1').innerHTML = 'Shopping list';
-	ebi('site').style.paddingTop = '6em';
-	show('tabh_h1');
-	show('added_inf');
 	render = function() {
 		ev_cir(locsort, true);
+		show('tabh_h1');
+		show('added_inf');
+		ebi('site').style.paddingTop = '6em';
 		
 		var have = 0;
 		var todo = 0;
@@ -1395,7 +1404,7 @@ function ev_import(e) {
 
 	hide_modals();
 	ebi('import_file').value = '';
-	show('vimport');
+	show_excl('vimport');
 }
 function ev_export(e) {
 	if (e !== undefined)
@@ -1403,7 +1412,7 @@ function ev_export(e) {
 
 	ebi('export_text').value = gen_export();
 	hide_modals();
-	show('vexport');
+	show_excl('vexport');
 }
 function gen_export() {
 	var ret = {};
@@ -1432,6 +1441,12 @@ function gen_export() {
 		alert('emergency export of day ' + active_day + ' in effect');
 		ret['sel'+active_day] = dbsel;
 	}
+	for (var a = 1; a <= 3; a++) {
+		if (!ret['sel'+a])
+			continue;
+
+		ret['sel'+a].sort(locsort);
+	}
 	return JSON.stringify(ret).replace(/},{"loc":"/g, '},\n{"loc":"');
 }
 function ev_export_file(e) {
@@ -1441,11 +1456,27 @@ function ev_export_file(e) {
 	var txt = gen_export();
 	push_file("battleplan-" + iso8601ish() + ".json", txt);
 }
+function json_err(ex, txt) {
+	var msg = [String(ex),'here is your json with each line prefixed with numLine:numGlyph'];
+	var ofs = 0;
+	txt = txt.split('\n');
+	for (var a = 0; a < txt.length; a++) {
+		msg.push('<span style="color:#c09">' + (a+1) + ':' + ofs + '</span> ' + esc(txt[a]));
+		ofs += txt[a].length;
+	}
+	err(msg);
+}
 function import_text(txt) {
 	//alert(txt);
 	inf(['data is now importing', 'please watch warmly']);
 	lol(function() { lol(function() {
-		var iv = JSON.parse(txt);
+		var iv;
+		try {
+			iv = JSON.parse(txt);
+		}
+		catch (ex) {
+			json_err(ex, txt);
+		}
 		for (var a = 1; a <= 3; a++) {
 			var uk = 'sel' + a;
 			var ck = 'zsel' + a;
@@ -1509,7 +1540,7 @@ function ev_remove(e) {
 	ebi('ldel_loc').textContent = ebi('ladd_loc').textContent;
 	
 	hide_modals();
-	show('vdelc');
+	show_excl('vdelc');
 }
 function ev_remove_ok(e) {
 	if (e !== undefined)
@@ -1650,7 +1681,7 @@ function ev_urls(e) {
 		links[a].onclick = ev_url_mod;
 
 	hide_modals();
-	show('vurls');
+	show_excl('vurls');
 }
 function ev_url_new(e) {
 	if (e !== undefined)
@@ -1789,7 +1820,7 @@ function ev_map_sel_hall(e) {
 		e.preventDefault();
 	
 	hide_modals();
-	show('vmaphall');
+	show_excl('vmaphall');
 }
 
 var ctx = ebi('map').getContext('2d');
@@ -2035,7 +2066,7 @@ ebi('bmenu_day1').onclick = ev_chday;
 ebi('bmenu_day2').onclick = ev_chday;
 ebi('bmenu_day3').onclick = ev_chday;
 ebi('bmenu_dload').onclick = ev_dload;
-ebi('tbmenu_cir').onclick = ev_cirtype;
+//ebi('tbmenu_cir').onclick = ev_cirtype;
 ebi('bmenu_cir').onclick = ev_cirtype;
 ebi('bmenu_cirkan').onclick = ev_cirkan;
 ebi('bmenu_cirrom').onclick = ev_cirrom;
@@ -2085,8 +2116,10 @@ window.onresize = ev_resize;
 
 
 // state init
-hide_viewctls();
-load_day();
+inf(['resuming previous session ...']);
+lol(function() { lol(function() {
+	load_day();
+})});
 
 //ev_row();
 //ev_import();
