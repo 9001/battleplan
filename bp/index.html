@@ -17,6 +17,9 @@ html, body {
 	background: #222;
 	font-family: sans-serif;
 }
+input {
+	color: #fc7;
+}
 #nojs {
 	color: #fc9;
 	background: #222;
@@ -53,21 +56,35 @@ html, body {
 	font-weight: bold;
 }
 #topleft {
+	background: #222;
 	margin-right: 2.5em;
 	height: 2.4em;
 }
-#topleft h1 {
-	font-size: 1.5em;
+#topleft a {
+	overflow: hidden;
+	width: 1em;
+	font-size: 2em;
 	text-align: center;
-	margin: 0;
-	padding: .2em 0;
-	font-weight: normal;
+	display: inline-block;
+	text-decoration: none;
+	background: #222;
+	line-height: 1.2em;
+}
+#topleft a.act {
+	background: #444;
 }
 #site {
 	padding-top: 2.5em;
 }
 a {
 	color: #0cf;
+}
+#tabh_h1 {
+	font-size: 1.5em;
+	text-align: center;
+	margin: 0;
+	padding: .2em 0;
+	font-weight: normal;
 }
 #tabh_row>* {
 	display: inline-block;
@@ -108,7 +125,6 @@ a {
 }
 #tabh_txt>* {
 	width: 49%;
-	color: #fc7;
 	background: #111;
 	font-size: 1.8em;
 	position: relative;
@@ -250,7 +266,8 @@ td:nth-child(2) {
 }
 #vimport>input,
 #vurls_add>input,
-#vurls_edit>input {
+#vurls_edit>input,
+#addctxqnote>input {
 	width: calc(100% - 5em);
 	display: block;
 	margin: 0 auto;
@@ -343,6 +360,9 @@ canvas {
 	height: 100%;
 	background: #000;
 }
+#bqnote {
+	margin: 1em;
+}
 
 
 </style>
@@ -354,24 +374,33 @@ canvas {
 <div id="topnav">
 	<a href="#" id="bmenu">=</a>
 	<div id="topleft">
+		<a href="#" id="tbmenu_chk">📌</a>
+		<a href="#" id="tbmenu_map">🗺</a>
+		<a href="#" id="tbmenu_srch">🔍</a>
+		<a href="#" id="tbmenu_row">⽥</a> <!-- ⺇ -->
+		<a href="#" id="tbmenu_cir">⭕</a>
+		<a href="#" id="tbmenu_day">📆</a>
+	</div>
+	<div id="topsub">
 		<h1 id="tabh_h1" class="viewctl"></h1>
-		<input id="tsrch" class="viewctl" value="stroemer" />
+		
+		<div id="added_inf" class="viewctl">// info about added items</div>
+		
 		<div id="tabh_row" class="viewctl"
 			><a href="#" id="brow_prev">//? <!-- jump to previous row -->
 			</a><a href="#" id="brow_list"> List rows
 			</a><a href="#" id="brow_next">//? <!-- jump to next row -->
 		</a></div>
-	</div>
-	<div id="topsub">
-		<div id="added_inf" class="viewctl">// info about added items</div>
 		<div id="tabh_col" class="viewctl">
 			<!-- will be automatically populated with a cell jumplist which fits the device screen -->
 		</div>
 		<div id="tabh_txt" class="viewctl"
-			><input id="trow_in" value="paste here"
+			><input id="trow_in" value="paste here" sample="paste here"
 			><input id="trow_out" value="parser out"
 			></input>
 		</div>
+		
+		<input id="tsrch" class="viewctl" value="stroemer" sample="stroemer" />
 		<div id="srchinf" class="viewctl">
 			<!-- will contain search results info -->
 		</div>
@@ -419,6 +448,10 @@ canvas {
 	</div>
 	<div id="addctxscore"></div>
 	<div id="addctxlinks"></div>
+	<div id="addctxqnote">
+		<input id="tqnote" value="paste stuff here" sample="paste stuff here" />
+		<a href="#" id="bqnote">Add URL/note</a>
+	</div>
 </div>
 <div id="vexport" class="modal">
 	<a href="#" class="bcancel">《 Cancel</a> <!-- ❮⫷ -->
@@ -453,7 +486,7 @@ canvas {
 	<a href="#" id="bdel_yes">DELET</a>
 </div>
 <div id="vurls" class="modal">
-	<a href="#" class="bcancel">《 Cancel</a>
+	<a href="#" class="bcancel" invoke="ev_rowclick">《 Back</a>
 	<a href="#" id="burl_new">💬 Add new</a> <!-- 🏵 -->
 	<div id="vurls_list">
 		<!-- will be the url list -->
@@ -461,12 +494,12 @@ canvas {
 	click an entry to edit or remove
 </div>
 <div id="vurls_add" class="modal">
-	<a href="#" class="bcancel">《 Cancel</a>
+	<a href="#" class="bcancel" goto="vurls">《 Back</a>
 	<input id="turl_add" />
 	<a href="#" id="burl_add">Add this</a>
 </div>
 <div id="vurls_edit" class="modal">
-	<a href="#" class="bcancel">《 Cancel</a>
+	<a href="#" class="bcancel" goto="vurls">《 Back</a>
 	<input id="turl_edit" />
 	<a href="#" id="burl_edit">Save edit</a>
 	<div id="lurl_cur"></div>
@@ -604,6 +637,16 @@ function esc(txt) {
 }
 
 
+function tab(tid) {
+	var tabs = ebi('topleft').getElementsByTagName('a');
+	for (var a = 0; a < tabs.length; a++)
+		tabs[a].classList.remove('act');
+	
+	try {
+		ebi(tid).classList.add('act');
+	}
+	catch { }
+}
 function hidetoast(div) {
 	if (div === undefined)
 		div = this;
@@ -753,7 +796,7 @@ function hide_viewctls(e) {
 	for (var a = 0, aa = modals.length; a<aa; a++)
 		modals[a].style.display = 'none';
 	
-	ebi('site').style.paddingTop = '2.5em';  // ¯\_(ツ)_/¯
+	ebi('site').style.paddingTop = '4.5em';  // ¯\_(ツ)_/¯
 }
 function show(html_id) {
 	ebi(html_id).style.display = 'block';
@@ -1003,6 +1046,7 @@ function ev_row() {
 		show('tabh_row');
 		show('tabh_col');
 		show('tabh_txt');
+		tab('tbmenu_row');
 		goto_row(active_row);
 	};
 	render();
@@ -1064,7 +1108,7 @@ function goto_row(row) {
 	empty_row_msg = 'row ' + row + ' empty on day ' + active_day;
 	draw_tbody(false);
 
-	ebi('site').style.paddingTop = '8em';  // ¯\_(ツ)_/¯
+	ebi('site').style.paddingTop = '10em';  // ¯\_(ツ)_/¯
 	
 	draw_th();
 }
@@ -1185,9 +1229,15 @@ function get_tsel(loc, create_if_404) {
 	set_score(loc, '-');
 	return get_tsel(loc);
 }
+var last_rowclick = null;
 function ev_rowclick(e, tgt) {
 	if (e !== undefined)
 		e.preventDefault();
+	
+	if (tgt !== undefined)
+		last_rowclick = tgt;
+	else
+		tgt = last_rowclick;
 
 	var loc = tb_fields(tgt)['loc'];
 	var bscore = ebi('addctxscore').getElementsByTagName('a');
@@ -1283,8 +1333,9 @@ function ev_score(e) {
 }
 function ev_added() {
 	hide_viewctls();
+	tab('tbmenu_chk');
 	ebi('tabh_h1').innerHTML = 'Shopping list';
-	ebi('site').style.paddingTop = '5em';
+	ebi('site').style.paddingTop = '6em';
 	show('tabh_h1');
 	show('added_inf');
 	render = function() {
@@ -1320,13 +1371,15 @@ function ev_added() {
 	};
 	render();
 }
-function ev_trowin_focus(e) {
-	if (this.value == 'paste here')
+function ev_focus(e) {
+	var sample = this.getAttribute('sample');
+	if (this.value == sample)
 		this.value = '';
 }
-function ev_trowin_blur(e) {
+function ev_blur(e) {
+	var sample = this.getAttribute('sample');
 	if (this.value == '')
-		this.value = 'paste here';
+		this.value = sample;
 }
 function ev_import(e) {
 	if (e !== undefined)
@@ -1487,19 +1540,12 @@ function ev_srch(e) {
 	hide_viewctls();
 	show('tsrch');
 	show('srchinf');
+	tab('tbmenu_srch');
 	ebi('srchinf').innerHTML = 'Search for a circle above';
 	
 	lol(function() { lol(function() {
 		ev_tsch_input();
 	})});
-}
-function ev_tsrch_focus(e) {
-	if (this.value == 'stroemer')
-		this.value = '';
-}
-function ev_tsrch_blur(e) {
-	if (this.value == '')
-		this.value = 'stroemer';
 }
 function ev_tsch_input(e) {
 	if (e !== undefined)
@@ -1525,7 +1571,7 @@ function ev_tsch_input(e) {
 	};
 	render();
 
-	ebi('site').style.paddingTop = '4em';  // ¯\_(ツ)_/¯
+	ebi('site').style.paddingTop = '6em';  // ¯\_(ツ)_/¯
 }
 function ev_trowin_input(e) {
 	if (e !== undefined)
@@ -1596,21 +1642,32 @@ function ev_url_new(e) {
 	ebi('turl_add').value = '';
 	show('vurls_add');
 }
+function add_url(loc, txt) {
+	var tsel = get_tsel(loc, true);
+	
+	if (!tsel['url']) {
+		tsel['url'] = [txt];
+	}
+	else {
+		for (var a = 0; a < tsel['url'].length; a++) {
+			if (tsel['url'][a] == txt) {
+				alert('that url already exists');
+				return false;
+			}
+		}
+		tsel['url'].push(txt);
+	}
+	
+	save_sel();
+	return true;
+}
 function ev_url_new_done(e) {
 	if (e !== undefined)
 		e.preventDefault();
 
 	var txt = ebi('turl_add').value;
-	
 	var loc = ebi('ladd_loc').textContent;
-	var tsel = get_tsel(loc, true);
-	
-	if (!tsel['url'])
-		tsel['url'] = [txt];
-	else
-		tsel['url'].push(txt);
-	
-	save_sel();
+	add_url(loc, txt);
 	ev_urls();
 }
 function ev_url_mod(e) {
@@ -1729,6 +1786,7 @@ function ev_showmap(e) {
 	if (e !== undefined)
 		e.preventDefault();
 	
+	tab('tbmenu_map');
 	inf(['drawing map']);
 	var that = this;
 	
@@ -1812,7 +1870,7 @@ function ev_showmap(e) {
 		map.style.height = sh + 'px';
 		ctx.setTransform(ctxr, 0, 0, ctxr, 0, 0);
 		ctx.lineCap = 'butt';
-		ctx.strokeStyle = '#351';
+		ctx.strokeStyle = '#231';
 		
 		ctx.fillStyle = '#bbb';
 		ctx.font = '24px sans-serif';
@@ -1920,25 +1978,60 @@ function ev_resize(e) {
 	//if (ebi('vmap').style.display !== 'none')
 	//	render();
 }
+function ev_cancel(e) {
+	hide_modals(e);
+	
+	var backto = this.getAttribute('goto');
+	if (backto != null)
+		show(backto);
+	
+	var invoke = this.getAttribute('invoke');
+	if (invoke != null)
+		window[invoke]();
+}
+function ev_add_qnote(e) {
+	if (e !== undefined)
+		e.preventDefault();
+
+	var loc = ebi('ladd_loc').textContent;
+	var txtbox = ebi('tqnote');
+	var txt = txtbox.value;
+	var sample = txtbox.getAttribute('sample');
+	
+	if (txt == '' || txt == sample) {
+		alert('type a note or url in the field above first');
+		return;
+	}
+	
+	if (add_url(loc, txt))
+		ebi('tqnote').value = sample;
+	
+	ev_rowclick();
+}
 
 
 ebi('bmenu').onclick = show_menu;
+ebi('tbmenu_day').onclick = show_chday;
 ebi('bmenu_day').onclick = show_chday;
 ebi('bmenu_day1').onclick = ev_chday;
 ebi('bmenu_day2').onclick = ev_chday;
 ebi('bmenu_day3').onclick = ev_chday;
 ebi('bmenu_dload').onclick = ev_dload;
+ebi('tbmenu_cir').onclick = ev_cirtype;
 ebi('bmenu_cir').onclick = ev_cirtype;
 ebi('bmenu_cirkan').onclick = ev_cirkan;
 ebi('bmenu_cirrom').onclick = ev_cirrom;
+ebi('tbmenu_row').onclick = ev_row;
 ebi('bmenu_row').onclick = ev_row;
+ebi('tbmenu_srch').onclick = ev_srch;
 ebi('bmenu_srch').onclick = ev_srch;
 ebi('brow_list').onclick = ev_listrows;
 ebi('brow_prev').onclick = ev_steprow;
 ebi('brow_next').onclick = ev_steprow;
+ebi('tbmenu_chk').onclick = ev_added;
 ebi('bmenu_chk').onclick = ev_added;
-ebi('trow_in').onfocus = ev_trowin_focus;
-ebi('trow_in').onblur = ev_trowin_blur;
+ebi('trow_in').onfocus = ev_focus;
+ebi('trow_in').onblur = ev_blur;
 ebi('trow_in').oninput = ev_trowin_input;
 ebi('bmenu_import').onclick = ev_import;
 ebi('bmenu_export').onclick = ev_export;
@@ -1948,23 +2041,27 @@ ebi('bimport_text').onclick = ev_import_text;
 ebi('badd_done').onclick = ev_purchased;
 ebi('badd_rem').onclick = ev_remove;
 ebi('bdel_yes').onclick = ev_remove_ok;
-ebi('tsrch').onfocus = ev_tsrch_focus;
-ebi('tsrch').onblur = ev_tsrch_blur;
+ebi('tsrch').onfocus = ev_focus;
+ebi('tsrch').onblur = ev_blur;
 ebi('tsrch').oninput = ev_tsch_input;
 ebi('badd_urls').onclick = ev_urls;
 ebi('burl_new').onclick = ev_url_new;
 ebi('burl_add').onclick = ev_url_new_done;
 ebi('burl_edit').onclick = ev_url_edit_save;
 ebi('burl_del').onclick = ev_url_delete;
+ebi('tbmenu_map').onclick = ev_map_sel_hall;
 ebi('bmenu_map').onclick = ev_map_sel_hall;
 ebi('bmaphall_e123').onclick = ev_showmap
 ebi('bmaphall_e456').onclick = ev_showmap
 ebi('bmaphall_w12').onclick = ev_showmap
+ebi('bqnote').onclick = ev_add_qnote;
+ebi('tqnote').onfocus = ev_focus;
+ebi('tqnote').onblur = ev_blur;
 
 
 var t = ecn('bcancel');
 for (var a=0; a<t.length; a++)
-	t[a].onclick = hide_modals;
+	t[a].onclick = ev_cancel;
 
 window.onresize = ev_resize;
 
