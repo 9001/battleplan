@@ -627,7 +627,7 @@ var LF = 'ａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗ�
 // hope this works
 var RLOC = new RegExp(
 	'([' + ALLROWS + UH + LH + '])[^' + ALLROWS + UH + LH + DH + DF + ']{0,3}([' +
-	DH + DF + ']{1,2})[^' + ALLROWS + UH + LH + DH + DF + ']{0,1}([ABabＡＢａｂ]?)', 'u');
+	DH + DF + ']{1,2})[^' + ALLROWS + UH + LH + DH + DF + UH + LF + ']{0,1}([ABabＡＢａｂ]?)', 'u');
 
 
 function tl(txt, from, to) {
@@ -819,6 +819,7 @@ function hide_modals(e) {
 		modals[a].style.display = 'none';
 	
 	show('vtab');
+	restore_scroll();
 }
 function hide_viewctls(e) {
 	if (e !== undefined)
@@ -835,8 +836,9 @@ function show(html_id) {
 	ebi(html_id).scrollTop = 0;
 }
 function show_excl(html_id) {
+	persist_scroll();
 	hide_modals();
-	ebi('vtab').style.display = 'none';
+	vtab.style.display = 'none';
 	show(html_id);
 }
 function show_menu(e) {
@@ -1043,18 +1045,39 @@ function ev_dload() {
 	show('vdl');
 }
 
-function refresh() {
-	//var t = document.getElementsByTagName('*'); for (var a=0, aa=t.length; a<aa; a++) if (t[a].scrollTop > 0) alert(t[a].scrollTop + ' for ' + t[a].tagName + ' / ' + t[a].id);
+var scroll_obj = null;
+var scroll_pos = null;
+function persist_scroll() {
+	var vtab = ebi('vtab');
+	if (vtab.style.display === 'none')
+		return;
+
+	if (scroll_obj !== null) {
+		scroll_pos = scroll_obj.scrollTop;
+		return;
+	}
+	
 	var o1 = document.getElementsByTagName('html')[0];
 	var o2 = document.body;
 	
 	var obj = o1.scrollTop > o2.scrollTop ? o1 : o2;
-	var ofs = obj.scrollTop;
+	scroll_pos = obj.scrollTop;
 	
+	if (scroll_pos > 0)
+		scroll_obj = obj;
+}
+function restore_scroll() {
+	if (scroll_obj !== null)
+		scroll_obj.scrollTop = scroll_pos;
+}
+
+function refresh() {
+	//var t = document.getElementsByTagName('*'); for (var a=0, aa=t.length; a<aa; a++) if (t[a].scrollTop > 0) alert(t[a].scrollTop + ' for ' + t[a].tagName + ' / ' + t[a].id);
+	persist_scroll();
 	render();
 	
 	lol(function() { lol(function() {
-		obj.scrollTop = ofs;
+		restore_scroll();
 	})});
 }
 function ev_cir(sortfunc, only_faved) {
@@ -2023,6 +2046,9 @@ function ev_showmap(e) {
 				ctx.fillStyle = '#000';
 				if (tsel && rcol[tsel['sc']])
 					ctx.fillStyle = rcol[tsel['sc']];
+
+				if (tsel && tsel['done'])
+					ctx.fillStyle = '#231';
 				
 				/*ctx.beginPath();
 				if (loc.slice(-1) == 'a') {
