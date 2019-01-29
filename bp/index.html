@@ -884,9 +884,16 @@ function load_day(day) {
 		if (MAXNCOL < ncols)
 			MAXNCOL = ncols;
 	}
-	
-	load_sel();
-	ev_added();	
+
+	lol(function() { lol(function() {
+		for (var a = 0, aa = dbday.length; a<aa; a++) {
+			var kar = dbday[a]['kan'];
+			kar = tl(kar, UF+LF+DF, LH+LH+LH);
+			dbday['kar'] = kar;
+		}
+		load_sel();
+		ev_added();
+	})});
 	return true;
 }
 function load_sel() {
@@ -1538,6 +1545,9 @@ function ev_srch(e) {
 
 	hide_modals();
 	hide_viewctls();
+	var box = ebi('trow_in');
+	box.value = box.getAttribute(
+	id="trow_in" value="paste here" sample="paste here"
 	show('tsrch');
 	show('srchinf');
 	tab('tbmenu_srch');
