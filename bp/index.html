@@ -2,7 +2,7 @@
 <!--
 
 	battleplan <ed@irc.rizon.net>, MIT-licensed
-	https://dootnode.org/ed/c95/json/bp.html
+	https://dootnode.org/ed/c95/bp.html
 
 -->
 <meta charset="utf-8">
@@ -232,8 +232,13 @@ td:nth-child(2) {
 	margin: 0em;
 	border: .2em solid #222;
 }
+#addctxlinks {
+	margin: 1em 0;
+}
 #vimport>*,
-#vexport>* {
+#vexport>*,
+#vurls_add>*,
+#vurls_edit>* {
 	margin: 1em;
 }
 #vimport>textarea,
@@ -243,12 +248,17 @@ td:nth-child(2) {
 	margin: 0 auto;
 	height: 12em;
 }
-#vimport>input {
+#vimport>input,
+#vurls_add>input,
+#vurls_edit>input {
 	width: calc(100% - 5em);
 	display: block;
 	margin: 0 auto;
+	color: #fff;
 	background: #333;
 	padding: 1em 1.3em;
+	border: none;
+	outline: none;
 }
 .toast {
 	position: fixed;
@@ -305,6 +315,9 @@ a#bdel_yes {
 	color: #ccc;
 	background: #222;
 	padding: .5em .75em;
+}
+#vurls_list a:before {
+	content: '🔖 ';
 }
 
 
@@ -370,7 +383,7 @@ a#bdel_yes {
 <div id="addctx" class="modal">
 	<a href="#" class="bcancel">《 Cancel</a> <!-- ❮⫷ -->
 	<a href="#" id="badd_done">💯 Set "Purchased"</a> <!-- 🔔 -->
-	<a href="#" class="notyet" id="badd_urls">🔗 Manage URLs</a>
+	<a href="#" id="badd_urls">🔖 Manage URLs</a> <!-- 🏷 -->
 	<a href="#" id="badd_rem">✘ Delete from list</a>
 	<div id="addctxinf">
 		<span id="ladd_kan">// kanji</span>
@@ -400,7 +413,27 @@ a#bdel_yes {
 		<span id="ldel_loc">// location</span>
 		<span id="ldel_rom">// romaji</span>
 	</div>
-	<a href="#" id="bdel_yes">DELETE</a>
+	<a href="#" id="bdel_yes">DELET</a>
+</div>
+<div id="vurls" class="modal">
+	<a href="#" class="bcancel">《 Cancel</a>
+	<a href="#" id="burl_new">💬 Add new</a> <!-- 🏵 -->
+	<div id="vurls_list">
+		<!-- will be the url list -->
+	</div>
+	click an entry to edit or remove
+</div>
+<div id="vurls_add" class="modal">
+	<a href="#" class="bcancel">《 Cancel</a>
+	<input id="turl_add" />
+	<a href="#" id="burl_add">Add this</a>
+</div>
+<div id="vurls_edit" class="modal">
+	<a href="#" class="bcancel">《 Cancel</a>
+	<input id="turl_edit" />
+	<a href="#" id="burl_edit">Save edit</a>
+	<div id="lurl_cur"></div>
+	<a href="#" id="burl_del">Delete</a>
 </div>
 <div id="site">
 	<div id="vtab">
@@ -488,7 +521,7 @@ function ecn(classname) {
 	return document.getElementsByClassName(classname);
 }
 function esc(txt) {
-	return txt.replace(/[&#<>]/g, function(c) {
+	return txt.replace(/[&"<>]/g, function(c) {
 		return {
 			'&': '&amp;',
 			'"': '&quot;',
@@ -775,7 +808,7 @@ function dl_error() {
 	alert('error');
 }
 function ev_dload() {
-	var url = 'lkrxy' + active_day + '.json';
+	var url = 'lkrxy' + active_day + '.json?_=' + Date.now();
 	var req = new XMLHttpRequest();
 	req.onload = dl_done;
 	req.onerror = dl_error;
@@ -992,28 +1025,60 @@ function tb_fields(tgt) {
 	var tds = tgt.getElementsByTagName('td');
 	return {
 		"score": tds[0].textContent,
-		"booth": tds[1].textContent,
+		"loc": tds[1].textContent,
 		"kanji": tds[2].textContent,
 		"romaji": tds[3].textContent
 	};
+}
+function get_tday(loc) {
+	for (var a = 0, aa = dbday.length; a < aa; a++)
+		if (loc == dbday[a]['loc'])
+			return dbday[a];
+	
+	return null;
+}
+function get_tsel(loc, create_if_404) {
+	for (var a = 0, aa = dbsel.length; a < aa; a++)
+		if (loc == dbsel[a]['loc'])
+			return dbsel[a];
+	
+	if (!create_if_404)
+		return null;
+	
+	set_score(loc, '-');
+	return get_tsel(loc);
 }
 function ev_rowclick(e, tgt) {
 	if (e !== undefined)
 		e.preventDefault();
 
-	var inf = tb_fields(tgt);
-	var links = ebi('addctxscore').getElementsByTagName('a');
-	for (var a = 0; a < links.length; a++)
-		links[a].classList.remove('act');
+	var loc = tb_fields(tgt)['loc'];
+	var bscore = ebi('addctxscore').getElementsByTagName('a');
+	for (var a = 0; a < bscore.length; a++)
+		bscore[a].classList.remove('act');
 	
-	if (inf['score'] !== '-')
-		links[parseInt(inf['score'])-1].classList.add('act');
+	var tday = get_tday(loc);
+	var tsel = get_tsel(loc);
+	if (tday == null) {
+		alert('could not find entry in dbday??');
+		return;
+	}
+	
+	var score = '-';
+	if (tsel != null)
+	{
+		score = tsel['sc'];
+		if (score !== '-')
+		{
+			bscore[parseInt(score)-1].classList.add('act');
+		}
+	}
 
-	ebi('ladd_kan').textContent = inf['kanji'];
-	ebi('ladd_rom').textContent = inf['romaji'];
-	ebi('ladd_loc').textContent = inf['booth'];
+	ebi('ladd_kan').textContent = tday['kan']
+	ebi('ladd_rom').textContent = tday['rom']
+	ebi('ladd_loc').textContent = loc;
 	
-	if (tgt.classList.contains('done')) {
+	if (tsel && tsel['done']) {
 		ebi('badd_done').textContent = '🔔 Set "Must Buy"';
 		ebi('badd_done').style.background =
 			'linear-gradient(90deg,#2c2c2c,#664422)';
@@ -1024,8 +1089,28 @@ function ev_rowclick(e, tgt) {
 			'linear-gradient(90deg,#2c2c2c,#446622)';
 	}
 	
+	var html = [];
+	if (tsel && tsel['url'])
+		for (var a = 0; a < tsel['url'].length; a++)
+		{
+			var url = esc(tsel['url'][a]);
+			html.push('<a target="_blank" href="' + url + '">🔖 ' + url + '</a>');
+		}
+	
+	if (tday['url'])
+		for (var a = 0; a < tday['url'].length; a++)
+		{
+			var url = esc(tday['url'][a]);
+			html.push('<a target="_blank" href="' + url + '">🔗 ' + url + '</a>');
+		}
+	
+	if (html.length > 0)
+		html.push('🔗 = added by circle<br />🔖 = added by (You)'); <!-- 🍆 -->
+	
+	ebi('addctxlinks').innerHTML = html.join('\n');
+	
 	show('addctx');
-	ebi('trow_out').value = inf['booth'];
+	ebi('trow_out').value = inf['loc'];
 }
 function set_score(loc, score) {
 	for (var a = 0, aa = dbsel.length; a < aa; a++)
@@ -1081,6 +1166,7 @@ function ev_import(e) {
 		e.preventDefault();
 
 	hide_modals();
+	ebi('import_file').value = '';
 	show('vimport');
 }
 function ev_export(e) {
@@ -1291,6 +1377,117 @@ function ev_trowin_input(e) {
 	};
 	render();
 }
+function ev_urls(e) {
+	if (e !== undefined)
+		e.preventDefault();
+
+	var loc = ebi('ladd_loc').textContent;
+	var tsel = get_tsel(loc, true);
+	if (tsel == null) {
+		alert('error reading tsel for [' + loc + ']');
+		return;
+	}
+	var html = [];
+	if (tsel['url'])
+		for (var a = 0; a < tsel['url'].length; a++)
+			html.push('<a href="#">' + esc(tsel['url'][a]) + '</a>');
+	
+	ebi('vurls_list').innerHTML = html.join('\n');
+	var links = ebi('vurls_list').getElementsByTagName('a');
+	for (var a = 0; a < links.length; a++)
+		links[a].onclick = ev_url_mod;
+
+	hide_modals();
+	show('vurls');
+}
+function ev_url_new(e) {
+	if (e !== undefined)
+		e.preventDefault();
+
+	hide_modals();
+	ebi('turl_add').value = '';
+	show('vurls_add');
+}
+function ev_url_new_done(e) {
+	if (e !== undefined)
+		e.preventDefault();
+
+	var txt = ebi('turl_add').value;
+	
+	var loc = ebi('ladd_loc').textContent;
+	var tsel = get_tsel(loc, true);
+	
+	if (!tsel['url'])
+		tsel['url'] = [txt];
+	else
+		tsel['url'].push(txt);
+	
+	save_sel();
+	ev_urls();
+}
+function ev_url_mod(e) {
+	if (e !== undefined)
+		e.preventDefault();
+	
+	var txt = this.textContent;
+	ebi('turl_edit').value = txt;
+	ebi('lurl_cur').textContent = txt;
+	
+	hide_modals();
+	show('vurls_edit');
+}
+function ev_url_edit_save(e) {
+	if (e !== undefined)
+		e.preventDefault();
+	
+	var orig = ebi('lurl_cur').textContent;
+	var repl = ebi('turl_edit').value;
+	
+	if (orig == repl) {
+		alert('new url is identical to the previous value; aborting');
+		return;
+	}
+	
+	var loc = ebi('ladd_loc').textContent;
+	var tsel = get_tsel(loc, true);
+	for (var a = 0; a < tsel.url.length; a++)
+		if (tsel.url[a] == repl) {
+			alert('new url already exists in the list; aborting');
+			return;
+		}
+	
+	for (var a = 0; a < tsel.url.length; a++)
+		if (tsel.url[a] == orig) {
+			tsel.url[a] = repl;
+			save_sel();
+			ev_urls();
+			return;
+		}
+		
+	alert('could not find url [' + orig + ']\nwas going to replace with [' + repl + ']');
+}
+function ev_url_delete(e) {
+	if (e !== undefined)
+		e.preventDefault();
+	
+	var orig = ebi('lurl_cur').textContent;
+	var loc = ebi('ladd_loc').textContent;
+	var tsel = get_tsel(loc, true);
+	var idx = -1;
+	for (var a = 0; a < tsel.url.length; a++)
+		if (tsel.url[a] == orig)
+			idx = a;
+	
+	if (idx < 0) {
+		alert('cold not find url [' + orig + '] ?? panic');
+		return;
+	}
+	tsel.url.splice(idx, 1);
+	
+	save_sel();
+	ev_urls();
+}
+
 
 ebi('bmenu').onclick = show_menu;
 ebi('bmenu_day').onclick = show_chday;
@@ -1321,6 +1518,11 @@ ebi('bdel_yes').onclick = ev_remove_ok;
 ebi('tsrch').onfocus = ev_tsrch_focus;
 ebi('tsrch').onblur = ev_tsrch_blur;
 ebi('tsrch').oninput = ev_tsch_input;
+ebi('badd_urls').onclick = ev_urls;
+ebi('burl_new').onclick = ev_url_new;
+ebi('burl_add').onclick = ev_url_new_done;
+ebi('burl_edit').onclick = ev_url_edit_save;
+ebi('burl_del').onclick = ev_url_delete;
 
 var t = ecn('bcancel');
 for (var a=0; a<t.length; a++)
