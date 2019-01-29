@@ -19,6 +19,9 @@ cd ~/bp && python3 -m http.server 1616
 EOF
 chmod 755 run
 
+{ ps | grep -E 'http.server[ ]1616$' | awk '{print $1}' | xargs kill -9
+} 2>/dev/null || true 
+
 python3 -V || pkg install -y python
 
 cat <<'EOF'
