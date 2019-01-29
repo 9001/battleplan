@@ -17,6 +17,19 @@ html, body {
 	background: #222;
 	font-family: sans-serif;
 }
+#nojs {
+	color: #fc9;
+	background: #222;
+	text-align: center;
+	padding: 2em 0;
+	position: fixed;
+	z-index: 9001;
+	top: 0;
+	left: 0;
+	right: 0;
+	width: 100%;
+	height: 100%;
+}
 #topnav {
 	color: #fff;
 	background: #333;
@@ -158,15 +171,26 @@ a {
 	padding: 2em 0;
 	text-align: center;
 }
+table {
+	border-collapse: collapse;
+}
 td {
-	padding: .2em .5em;
+	padding: .5em;
+	border: 3px solid transparent;
+	border-width: 0 3px;
+}
+td:first-child {
+	border-left: 6px solid transparent;
+}
+td:last-child {
+	border-right: 6px solid transparent;
 }
 td:nth-child(2) {
 	white-space: nowrap;
 }
 #tb tr:hover td {
-	background: #333;
-	border-left: .2em solid #fc0;
+	border-color: #fff;
+	box-shadow: 0 0 .15em #000 inset;
 }
 #tb tr:hover td:nth-child(2) {
 	border-left: none;
@@ -176,16 +200,16 @@ td:nth-child(2) {
 	background: repeating-linear-gradient(
 		45deg, #222, #222 10px, #2c2c2c 11px, #2c2c2c 20px);
 }
-#ladd_kan {
+#ladd_kan, #ldel_kan {
 	display: block;
 	font-size: 1.5em;
 	padding: .5em .2em;
 }
-#ladd_rom {
+#ladd_rom, #ldel_rom {
 	background: #111; 120;
 	padding: .2em .3em;
 }
-#ladd_loc {
+#ladd_loc, #ldel_loc {
 	color: #fff;
 	background: #333; 453;
 	padding: .2em .3em;
@@ -255,14 +279,46 @@ x.sc9 td { background: hsl( 90,70%,30%); color: #fff }
 	text-decoration: line-through !important;
 	opacity: .5;
 }
+#vdelc {
+	text-align: center;
+}
+#vdelc a {
+	margin: .5em;
+}
+a#bdel_yes {
+	margin: 2em;
+	padding: 2em 0;
+}
+#tsrch {
+	margin: 0;
+	padding: 0;
+	border: none;
+	outline: none;
+	font-size: 1.5em;
+	padding: .15em .5em;
+	width: calc(100% - 1em);
+	border-bottom: .1em solid #0cf;
+	background: #333;
+	color: #fea;
+}
+#srchinf {
+	color: #ccc;
+	background: #222;
+	padding: .5em .75em;
+}
 
 
 </style>
 </head><body>
+<div id="nojs" class="modal">
+	<h1>enable javascript you doofus</h1>
+	<p>alternatively something broke in which ccase please let me know</p>
+</div>
 <div id="topnav">
 	<a href="#" id="bmenu">=</a>
 	<div id="topleft">
 		<h1 id="tabh_h1" class="viewctl"></h1>
+		<input id="tsrch" class="viewctl" value="stroemer" />
 		<div id="tabh_row" class="viewctl"
 			><a href="#" id="brow_prev">//? <!-- jump to previous row -->
 			</a><a href="#" id="brow_list"> List rows
@@ -278,19 +334,21 @@ x.sc9 td { background: hsl( 90,70%,30%); color: #fff }
 			><input id="trow_out" value="parser out"
 			></input>
 		</div>
+		<div id="srchinf">
+			<!-- will contain search results info -->
+		</div>
 	</div>
 </div>
 <div id="vmenu" class="modal">
 	<a href="#" class="bcancel">《 Cancel</a>
-	<a href="#" id="bmenu_day">📆 Change day (now: #)</a>
-	<a href="#" id="bmenu_chk">📌 View added booths</a>
-	<a href="#" class="notyet" id="bmenu_srch">🔍 Search for circle</a>
-	<a href="#" id="bmenu_cirkan">⭕語 View all circles (sort: kanji)</a>
-	<a href="#" id="bmenu_cirrom">⭕a View all circles (sort: romaji)</a>
-	<a href="#" id="bmenu_row">⽥ View all booths (sort: row)</a>
+	<a href="#" id="bmenu_chk">📌 View shopping list</a>
+	<a href="#" id="bmenu_srch">🔍 Search for circle</a>
+	<a href="#" id="bmenu_row">⽥ Show all booths</a> <!-- ⺇ -->
+	<a href="#" id="bmenu_cir">⭕ Show all circles (slow!!)</a>
 	<a href="#" id="bmenu_import">📂 Import your list</a>
 	<a href="#" id="bmenu_export">💾 Export your list</a>
-	<a href="#" id="bmenu_dload">📲 Download DB: Day #</a>
+	<a href="#" id="bmenu_day">📆 Change day (now: #)</a>
+	<a href="#" id="bmenu_dload">📲 Download DB for Day #</a>
 </div>
 <div id="vday" class="modal">
 	<a href="#" class="bcancel">《 Cancel</a>
@@ -298,10 +356,10 @@ x.sc9 td { background: hsl( 90,70%,30%); color: #fff }
 	<a href="#" id="bmenu_day2">日 / 2</a>
 	<a href="#" id="bmenu_day3">月 / 3</a>
 </div>
-<div id="vsrchtype" class="modal">
+<div id="vcirtype" class="modal">
 	<a href="#" class="bcancel">《 Cancel</a>
-	<a href="#" class="notyet" id="bmenu_srchrow">Search by row/column</a>
-	<a href="#" class="notyet" id="bmenu_srchname">Search by circle name</a>
+	<a href="#" id="bmenu_cirkan">Sort by Kanji</a>
+	<a href="#" id="bmenu_cirrom">Sort by Romaji</a>
 </div>
 <div id="vdl" class="modal">
 	Downloading day # ...
@@ -313,7 +371,7 @@ x.sc9 td { background: hsl( 90,70%,30%); color: #fff }
 	<a href="#" class="bcancel">《 Cancel</a> <!-- ❮⫷ -->
 	<a href="#" id="badd_done">💯 Set "Purchased"</a> <!-- 🔔 -->
 	<a href="#" class="notyet" id="badd_urls">🔗 Manage URLs</a>
-	<a href="#" class="notyet" id="badd_rem">✘ Delete from list</a>
+	<a href="#" id="badd_rem">✘ Delete from list</a>
 	<div id="addctxinf">
 		<span id="ladd_kan">// kanji</span>
 		<span id="ladd_loc">// location</span>
@@ -334,6 +392,15 @@ x.sc9 td { background: hsl( 90,70%,30%); color: #fff }
 	<input id="import_file" type="file" />
 	<a href="#" id="bimport_text">text import</a>
 	<textarea id="timport_text"></textarea>
+</div>
+<div id="vdelc" class="modal">
+	<a href="#" class="bcancel">《 Cancel</a>
+	<div id="delinf">
+		<span id="ldel_kan">// kanji</span>
+		<span id="ldel_loc">// location</span>
+		<span id="ldel_rom">// romaji</span>
+	</div>
+	<a href="#" id="bdel_yes">DELETE</a>
 </div>
 <div id="site">
 	<div id="vtab">
@@ -371,7 +438,7 @@ var ROWS = [
 var BOOTHS = [];
 var MAXNCOL = 0;
 var active_day = -1;
-var active_row = 'Ａ';
+var active_row;
 var dbday = [];
 var dbsel = [];
 var lol = window.requestAnimationFrame;
@@ -382,6 +449,36 @@ var empty_row_msg = '???';
 var ALLROWS = '';
 for (var a = 0; a < ROWS.length; a++)
 	ALLROWS += ROWS[a];
+
+
+var DH = '0123456789';
+var UH = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+var LH = 'abcdefghijklmnopqrstuvwxyz';
+var DF = '０１２３４５６７８９';
+var UF = 'ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺ';
+var LF = 'ａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚ';
+
+// hope this works
+var RLOC = new RegExp(
+	'([' + ALLROWS + UH + LH + '])[^' + ALLROWS + UH + LH + DH + DF + ']{0,3}([' +
+	DH + DF + ']{1,2})[^' + ALLROWS + UH + LH + DH + DF + ']{0,1}([ABabＡＢａｂ]?)', 'u');
+
+
+function tl(txt, from, to) {
+	var re = new RegExp('[' + from + ']', 'gu');
+	var dict = {};
+	for (var a = 0; a < from.length; a++)
+		dict[from[a]] = to[a];
+
+	return txt.replace(re, function(c) {
+		return dict[c];
+	});
+}
+
+
+active_row = localStorage.getItem('activerow');
+if (active_row == null)
+	active_row = 'Ａ';
 
 
 function ebi(elm_id) {
@@ -400,12 +497,17 @@ function esc(txt) {
 		}[c];
 	});
 }
+
+
 function hidetoast(div) {
 	if (div === undefined)
 		div = this;
 	
-	if (div.target)
-		div = div.target;
+	if (div.currentTarget)
+		div = div.currentTarget;
+	
+	//while (!div.classList.contains('toast') && div.parentNode)
+	//	div = div.parentNode;
 	
 	if (div.parentNode !== null)
 		div.parentNode.removeChild(div);
@@ -550,6 +652,7 @@ function hide_viewctls(e) {
 }
 function show(html_id) {
 	ebi(html_id).style.display = 'block';
+	ebi(html_id).scrollTop = 0;
 }
 function show_menu(e) {
 	e.preventDefault();
@@ -585,7 +688,7 @@ function load_day(day) {
 	
 	localStorage.setItem('activeday', active_day);
 	ebi('bmenu_day').innerHTML = '📆 Change day (now: ' + active_day + ')';
-	ebi('bmenu_dload').innerHTML = '📲 Download DB: Day ' + active_day;
+	ebi('bmenu_dload').innerHTML = '📲 Download DB for Day ' + active_day;
 	ebi('vdl').innerHTML = 'downloading database for day ' + active_day + ' ...';
 	
 	loaded = localStorage.getItem('day' + active_day);
@@ -682,6 +785,21 @@ function ev_dload() {
 	hide_modals();
 	show('vdl');
 }
+
+function refresh() {
+	//var t = document.getElementsByTagName('*'); for (var a=0, aa=t.length; a<aa; a++) if (t[a].scrollTop > 0) alert(t[a].scrollTop + ' for ' + t[a].tagName + ' / ' + t[a].id);
+	var o1 = document.getElementsByTagName('html')[0];
+	var o2 = document.body;
+	
+	var obj = o1.scrollTop > o2.scrollTop ? o1 : o2;
+	var ofs = obj.scrollTop;
+	
+	render();
+	
+	lol(function() { lol(function() {
+		obj.scrollTop = ofs;
+	})});
+}
 function ev_cir(sortfunc, only_faved) {
 	inf(['loading']);
 	lol(function() { lol(function() {
@@ -696,19 +814,17 @@ function ev_cirkan() {
 	hide_viewctls();
 	ebi('tabh_h1').innerHTML = 'All circles';
 	show('tabh_h1');
-	render = function() { 
-		ev_cir((a,b) => (a.kan.localeCompare(b.kan)), false);
+	render = function() {
 	};
-	render();
+	ev_cir((a,b) => (a.kan.localeCompare(b.kan)), false);
 }
 function ev_cirrom() {
 	hide_viewctls();
 	ebi('tabh_h1').innerHTML = 'All circles';
 	show('tabh_h1');
 	render = function() {
-		ev_cir((a,b) => (a.rom.localeCompare(b.rom)), false);
 	};
-	render();
+	ev_cir((a,b) => (a.rom.localeCompare(b.rom)), false);
 }
 function ev_row() {
 	render = function() {
@@ -721,15 +837,9 @@ function ev_row() {
 	};
 	render();
 }
-function ev_srch() {
+function ev_cirtype() {
 	hide_modals();
-	show('vsrchtype');
-}
-function ev_srchrow() {
-	
-}
-function ev_srchname() {
-	
+	show('vcirtype');
 }
 function ev_listrows() {
 	hide_modals();
@@ -744,6 +854,8 @@ function ev_jumprow(e) {
 function goto_row(row) {
 	hide_modals();
 	active_row = row;
+	localStorage.setItem('activerow', active_row);
+	
 	var ridx = ALLROWS.indexOf(row);
 	
 	if (ridx == 0) {
@@ -812,7 +924,7 @@ function draw_tbody(only_faved) {
 		
 		//var ypos = loc.slice(3);
 		html.push('<tr id="c' +
-			loc + '" class="' +
+			loc + '" act="ev_rowclick" + class="' +
 			trclass + '"><td>' +
 			score + '</td><td>' +
 			BOOTHS[a]['loc'] + '</td><td>' +
@@ -828,7 +940,10 @@ function draw_tbody(only_faved) {
 	
 	var rows = ebi('tb').getElementsByTagName('tr');
 	for (var a = 0, aa = rows.length; a<aa; a++)
-		rows[a].onclick = ev_rowclick;
+	{
+		rows[a].onmousedown = ev_mousedown;
+		rows[a].onmouseup = ev_mouseup;
+	}
 }
 function draw_th() {
 	var co = ebi('tabh_col');
@@ -873,28 +988,32 @@ function ev_steprow() {
 	
 	goto_row(this.innerHTML);
 }
-function ev_rowclick(e) {
+function tb_fields(tgt) {
+	var tds = tgt.getElementsByTagName('td');
+	return {
+		"score": tds[0].textContent,
+		"booth": tds[1].textContent,
+		"kanji": tds[2].textContent,
+		"romaji": tds[3].textContent
+	};
+}
+function ev_rowclick(e, tgt) {
 	if (e !== undefined)
 		e.preventDefault();
 
-	var tds = this.getElementsByTagName('td');
-	var score = tds[0].innerHTML;
-	var booth = tds[1].innerHTML;
-	var kanji = tds[2].innerHTML;
-	var romaji = tds[3].innerHTML;
-	
+	var inf = tb_fields(tgt);
 	var links = ebi('addctxscore').getElementsByTagName('a');
 	for (var a = 0; a < links.length; a++)
 		links[a].classList.remove('act');
 	
-	if (score !== '-')
-		links[parseInt(score)-1].classList.add('act');
+	if (inf['score'] !== '-')
+		links[parseInt(inf['score'])-1].classList.add('act');
 
-	ebi('ladd_kan').textContent = kanji;
-	ebi('ladd_rom').textContent = romaji;
-	ebi('ladd_loc').textContent = booth;
+	ebi('ladd_kan').textContent = inf['kanji'];
+	ebi('ladd_rom').textContent = inf['romaji'];
+	ebi('ladd_loc').textContent = inf['booth'];
 	
-	if (this.classList.contains('done')) {
+	if (tgt.classList.contains('done')) {
 		ebi('badd_done').textContent = '🔔 Set "Must Buy"';
 		ebi('badd_done').style.background =
 			'linear-gradient(90deg,#2c2c2c,#664422)';
@@ -906,10 +1025,10 @@ function ev_rowclick(e) {
 	}
 	
 	show('addctx');
-	ebi('trow_out').value = booth;
+	ebi('trow_out').value = inf['booth'];
 }
 function set_score(loc, score) {
-	for (var a = 0, aa = dbsel.length; a<aa; a++)
+	for (var a = 0, aa = dbsel.length; a < aa; a++)
 		if (dbsel[a]['loc'] == loc)
 		{
 			dbsel[a]['sc'] = score;
@@ -938,7 +1057,7 @@ function ev_score(e) {
 		[ebi('ladd_kan').textContent],
 		[ebi('ladd_rom').textContent]
 	], 'sc' + score);
-	render();
+	refresh();
 }
 function ev_added() {
 	hide_viewctls();
@@ -1045,7 +1164,94 @@ function ev_purchased(e) {
 		toast('Purchased ' + desc, '472');
 	}
 	save_sel();
+	refresh();
+}
+function ev_remove(e) {
+	if (e !== undefined)
+		e.preventDefault();
+	
+	ebi('ldel_kan').textContent = ebi('ladd_kan').textContent;
+	ebi('ldel_rom').textContent = ebi('ladd_rom').textContent;
+	ebi('ldel_loc').textContent = ebi('ladd_loc').textContent;
+	
+	hide_modals();
+	show('vdelc');
+}
+function ev_remove_ok(e) {
+	if (e !== undefined)
+		e.preventDefault();
+	
+	var find = ebi('ldel_loc').textContent;
+	var rmlist = dbsel.filter(o => {
+		return o.loc === find;
+	});
+	if (rmlist.length !== 1) {
+		alert('cant delete, expected 1 but got ' + rmlist.length);
+		return;
+	}
+	dbsel.splice(dbsel.indexOf(rmlist[0]), 1);
+	
+	save_sel();
+	refresh();
+}
+function ev_mousedown(e) {
+	e.currentTarget.mdt = Date.now();
+}
+function ev_mouseup(e) {
+	var now = Date.now();
+	var tgt = e.currentTarget;
+	if (now - parseFloat(tgt.mdt) < 200)
+		lol(function() { lol(function() {
+			window[tgt.getAttribute('act')](e, tgt);
+		})});
+}
+function ev_srch(e) {
+	if (e !== undefined)
+		e.preventDefault();
+
+	hide_modals();
+	hide_viewctls();
+	show('tsrch');
+	show('srchinf');
+	ebi('srchinf').innerHTML = 'Search for a circle above';
+	
+	lol(function() { lol(function() {
+		ev_tsch_input();
+	})});
+}
+function ev_tsrch_focus(e) {
+	if (this.value == 'stroemer')
+		this.value = '';
+}
+function ev_tsrch_blur(e) {
+	if (this.value == '')
+		this.value = 'stroemer';
+}
+function ev_tsch_input(e) {
+	if (e !== undefined)
+		e.preventDefault();
+
+	var txt = ebi('tsrch').value.toLowerCase();
+	BOOTHS = dbday.filter(o => {
+		return o.kan.toLowerCase().indexOf(txt) !== -1 ||
+			o.rom.toLowerCase().indexOf(txt) !== -1;
+	});
+	BOOTHS.sort(locsort);
+	
+	var info = BOOTHS.length + ' results';
+	if (BOOTHS.length > 100) {
+		BOOTHS.splice(100, 999999);
+		info = 'Over 100 results';
+	}
+	ebi('srchinf').textContent = info;
+	
+	render = function() {
+		empty_row_msg = 'no search results';
+		draw_tbody(false);
+	};
 	render();
+
+	ebi('site').style.paddingTop = '4em';  // ¯\_(ツ)_/¯
 }
 
 ebi('bmenu').onclick = show_menu;
@@ -1054,12 +1260,11 @@ ebi('bmenu_day1').onclick = ev_chday;
 ebi('bmenu_day2').onclick = ev_chday;
 ebi('bmenu_day3').onclick = ev_chday;
 ebi('bmenu_dload').onclick = ev_dload;
+ebi('bmenu_cir').onclick = ev_cirtype;
 ebi('bmenu_cirkan').onclick = ev_cirkan;
 ebi('bmenu_cirrom').onclick = ev_cirrom;
 ebi('bmenu_row').onclick = ev_row;
 ebi('bmenu_srch').onclick = ev_srch;
-ebi('bmenu_srchrow').onclick = ev_srchrow;
-ebi('bmenu_srchname').onclick = ev_srchname;
 ebi('brow_list').onclick = ev_listrows;
 ebi('brow_prev').onclick = ev_steprow;
 ebi('brow_next').onclick = ev_steprow;
@@ -1072,6 +1277,11 @@ ebi('export_download').onclick = ev_export_file;
 ebi('import_file').onchange = ev_import_file;
 ebi('bimport_text').onclick = ev_import_text;
 ebi('badd_done').onclick = ev_purchased;
+ebi('badd_rem').onclick = ev_remove;
+ebi('bdel_yes').onclick = ev_remove_ok;
+ebi('tsrch').onfocus = ev_tsrch_focus;
+ebi('tsrch').onblur = ev_tsrch_blur;
+ebi('tsrch').oninput = ev_tsch_input;
 
 var t = ecn('bcancel');
 for (var a=0; a<t.length; a++)
@@ -1082,15 +1292,8 @@ window.onresize = draw_th;
 
 // state init
 hide_viewctls();
-
-
-// let's call this a unit test
 if (load_day())
-{
-	//ev_row();
-	//goto_row('Ａ');
 	ev_added();
-}
 
 
 /*
