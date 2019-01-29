@@ -1840,7 +1840,7 @@ function ev_showmap(e) {
 	var that = this;
 	
 	lol(function() { lol(function() {
-		var sz = 9; // box size
+		var sz = 10; // box size
 		
 		var mainhall = that.textContent;
 		var subhalls = [];
@@ -1967,6 +1967,17 @@ function ev_showmap(e) {
 			ctx.fillText(rows[a], x, y);
 		}
 		
+		ctx.fillStyle = '#351';
+		ctx.font = '7px sans-serif';
+		for (var a = 0; a < booths.length; a++) {
+			var tday = booths[a];
+			var loc = tday['loc'];
+			var x = parseInt(tday['x'], 10)+(1);
+			var y = parseInt(tday['y'], 10)+(sz-2);
+			
+			ctx.fillText(loc.slice(-3).slice(0,2), x, y);
+		}
+		
 		//ctx.translate(-0.5, -0.5);
 		for (var b = 0; b < 2; b++) {
 			for (var a = 0, aa = booths.length; a < aa; a++) {
@@ -1985,7 +1996,7 @@ function ev_showmap(e) {
 				if (tsel && rcol[tsel['sc']])
 					ctx.fillStyle = rcol[tsel['sc']];
 				
-				ctx.beginPath();
+				/*ctx.beginPath();
 				if (loc.slice(-1) == 'a') {
 					ctx.moveTo(x, y+sz);
 					ctx.lineTo(x, y);
@@ -2007,6 +2018,25 @@ function ev_showmap(e) {
 					ctx.stroke();
 					ctx.stroke();
 					ctx.restore();
+				}*/
+				
+				if (fill) {
+					ctx.beginPath();
+					if (loc.slice(-1) == 'a') {
+						ctx.moveTo(x, y+sz);
+						ctx.lineTo(x, y);
+						ctx.lineTo(x+sz, y);
+					}
+					else {
+						ctx.moveTo(x+sz, y);
+						ctx.lineTo(x+sz, y+sz);
+						ctx.lineTo(x, y+sz);
+					}
+					ctx.closePath();
+					ctx.fill();
+				}
+				else {
+					ctx.strokeRect(x, y, sz, sz);
 				}
 			}
 			//ctx.translate(0.5, 0.5);
