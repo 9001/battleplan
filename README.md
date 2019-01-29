@@ -1,5 +1,4 @@
-battleplan
-
+# battleplan
 offline comiket shopping list webapp
 
 maintainers: see the tools folder for a separate readme
@@ -15,7 +14,7 @@ maintainers: see the tools folder for a separate readme
 * copy an entire tweet into the "paste here" field on the "Show all booths" page to automatically detect the first comiket booth and display it below -- try this example: 2日目(日曜日)東シ-81aにて頒布予定です。
 * note: you need to have bp set to the correct day first
 * export your shopping list to a json file which can be imported to a laptop or whatever (currently imports will overwrite the current shopping list, a merge feature will be added)
-* possible to do all this fully offline by saving the html file and json files to your phone (more on this later, requires any android phone, works without root) termux + python3 -m http.server for example
+* possible to do all this fully offline by saving the html file and json files to your phone
 
 # use it online
 * https://dootnode.org/ed/c95/bp/
