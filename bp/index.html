@@ -73,18 +73,8 @@ input {
 #topleft a.act {
 	background: linear-gradient(0deg,#333,#555 50%,#666 50%,#333);
 }
-#site {
-	padding-top: 2.5em;
-}
 a {
 	color: #0cf;
-}
-#tabh_h1 {
-	font-size: 1.5em;
-	text-align: center;
-	margin: 0;
-	padding: .2em 0;
-	font-weight: normal;
 }
 #tabh_row>* {
 	display: inline-block;
@@ -339,7 +329,7 @@ a#bdel_yes {
 	background: #333;
 	color: #fea;
 }
-#srchinf {
+#srchinfb {
 	color: #ccc;
 	background: #222;
 	padding: .5em .75em;
@@ -392,6 +382,17 @@ h3 {
 	padding: 0;
 	text-align: center;
 }
+#vsrchcfg {
+	text-align: center;
+}
+#vsrchcfg>* {
+	margin: .5em;
+}
+#vsrchcfg>div {
+	text-align: left;
+	line-height: 2.2em;
+	display: inline-block;
+}
 
 
 </style>
@@ -411,8 +412,6 @@ h3 {
 		<a href="#" id="tbmenu_day">📆</a>
 	</div>
 	<div id="topsub">
-		<h1 id="tabh_h1" class="viewctl"></h1>
-		
 		<div id="added_inf" class="viewctl">// info about added items</div>
 		<div id="added_jump" class="viewctl">// jumplist</div>
 		
@@ -431,8 +430,11 @@ h3 {
 		</div>
 		
 		<input id="tsrch" class="viewctl" value="stroemer" sample="stroemer" />
-		<div id="srchinf" class="viewctl">
-			<!-- will contain search results info -->
+		<div id="srchinfb" class="viewctl">
+			<span id="srchinf">
+				<!-- will contain search results info -->
+			</span>
+			<a href="#" id="bsrchcfg">(settings)</a>
 		</div>
 	</div>
 </div>
@@ -496,10 +498,12 @@ h3 {
 		<label for="selskipmin">min. score</label>
 		<input name="selskipmin" id="selskipmin" size="2" />
 	</div></div>
+	
 	<h3>navigate shopping list</h3>
 	<div class="grid2"><a
 		href="#" id="bgotoprevsel">previous</a><a
 		href="#" id="bgotonextsel">nextious</a></div>
+		
 	<h3>navigate booths</h3>
 	<div class="grid2"><a
 		href="#" id="bgotoprevday">previous</a><a
@@ -568,6 +572,28 @@ h3 {
 	<p>delete the database of another day below by clicking it</p>
 	<p>afterwards, another attempt will be made to save the day <span id="attempted_day">N</span> DB:</p>
 	<div id="purgelist"></div>
+</div>
+<div id="vsrchcfg" class="modal">
+	<a href="#" class="bcancel">《 Apply</a>
+	<div>
+		<input type="checkbox" id="csrch_regex">
+		<label for="csrch_regex">enable regex</label><br />
+		
+		<input type="checkbox" id="csrch_name_kan">
+		<label for="csrch_name_kan">search name (kanji)</label><br />
+		
+		<input type="checkbox" id="csrch_name_rom">
+		<label for="csrch_name_rom">search name (romaji)</label><br />
+		
+		<input type="checkbox" id="csrch_url_all">
+		<label for="csrch_url_all">search URLs: All</label><br />
+		
+		<input type="checkbox" id="csrch_url_pixiv">
+		<label for="csrch_url_pixiv">search URLs: Pixiv</label><br />
+		
+		<input type="checkbox" id="csrch_url_twitter">
+		<label for="csrch_url_twitter">search URLs: Twitter</label><br />
+	</div>
 </div>
 <div id="site">
 	<div id="vtab">
@@ -660,16 +686,16 @@ var sc_col = {
 	"9": "#fff"
 };
 var sc_fcol = {
-	"-": "#fff",
-	"1": "#fff",
-	"2": "#fff",
-	"3": "#fff",
-	"4": "#fff",
-	"5": "#fff",
-	"6": "#fff",
-	"7": "#fff",
-	"8": "#fff",
-	"9": "#000"
+	"-": "#351",
+	"1": "#666",
+	"2": "#666",
+	"3": "#666",
+	"4": "#666",
+	"5": "hsl(240,20%,40%)",
+	"6": "hsl(  0,40%,50%)",
+	"7": "hsl( 35,70%,50%)",
+	"8": "hsl( 90,70%,50%)",
+	"9": "#444"
 }
 
 var BOOTHS = [];
@@ -686,7 +712,9 @@ var pending_day_db = null;
 var nfail = 0;
 var sortkey1 = 'loc';
 var sortkey2 = 'kan';
+var active_tab = null;
 var should_restore_scroll = false;
+var shitty_canvas_performance = false;  // TODO: set true for iOS
 
 
 var ALLROWS = '';
@@ -741,10 +769,17 @@ if (addctx_exit_act == 'list')
 else
 	ebi('raddnext').checked = true;
 
-var selskipmin = localStorage.getItem('selskipmin') || '0';
-selskipmin = parseInt(selskipmin);
-ebi('selskipmin').value = selskipmin;
+function cfg_int(name, defval, max_digits) {
+	var tv = localStorage.getItem(name) || defval;
+	tv = parseInt(tv);
+	window[name] = tv;
+	var obj = ebi('selskipmin');
+	obj.value = tv;
+	obj.setAttribute('max_digits', max_digits);
+}
 
+var selskipmin;
+cfg_int('selskipmin', '0', 1);
 
 function ebi(elm_id) {
 	return document.getElementById(elm_id);
@@ -756,6 +791,7 @@ function ecn(classname) {
 
 function tab(tid) {
 	persist_scroll();
+	active_tab = tid;
 	var tabs = ebi('topleft').getElementsByTagName('a');
 	for (var a = 0; a < tabs.length; a++)
 		tabs[a].classList.remove('act');
@@ -907,7 +943,6 @@ function hide_modals(e) {
 		modals[a].style.display = 'none';
 	
 	show('vtab');
-	restore_scroll();
 }
 function hide_viewctls(e) {
 	if (e !== undefined)
@@ -1135,18 +1170,26 @@ function ev_dload() {
 
 var scroll_obj = null;
 var scroll_pos = [0,0];
+function get_scroll_offset() {
+	var o1 = document.getElementsByTagName('html')[0];
+	var o2 = document.body;
+	
+	var obj = o1.scrollTop > o2.scrollTop ? o1 : o2;
+	var ret = obj.scrollTop;
+	
+	if (ret > 0)
+		scroll_obj = obj;
+	
+	return ret;
+}
 function persist_scroll() {
 	var vtab = ebi('vtab');
 	if (vtab.style.display === 'none')
 		return;
 	
-	var idx = -1;
-	
-	if (ebi('added_jump').style.display === 'block')
-		idx = 0;
-	
-	if (ebi('tabh_row').style.display === 'block')
-		idx = 1
+	var idx =
+		active_tab == 'tbmenu_chk' ? 0 :
+		active_tab == 'tbmenu_row' ? 1 : -1;
 	
 	if (idx < 0)
 		return;
@@ -1156,23 +1199,12 @@ function persist_scroll() {
 		return;
 	}
 	
-	var o1 = document.getElementsByTagName('html')[0];
-	var o2 = document.body;
-	
-	var obj = o1.scrollTop > o2.scrollTop ? o1 : o2;
-	scroll_pos[idx] = obj.scrollTop;
-	
-	if (scroll_pos[idx] > 0)
-		scroll_obj = obj;
+	scroll_pos[idx] = get_scroll_offset();
 }
 function restore_scroll() {
-	var idx = -1;
-	
-	if (ebi('added_jump').style.display === 'block')
-		idx = 0;
-	
-	if (ebi('tabh_row').style.display === 'block')
-		idx = 1
+	var idx =
+		active_tab == 'tbmenu_chk' ? 0 :
+		active_tab == 'tbmenu_row' ? 1 : -1;
 	
 	if (idx < 0)
 		return;
@@ -1198,27 +1230,24 @@ function ev_cir(sortfunc, only_faved) {
 		BOOTHS = JSON.parse(JSON.stringify(dbday));
 		BOOTHS.sort(sortfunc);
 		draw_tbody(only_faved);
-		if (should_restore_scroll)
-			restore_scroll();
 	})});
 }
 function ev_cirkan() {
 	hide_viewctls();
-	ebi('tabh_h1').innerHTML = 'All circles';
-	show('tabh_h1');
 	render = function() {
 	};
 	ev_cir((a,b) => (a.kan.localeCompare(b.kan)), false);
 }
 function ev_cirrom() {
 	hide_viewctls();
-	ebi('tabh_h1').innerHTML = 'All circles';
-	show('tabh_h1');
 	render = function() {
 	};
 	ev_cir((a,b) => (a.rom.localeCompare(b.rom)), false);
 }
-function ev_row() {
+function ev_row(e) {
+	if (e !== undefined)
+		e.preventDefault();
+	
 	should_restore_scroll = ebi('tabh_row').style.display === 'none';
 	render = function() {
 		hide_modals();
@@ -1233,6 +1262,7 @@ function ev_row() {
 	render();
 }
 function ev_cirtype() {
+	//inf(['window cleared for performance reasons']);
 	hide_modals();
 	show('vcirtype');
 }
@@ -1339,6 +1369,11 @@ function draw_tbody(only_faved) {
 		rows[a].onmouseup = ev_mouseup;
 	}
 	draw_th();
+	
+	if (should_restore_scroll) {
+		should_restore_scroll = false;
+		restore_scroll();
+	}
 }
 function draw_th() {
 	var co = ebi('tabh_col');
@@ -1488,10 +1523,8 @@ function ev_added() {
 	should_restore_scroll = ebi('added_jump').style.display === 'none';
 	hide_viewctls();
 	tab('tbmenu_chk');
-	ebi('tabh_h1').innerHTML = 'Shopping list';
 	render = function() {
 		ev_cir(locsort, true);
-		show('tabh_h1');
 		show('added_inf');
 		show('added_jump');
 		
@@ -1533,9 +1566,7 @@ function ev_added() {
 			var row = loc.slice(2, 3);
 			if (last_row != row) {
 				if (todo > 0)
-					html.push(
-						'<a href="#c' + first_in_row + '">' + last_row + '</a>' +
-						todo + '<span>/' + have + '</span>');
+					html.push('<a href="#c' + first_in_row + '">' + last_row + '</a>' + todo);
 				have = 0;
 				todo = 0;
 				last_row = row;
@@ -1549,17 +1580,17 @@ function ev_added() {
 			
 			if (a == aa-1)  // :shrug:
 				if (todo > 0)
-					html.push(
-						'<a href="#c' + first_in_row + '">' + last_row + '</a>' +
-						todo + '/<span>' + have + '</span>');
+					html.push('<a href="#c' + first_in_row + '">' + last_row + '</a>' + todo);
 		}
 		ebi('added_jump').innerHTML = html.join(' ');
+		
+		var links = ebi('added_jump').getElementsByTagName('a');
+		for (var a = 0; a < links.length; a++)
+			links[a].onclick = ev_scrollto;
+		
 		ev_resize();
 	};
 	render();
-	
-	if (should_restore_scroll)
-		restore_scroll();
 }
 function ev_focus(e) {
 	var sample = this.getAttribute('sample');
@@ -1762,7 +1793,7 @@ function ev_srch(e) {
 	hide_modals();
 	hide_viewctls();
 	show('tsrch');
-	show('srchinf');
+	show('srchinfb');
 	tab('tbmenu_srch');
 	ebi('srchinf').innerHTML = 'Search for a circle above';
 	
@@ -2012,6 +2043,9 @@ var ctxr = (window.devicePixelRatio || 1) / (
 	ctx.oBackingStorePixelRatio ||
 	ctx.BackingStorePixelRatio || 1);
 
+if (ctxr < 1.9)
+	ctxr *= 2;
+
 function show_map() {
 	tab('tbmenu_map');
 	inf(['drawing map']);
@@ -2134,17 +2168,32 @@ function show_map() {
 		
 		ctx.fillStyle = '#351';
 		ctx.font = '7px sans-serif';
-		for (var a = 0; a < booths.length; a++) {
-			var tday = booths[a];
-			var loc = tday['loc'];
-			var x = parseInt(tday['x'], 10)+(1);
-			var y = parseInt(tday['y'], 10)+(sz-2);
-			
-			ctx.fillText(loc.slice(-3).slice(0,2), x, y);
+		if (!shitty_canvas_performance) {
+			var last_loc = null;
+			for (var a = 0; a < booths.length; a++) {
+				var tday = booths[a];
+				var loc = tday['loc'];
+				var x = parseInt(tday['x'], 10)+(1);
+				var y = parseInt(tday['y'], 10)+(sz-2);
+				
+				var tsel = get_tsel(loc);
+				var scored = tsel && tsel['sc'] !== '-';
+				
+				if (scored)
+					continue;
+				
+				loc = loc.slice(-3).slice(0,2);
+				if (loc == last_loc && !scored)
+					continue;
+				
+				ctx.fillText(loc, x, y);
+				last_loc = loc;
+			}
 		}
 		
 		//ctx.translate(-0.5, -0.5);
-		for (var b = 0; b < 2; b++) {
+		var n_renders = 2;
+		for (var b = 0; b < n_renders; b++) {
 			for (var a = 0, aa = booths.length; a < aa; a++) {
 				var tday = booths[a];
 				var loc = tday['loc'];
@@ -2188,17 +2237,40 @@ function show_map() {
 					ctx.restore();
 				}*/
 				
+				var triangles = true;
+				
 				if (fill) {
 					ctx.beginPath();
-					if (loc.slice(-1) == 'a') {
-						ctx.moveTo(x, y+sz);
-						ctx.lineTo(x, y);
-						ctx.lineTo(x+sz, y);
+					if (triangles) {
+						if (loc.slice(-1) == 'a') {
+							ctx.moveTo(x, y+sz);
+							ctx.lineTo(x, y);
+							ctx.lineTo(x+sz, y);
+						}
+						else {
+							ctx.moveTo(x+sz, y);
+							ctx.lineTo(x+sz, y+sz);
+							ctx.lineTo(x, y+sz);
+						}
 					}
 					else {
-						ctx.moveTo(x+sz, y);
-						ctx.lineTo(x+sz, y+sz);
-						ctx.lineTo(x, y+sz);
+						// TODO:
+						//   need the booth order csv field
+						//   in order to fill the correct side
+						
+						var fill_top = loc.slice(-1) == 'a';
+						if (fill_top) {
+							ctx.moveTo(x,    y);
+							ctx.lineTo(x+sz, y);
+							ctx.lineTo(x+sz, y+sz/2);
+							ctx.lineTo(x,    y+sz/2);
+						}
+						else if (fill_bottom) {
+							ctx.moveTo(x,    y+sz/2);
+							ctx.lineTo(x+sz, y+sz/2);
+							ctx.lineTo(x+sz, y+sz);
+							ctx.lineTo(x,    y+sz);
+						}
 					}
 					ctx.closePath();
 					ctx.fill();
@@ -2206,9 +2278,46 @@ function show_map() {
 				else {
 					ctx.strokeRect(x, y, sz, sz);
 				}
+				
+				if (!shitty_canvas_performance && b == n_renders - 1) {
+					ctx.fillStyle = (!tsel || tsel['done']) ?
+						'#351' : sc_fcol[tsel['sc']];
+					
+					ctx.save();
+					ctx.clip();
+					var ntab = loc.slice(-3).slice(0,2);
+					ctx.fillText(ntab, x + 1, y + (sz-2));
+					ctx.restore();
+				}
 			}
 			//ctx.translate(0.5, 0.5);
 		}
+		
+		if (shitty_canvas_performance) {
+			var last_loc = null;
+			for (var a = 0; a < booths.length; a++) {
+				var tday = booths[a];
+				var loc = tday['loc'];
+				var x = parseInt(tday['x'], 10)+(1);
+				var y = parseInt(tday['y'], 10)+(sz-2);
+				
+				var tsel = get_tsel(loc);
+				var scored = tsel && tsel['sc'] !== '-';
+				
+				loc = loc.slice(-3).slice(0,2);
+				if (loc == last_loc && !scored)
+					continue;
+				
+				if (scored) 
+					ctx.fillStyle = sc_fcol[tsel['sc']];
+				else
+					ctx.fillStyle = '#351';
+				
+				ctx.fillText(loc, x, y);
+				last_loc = loc;
+			}
+		}
+		
 		hide_modals();
 		show('vmap');
 	})});
@@ -2358,10 +2467,13 @@ function open_addctx(loc) {
 	show_excl('addctx');
 }
 
-function ev_selskipmin_edit(e) {
+function ev_cfg_int_edit(e) {
 	if (e !== undefined)
 		e.preventDefault();
 
+}
+
+function ev_selskipmin_edit(e) {
 	selskipmin = ebi('selskipmin').value;
 	if (selskipmin.length > 1)
 		selskipmin = selskipmin.slice(-1);
@@ -2445,7 +2557,30 @@ function gen_navkeys() {
 	}
 	gen_navkeytxt('bgotonextsel', sloc);
 }
+function ev_scrollto(e) {
+	var href = this.getAttribute('href').slice(1);
+	var tgt = ebi(href);
+	//var cs = getComputedStyle(tgt);
+	var pad = parseInt(ebi('site').style.paddingTop, 10);
+	var ofs = parseInt(tgt.offsetTop, 10) + pad;
+	
+	if (scroll_obj === null)
+		get_scroll_offset();
+	
+	if (scroll_obj !== null) {
+		if (e !== undefined)
+			e.preventDefault();
+		
+		scroll_obj.scrollTop = ofs - pad;
+	}
+}
+function ev_srchcfg(e) {
+	if (e !== undefined)
+		e.preventDefault();
 
+	hide_modals();
+	show_excl('vsrchcfg');
+}
 
 
 ebi('bmenu').onclick = show_menu;
@@ -2501,6 +2636,7 @@ ebi('bgotoprevsel').onclick = ev_boothnav;
 ebi('bgotonextsel').onclick = ev_boothnav;
 ebi('bgotoprevday').onclick = ev_boothnav;
 ebi('bgotonextday').onclick = ev_boothnav;
+ebi('bsrchcfg').onclick = ev_srchcfg;
 
 
 var t = ecn('bcancel');
