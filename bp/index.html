@@ -260,6 +260,14 @@ td:nth-child(2) {
 	border: none;
 	outline: none;
 }
+#vimport>div {
+	margin: 1em 0;
+	text-align: center;
+}
+#vimport>div>div {
+	display: inline-block;
+	text-align: left;
+}
 .toast {
 	position: fixed;
 	bottom: .5em;
@@ -275,7 +283,7 @@ td:nth-child(2) {
 .sc1 td, .sc2 td, .sc3 td, .sc4 td { color: #444; }
 .sc5 td, .modal a.sc5 { background: hsl(240,20%,20%); color: #888 }
 .sc6 td, .modal a.sc6 { background: hsl(  0,40%,30%); }
-.sc7 td, .modal a.sc7 { background: hsl( 30,70%,30%); color: #fff }
+.sc7 td, .modal a.sc7 { background: hsl( 35,70%,30%); color: #fff }
 .sc8 td, .modal a.sc8 { background: hsl( 90,70%,30%); color: #fff }
 .sc9 td, .modal a.sc9 { background: #fff; color: #000 }
 x.sc8 td { background: hsl(270,40%,40%); color: #fff }
@@ -285,7 +293,7 @@ x.sc9 td { background: hsl( 90,70%,30%); color: #fff }
 	box-shadow: 0 0 .2em #000 inset;
 }
 .notyet {
-	color: #c55 !important;
+	color: #f76 !important;
 	text-decoration: line-through !important;
 	opacity: .5;
 }
@@ -396,14 +404,24 @@ a#bdel_yes {
 <div id="vexport" class="modal">
 	<a href="#" class="bcancel">《 Cancel</a> <!-- ❮⫷ -->
 	<p>select all the text below and copy it to some place safe, or...</p>
-	<a href="#" id="export_download">download export file</a>
+	<a href="#" id="export_download">💾 download export file</a>
 	<textarea id="export_text" readonly></textarea>
 </div>
 <div id="vimport" class="modal">
 	<a href="#" class="bcancel">《 Cancel</a> <!-- ❮⫷ -->
-	<p>paste your backup below and hit the text import button, or drop a backup file on the browser below</p>
+	<div><div>
+		<input type="radio" name="rimport" id="rimport_drop" name="rimport_drop">
+		<label for="rimport_drop">delete existing list</label><br />
+		
+		<input type="radio" name="rimport" id="rimport_repl" name="rimport_repl" disabled>
+		<label for="rimport_repl" class="notyet">merge; prefer imported</label><br />
+		
+		<input type="radio" name="rimport" id="rimport_curr" name="rimport_curr" disabled>
+		<label for="rimport_curr" class="notyet">merge; prefer current</label>
+	</div></div>
+	<p>paste your backup below and hit the text import button, or drop a backup file in the browser below</p>
 	<input id="import_file" type="file" />
-	<a href="#" id="bimport_text">text import</a>
+	<a href="#" id="bimport_text">📃 text import</a>
 	<textarea id="timport_text"></textarea>
 </div>
 <div id="vdelc" class="modal">
@@ -755,7 +773,7 @@ function load_day(day) {
 	}
 	
 	load_sel();
-	hide_modals();
+	ev_added();	
 	return true;
 }
 function load_sel() {
@@ -1110,7 +1128,7 @@ function ev_rowclick(e, tgt) {
 	ebi('addctxlinks').innerHTML = html.join('\n');
 	
 	show('addctx');
-	ebi('trow_out').value = inf['loc'];
+	ebi('trow_out').value = loc;
 }
 function set_score(loc, score) {
 	for (var a = 0, aa = dbsel.length; a < aa; a++)
@@ -1209,7 +1227,6 @@ function import_text(txt) {
 					k, JSON.stringify(iv[k]));
 		};
 		load_day(active_day);
-		ev_added();
 	})});
 }
 function ev_import_file(e) {
@@ -1533,10 +1550,10 @@ window.onresize = draw_th;
 
 // state init
 hide_viewctls();
-if (load_day())
-	ev_added();
+load_day();
 
 //ev_row();
+//ev_import();
 
 
 /*
