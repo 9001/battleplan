@@ -124,7 +124,7 @@ x#tabh_row a:nth-child(3) {
 	border-width: 1px 0;
 }
 .modal {
-	background: #024;
+	background: #222; 232;
 	position: fixed;
 	overflow: scroll;
 	top: 0;
@@ -132,17 +132,18 @@ x#tabh_row a:nth-child(3) {
 	right: 0;
 	width: 100%;
 	height: 100%;
-	padding: 0 0 0 0;
+	padding: 0;
 }
 .modal a {
 	color: #fff;
+	background: #333; 343;
 	display: block;
 	text-align: center;
 	text-decoration: none;
 	padding: .7em 0;
 }
 .modal a:hover {
-	background: #246;
+	background: #444; 454;
 }
 #vdl {
 	position: fixed;
@@ -152,7 +153,6 @@ x#tabh_row a:nth-child(3) {
 	bottom: 0;
 	width: 100%;
 	height: 100%;
-	background: #024;
 	color: #fff;
 	font-size: 1.5em;
 	padding: 2em 0;
@@ -167,6 +167,54 @@ td:nth-child(2) {
 #tb tr:hover td {
 	background: #333;
 }
+#ladd_kan {
+	display: block;
+	font-size: 1.5em;
+	padding: .5em .2em;
+}
+#ladd_rom {
+	background: #111; 120;
+	padding: .2em .3em;
+}
+#ladd_loc {
+	color: #fff;
+	background: #333; 453;
+	padding: .2em .3em;
+}
+#addctx>a {
+	display: block;
+	margin: .5em;
+}
+#addctxinf {
+	text-align: center;
+}
+#addctxscore {
+	text-align: center;
+	padding-top: .5em;
+}
+#addctxscore>a {
+	display: inline-block;
+	padding: .2em .4em;
+	font-size: 2em;
+	margin: .2em;
+}
+.toast {
+	position: fixed;
+	bottom: .5em;
+	right: .6em;
+	background: #333;
+	color: #fff;
+	border-radius: .25em;
+	padding: .5em .6em;
+}
+.nudged {
+	background: #999;
+}
+.sc5 td { background: hsl(240,70%,25%) }
+.sc6 td { background: hsl(280,70%,25%) }
+.sc7 td { background: hsl(0,50%,30%) }
+.sc8 td { background: hsl(30,70%,30%) }
+.sc9 td { background: hsl(90,70%,30%) }
 
 
 </style>
@@ -192,12 +240,12 @@ td:nth-child(2) {
 	</div>
 </div>
 <div id="vmenu" class="modal">
-	<a href="#" id="bmenu_cancel">◁ Cancel</a>
+	<a href="#" id="bmenu_cancel">《 Cancel</a>
 	<a href="#" id="bmenu_day">📆 Change day (now: #)</a>
 	<a href="#" id="bmenu_chk">📌 View added booths</a>
 	<a href="#" id="bmenu_srch">🔍 Search for circle</a>
 	<a href="#" id="bmenu_cirkan">⭕語 View all circles (sort: kanji)</a>
-	<a href="#" id="bmenu_cirrom">⭕🔡 View all circles (sort: romaji)</a>
+	<a href="#" id="bmenu_cirrom">⭕a View all circles (sort: romaji)</a>
 	<a href="#" id="bmenu_row">⽥ View all booths (sort: row)</a>
 	<a href="#" id="bmenu_import">📂 Import your list</a>
 	<a href="#" id="bmenu_export">💾 Export your list</a>
@@ -218,12 +266,24 @@ td:nth-child(2) {
 <div id="vrowlist" class="modal">
 	<!-- will be populated with list of rows -->
 </div>
+<div id="addctx" class="modal">
+	<a href="#" id="badd_exit">《 cancel</a> <!-- ❮⫷ -->
+	<a href="#" id="badd_urls">🔗 manage URLs</a>
+	<a href="#" id="badd_rem">✘ delete from list</a>
+	<div id="addctxinf">
+		<span id="ladd_kan">// kanji</span>
+		<span id="ladd_loc">// location</span>
+		<span id="ladd_rom">// romaji</span>
+	</div>
+	<div id="addctxscore"></div>
+	<div id="addctxlink"></div>
+</div>
 <div id="site">
 	<div id="vtab">
 		<table>
 			<thead>
 				<tr>
-					<td>#</td> <!-- rating -->
+					<td>#</td> <!-- score -->
 					<td>loc</td> <!-- day/row/col -->
 					<td>kanji</td>
 					<td>romaji</td>
@@ -271,6 +331,39 @@ function ebi(elm_id) {
 function ecn(classname) {
 	return document.getElementsByClassName(classname);
 }
+function esc(txt) {
+	return txt.replace(/[&#<>]/g, function(c) {
+		return {
+			'&': '&amp;',
+			'"': '&quot;',
+			'<': '&lt;',
+			'>': '&gt;'
+		}[c];
+	});
+}
+function hidetoast(div) {
+	if (div === undefined)
+		div = this;
+	
+	if (div.target)
+		div = div.target;
+	
+	if (div.parentNode !== null)
+		div.parentNode.removeChild(div);
+}
+function nudgetoast(div) {
+	div.classList.remove('nudged');
+}
+function toast(html) {
+	var div = document.createElement('div');
+	div.innerHTML = html;
+	div.onclick = hidetoast;
+	div.classList.add('toast');
+	div.classList.add('nudged');
+	document.body.appendChild(div);
+	setTimeout(function() { nudgetoast(div); }, 100);
+	setTimeout(function() { hidetoast(div); }, 3000);
+}
 
 
 var html = [];
@@ -281,10 +374,22 @@ for (var a = 0; a < ROWS.length; a++) {
 	html.push('<hr />');
 }
 ebi('vrowlist').innerHTML = html.join('\n');
+
 var links = ebi('vrowlist').getElementsByTagName('a');
 for (var a = 0, aa = links.length; a<aa; a++)
 	links[a].onclick = ev_jumprow;
 
+var html = [];
+for (var a = 1; a < 10; a++)
+{
+	html.push('<a href="#" id="badd_r' + a + '">' + a + '</a>');
+	if (a % 3 == 0)
+		html.push('<br />');
+}
+ebi('addctxscore').innerHTML = html.join('');
+var links = ebi('addctxscore').getElementsByTagName('a');
+for (var a = 0, aa = links.length; a<aa; a++)
+	links[a].onclick = ev_score;
 
 function hide_modals(e) {
 	if (e !== undefined)
@@ -437,7 +542,7 @@ function ev_dload() {
 	hide_modals();
 	show('vdl');
 }
-function ev_cir(sortfunc) {
+function ev_cir(sortfunc, only_faved) {
 	hide_viewctls();
 	inf(['loading']);
 	lol(function() { lol(function() {
@@ -446,16 +551,31 @@ function ev_cir(sortfunc) {
 		dbd.sort(sortfunc);
 		for (var a = 0; a < dbd.length; a++)
 		{
-			html.push('<tr><td>?</td><td>' + dbd[a].loc + '</td><td>' + dbd[a].kan + '</td><td>' + dbd[a].rom + '</td></tr>');
+			var score = -1;
+			for (var b = 0, bb = dbsel.length; b<bb; b++)
+				if (dbsel[b].loc == dbd[a].loc)
+				{
+					score = dbsel[b].sc;
+					break;
+				}
+			
+			if (only_faved && score == -1)
+				continue;
+
+			html.push('<tr class="sc' + score +
+				'"><td>' + score +
+				'</td><td>' + dbd[a].loc +
+				'</td><td>' + esc(dbd[a].kan) +
+				'</td><td>' + esc(dbd[a].rom) + '</td></tr>');
 		}
 		ebi('tb').innerHTML = html.join('\n');
 	})});
 }
 function ev_cirkan() {
-	ev_cir((a,b) => (a.kan.localeCompare(b.kan)));
+	ev_cir((a,b) => (a.kan.localeCompare(b.kan)), false);
 }
 function ev_cirrom() {
-	ev_cir((a,b) => (a.rom.localeCompare(b.rom)));
+	ev_cir((a,b) => (a.rom.localeCompare(b.rom)), false);
 }
 function ev_row() {
 	hide_modals();
@@ -463,6 +583,7 @@ function ev_row() {
 	show('tabh_row');
 	show('tabh_col');
 	show('tabh_txt');
+	goto_row(active_row);
 }
 function ev_srch() {
 	hide_modals();
@@ -526,7 +647,7 @@ function goto_row(row) {
 	for (var a = 0, aa = BOOTHS.length; a<aa; a++)
 	{
 		var ypos = BOOTHS[a]['loc'].slice(3);
-		html.push('<tr id="c' + ypos + '"><td>?</td><td>' + BOOTHS[a]['loc'] + '</td><td>' + BOOTHS[a]['kan'] + '</td><td>' + BOOTHS[a]['rom'] + '</td></tr>');
+		html.push('<tr id="c' + ypos + '"><td>?</td><td>' + BOOTHS[a]['loc'] + '</td><td>' + esc(BOOTHS[a]['kan']) + '</td><td>' + esc(BOOTHS[a]['rom']) + '</td></tr>');
 	}
 	
 	if (html.length == 0)
@@ -534,6 +655,10 @@ function goto_row(row) {
 	
 	ebi('tb').innerHTML = html.join('\n');
 	ebi('site').style.paddingTop = '8em';  // ¯\_(ツ)_/¯
+	
+	var rows = ebi('tb').getElementsByTagName('tr');
+	for (var a = 0, aa = rows.length; a<aa; a++)
+		rows[a].onclick = ev_rowclick;
 	
 	draw_tabh();
 }
@@ -580,6 +705,52 @@ function ev_steprow() {
 	
 	goto_row(this.innerHTML);
 }
+function ev_rowclick(e) {
+	if (e !== undefined)
+		e.preventDefault();
+
+	var tds = this.getElementsByTagName('td');
+	var booth = tds[1].innerHTML;
+	var kanji = tds[2].innerHTML;
+	var romaji = tds[3].innerHTML;
+	
+	ebi('ladd_kan').textContent = kanji;
+	ebi('ladd_rom').textContent = romaji;
+	ebi('ladd_loc').textContent = booth;
+	show('addctx');
+}
+function set_score(loc, score) {
+	for (var a = 0, aa = dbsel.length; a<aa; a++)
+		if (dbsel[a]['loc'] == loc)
+		{
+			dbsel[a]['sc'] = score;
+			save_sel();
+			return true;
+		}
+	
+	dbsel.push({
+		'loc': loc,
+		'sc': score
+	});
+	save_sel();
+}
+function ev_score(e) {
+	if (e !== undefined)
+		e.preventDefault();
+
+	var loc = ebi('ladd_loc').textContent;
+	var score = this.textContent;
+	
+	set_score(loc, score);
+	hide_modals();
+	toast('[' + score + ']<br />' +
+		loc + '<br />' +
+		ebi('ladd_kan') + '<br />' +
+		ebi('ladd_rom'));
+}
+function ev_added() {
+	ev_cir((a,b) => (a.loc.localeCompare(b.loc)), true);
+}
 
 ebi('bmenu').onclick = show_menu;
 ebi('bmenu_cancel').onclick = hide_modals;
@@ -597,6 +768,8 @@ ebi('bmenu_srchname').onclick = ev_srchname;
 ebi('brow_list').onclick = ev_listrows;
 ebi('brow_prev').onclick = ev_steprow;
 ebi('brow_next').onclick = ev_steprow;
+ebi('badd_exit').onclick = hide_modals;
+ebi('bmenu_chk').onclick = ev_added;
 window.onresize = draw_tabh;
 
 
