@@ -363,6 +363,16 @@ canvas {
 #bqnote {
 	margin: 1em;
 }
+.grid2 a {
+	width: 48%;
+	margin: 1%;
+	display: inline-block;
+}
+h3 {
+	margin: 1em 0 0 0;
+	padding: 0;
+	text-align: center;
+}
 
 
 </style>
@@ -454,18 +464,23 @@ canvas {
 		<a href="#" id="bqnote">Add URL/note</a>
 	</div>
 	<div class="center"><div id="addctx_exit_act">
-		<input type="radio" name="addctx_exit_act" id="raddlist" name="raddlist">
+		<input type="radio" name="addctx_exit_act" id="raddlist">
 		<label for="raddlist">return to list</label><br />
 		
-		<input type="radio" name="addctx_exit_act" id="raddnext" name="raddnext">
-		<label for="raddnext">go to next booth</label>
+		<input type="radio" name="addctx_exit_act" id="raddnext">
+		<label for="raddnext">go to next booth</label><br />
+		
+		<label for="selskipmin">min. score</label>
+		<input name="selskipmin" id="selskipmin" size="2" />
 	</div></div>
-	<!-- div class="grid2"><a
-		href="#" id="bgotoprevsel">previous<a><a
-		href="#" id="bgotonextsel">nextious</a></div>
+	<h3>navigate shopping list</h3>
 	<div class="grid2"><a
-		href="#" id="bgotoprevday">previous<a><a
-		href="#" id="bgotonextday">nextious</a></div -->
+		href="#" id="bgotoprevsel">previous</a><a
+		href="#" id="bgotonextsel">nextious</a></div>
+	<h3>navigate booths</h3>
+	<div class="grid2"><a
+		href="#" id="bgotoprevday">previous</a><a
+		href="#" id="bgotonextday">nextious</a></div>
 </div>
 <div id="vexport" class="modal">
 	<a href="#" class="bcancel">《 Cancel</a> <!-- ❮⫷ -->
@@ -476,13 +491,13 @@ canvas {
 <div id="vimport" class="modal">
 	<a href="#" class="bcancel">《 Cancel</a> <!-- ❮⫷ -->
 	<div class="center"><div>
-		<input type="radio" name="rimport" id="rimport_drop" name="rimport_drop" checked>
+		<input type="radio" name="rimport" id="rimport_drop" checked>
 		<label for="rimport_drop">delete existing list</label><br />
 		
-		<input type="radio" name="rimport" id="rimport_repl" name="rimport_repl" disabled>
+		<input type="radio" name="rimport" id="rimport_repl" disabled>
 		<label for="rimport_repl" class="notyet">merge; prefer imported</label><br />
 		
-		<input type="radio" name="rimport" id="rimport_curr" name="rimport_curr" disabled>
+		<input type="radio" name="rimport" id="rimport_curr" disabled>
 		<label for="rimport_curr" class="notyet">merge; prefer current</label>
 	</div></div>
 	<p>paste your backup below and hit the text import button, or drop a backup file in the browser below</p>
@@ -609,6 +624,31 @@ var ROWS = [
 	'あくけこさしすせそたちつてとな',
 	'いうえおかき'
 ];
+var sc_col = {
+	"-": "#000",
+	"1": "#444",
+	"2": "#444",
+	"3": "#444",
+	"4": "#444",
+	"5": "hsl(240,20%,20%)",
+	"6": "hsl(  0,40%,30%)",
+	"7": "hsl( 35,70%,30%)",
+	"8": "hsl( 90,70%,30%)",
+	"9": "#fff"
+};
+var sc_fcol = {
+	"-": "#fff",
+	"1": "#fff",
+	"2": "#fff",
+	"3": "#fff",
+	"4": "#fff",
+	"5": "#fff",
+	"6": "#fff",
+	"7": "#fff",
+	"8": "#fff",
+	"9": "#000"
+}
+
 var BOOTHS = [];
 var MAXNCOL = 0;
 var active_day = -1;
@@ -676,6 +716,10 @@ if (addctx_exit_act == 'list')
 	ebi('raddlist').checked = true;
 else
 	ebi('raddnext').checked = true;
+
+var selskipmin = localStorage.getItem('selskipmin') || '0';
+selskipmin = parseInt(selskipmin);
+ebi('selskipmin').value = selskipmin;
 
 
 function ebi(elm_id) {
@@ -1300,6 +1344,9 @@ function tb_fields(tgt) {
 	};
 }
 function get_ibooth(loc) {
+	if (loc === undefined)
+		loc = ebi('ladd_loc').textContent;
+	
 	for (var a = 0, aa = BOOTHS.length; a < aa; a++)
 		if (loc == BOOTHS[a]['loc'])
 			return a;
@@ -1314,6 +1361,9 @@ function get_tbooth(loc) {
 	return BOOTHS[idx];
 }
 function get_iday(loc) {
+	if (loc === undefined)
+		loc = ebi('ladd_loc').textContent;
+	
 	for (var a = 0, aa = dbday.length; a < aa; a++)
 		if (loc == dbday[a]['loc'])
 			return a;
@@ -1545,13 +1595,7 @@ function ev_import_text(e) {
 }
 function ev_purchased(e) {
 	var loc = ebi('ladd_loc').textContent;
-	var entry = null;
-	for (var a = 0, aa = dbsel.length; a<aa; a++)
-		if (loc == dbsel[a]['loc'])
-		{
-			entry = dbsel[a];
-			break;
-		}
+	var entry = get_tsel(loc, true);
 	
 	var desc = ebi('ladd_loc').textContent + '<br />' +
 		ebi('ladd_kan').textContent + '<br />' +
@@ -1905,18 +1949,6 @@ function show_map() {
 		rows = rows.split('');
 		//alert('showing map for ' + mainhall + ' (' + subhalls.join(',') + '); rows ' + rows.join(','));
 		
-		var rcol = {
-			"1": "444",
-			"2": "444",
-			"3": "444",
-			"4": "444",
-			"5": "hsl(240,20%,20%)",
-			"6": "hsl(  0,40%,30%)",
-			"7": "hsl( 35,70%,30%)",
-			"8": "hsl( 90,70%,30%)",
-			"9": "#fff"
-		};
-		
 		var minx =  99999;
 		var maxx = -99999;
 		var miny =  99999;
@@ -2035,8 +2067,8 @@ function show_map() {
 				var y = parseInt(tday['y'], 10);
 				
 				ctx.fillStyle = '#000';
-				if (tsel && rcol[tsel['sc']])
-					ctx.fillStyle = rcol[tsel['sc']];
+				if (tsel && sc_col[tsel['sc']])
+					ctx.fillStyle = sc_col[tsel['sc']];
 
 				if (tsel && tsel['done'])
 					ctx.fillStyle = '#231';
@@ -2228,8 +2260,99 @@ function open_addctx(loc) {
 	
 	ebi('addctxlinks').innerHTML = html.join('\n');
 	ebi('trow_out').value = loc;
+	
+	gen_navkeys();
 	show_excl('addctx');
 }
+
+function ev_selskipmin_edit(e) {
+	if (e !== undefined)
+		e.preventDefault();
+
+	selskipmin = ebi('selskipmin').value;
+	if (selskipmin.length > 1)
+		selskipmin = selskipmin.slice(-1);
+	
+	selskipmin = parseInt(selskipmin);
+	if (String(selskipmin).length != 1)
+		selskipmin = 0;
+	
+	ebi('selskipmin').value = selskipmin;
+	localStorage.setItem('selskipmin', selskipmin);
+	
+	gen_navkeys();
+}
+
+function ev_boothnav(e) {
+	if (e !== undefined)
+		e.preventDefault();
+
+	var tgt = this.getAttribute('tgt');
+	if (tgt == '-')
+		return alert('cannot navigate in this direction; no more booths matching criteria');
+	
+	return open_addctx(tgt);
+	
+	var bid = this.getAttribute('id').indexOf('bgotoprev') == 0 ?
+		-1 : 1;
+	
+	var atlas = bid.slice(-3) == 'sel' ?
+		BOOTHS : dbday;
+}
+
+function gen_navkeytxt(bid, loc) {
+	var obj = ebi(bid);
+	if (loc == null) {
+		obj.textContent = 'EOF';
+		obj.setAttribute('tgt', '-');
+		return;
+	}
+	
+	var tday = get_tday(loc);
+	var tsel = get_tsel(loc);
+	obj.setAttribute('tgt', tday['loc']);
+	ebi(bid).innerHTML =
+		tday['loc'] + '<br />' +
+		(tsel == null ? '-' : tsel['sc']) + '<br />' +
+		esc(tday['kan']) + '<br />' +
+		esc(tday['rom']);
+	
+	var cidx = tsel == null ? '-' : tsel['sc'];
+	obj.style.background = sc_col[cidx];
+	obj.style.color = sc_fcol[cidx];
+}
+function gen_navkeys() {
+	var iday = get_iday();
+	var iboo = get_ibooth();
+	
+	gen_navkeytxt('bgotoprevday', iday > 0 ? dbday[iday-1]['loc'] : null);
+	gen_navkeytxt('bgotonextday', iday + 1 < dbday.length ? dbday[iday+1]['loc'] : null);
+	
+	var sloc = null;
+	var i = iboo - 1;
+	while (i > 0) {
+		var tsel = get_tsel(BOOTHS[i]['loc']);
+		if (selskipmin == 0 || (tsel && tsel['sc'] >= selskipmin)) {
+			sloc = BOOTHS[i]['loc'];
+			break;
+		}
+		i--;
+	}
+	gen_navkeytxt('bgotoprevsel', sloc);
+	
+	var sloc = null;
+	var i = iboo + 1;
+	while (i < BOOTHS.length) {
+		var tsel = get_tsel(BOOTHS[i]['loc']);
+		if (selskipmin == 0 || (tsel && tsel['sc'] >= selskipmin)) {
+			sloc = BOOTHS[i]['loc'];
+			break;
+		}
+		i++;
+	}
+	gen_navkeytxt('bgotonextsel', sloc);
+}
+
 
 
 ebi('bmenu').onclick = show_menu;
@@ -2280,6 +2403,11 @@ ebi('bqnote').onclick = ev_add_qnote;
 ebi('tqnote').onfocus = ev_focus;
 ebi('tqnote').onblur = ev_blur;
 ebi('dbg').onclick = ev_dbg;
+ebi('selskipmin').oninput = ev_selskipmin_edit;
+ebi('bgotoprevsel').onclick = ev_boothnav;
+ebi('bgotonextsel').onclick = ev_boothnav;
+ebi('bgotoprevday').onclick = ev_boothnav;
+ebi('bgotonextday').onclick = ev_boothnav;
 
 
 var t = ecn('bcancel');
