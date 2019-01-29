@@ -132,7 +132,7 @@ x#tabh_row a:nth-child(3) {
 	right: 0;
 	width: 100%;
 	height: 100%;
-	padding: 0 0 2em 0;
+	padding: 0 0 0 0;
 }
 .modal a {
 	color: #fff;
@@ -164,6 +164,9 @@ td {
 td:nth-child(2) {
 	white-space: nowrap;
 }
+#tb tr:hover td {
+	background: #333;
+}
 
 
 </style>
@@ -183,39 +186,39 @@ td:nth-child(2) {
 		</div>
 		<div id="tabh_txt" class="viewctl"
 			><input id="trow_in" value="paste here"
-			><input id="trow_out" value="active loc"
+			><input id="trow_out" value="parser out"
 			></input>
 		</div>
 	</div>
 </div>
+<div id="vmenu" class="modal">
+	<a href="#" id="bmenu_cancel">◁ Cancel</a>
+	<a href="#" id="bmenu_day">📆 Change day (now: #)</a>
+	<a href="#" id="bmenu_chk">📌 View added booths</a>
+	<a href="#" id="bmenu_srch">🔍 Search for circle</a>
+	<a href="#" id="bmenu_cirkan">⭕語 View all circles (sort: kanji)</a>
+	<a href="#" id="bmenu_cirrom">⭕🔡 View all circles (sort: romaji)</a>
+	<a href="#" id="bmenu_row">⽥ View all booths (sort: row)</a>
+	<a href="#" id="bmenu_import">📂 Import your list</a>
+	<a href="#" id="bmenu_export">💾 Export your list</a>
+	<a href="#" id="bmenu_dload">📲 Download DB: Day #</a>
+</div>
+<div id="vday" class="modal">
+	<a href="#" id="bmenu_day1">土 / 1</a>
+	<a href="#" id="bmenu_day2">日 / 2</a>
+	<a href="#" id="bmenu_day3">月 / 3</a>
+</div>
+<div id="vsrchtype" class="modal">
+	<a href="#" id="bmenu_srchrow">Search by row/column</a>
+	<a href="#" id="bmenu_srchname">Search by circle name</a>
+</div>
+<div id="vdl" class="modal">
+	Downloading day # ...
+</div>
+<div id="vrowlist" class="modal">
+	<!-- will be populated with list of rows -->
+</div>
 <div id="site">
-	<div id="vmenu" class="modal">
-		<a href="#" id="bmenu_cancel">◁ Cancel</a>
-		<a href="#" id="bmenu_day">📆 Change day (now: #)</a>
-		<a href="#" id="bmenu_chk">📌 View added booths</a>
-		<a href="#" id="bmenu_srch">🔍 Search for circle</a>
-		<a href="#" id="bmenu_cirkan">⭕語 View all circles (sort: kanji)</a>
-		<a href="#" id="bmenu_cirrom">⭕🔡 View all circles (sort: romaji)</a>
-		<a href="#" id="bmenu_row">⽥ View all booths (sort: row)</a>
-		<a href="#" id="bmenu_import">📂 Import your list</a>
-		<a href="#" id="bmenu_export">💾 Export your list</a>
-		<a href="#" id="bmenu_dload">📲 Download DB: Day #</a>
-	</div>
-	<div id="vday" class="modal">
-		<a href="#" id="bmenu_day1">土 / 1</a>
-		<a href="#" id="bmenu_day2">日 / 2</a>
-		<a href="#" id="bmenu_day3">月 / 3</a>
-	</div>
-	<div id="vsrchtype" class="modal">
-		<a href="#" id="bmenu_srchrow">Search by row/column</a>
-		<a href="#" id="bmenu_srchname">Search by circle name</a>
-	</div>
-	<div id="vdl" class="modal">
-		Downloading day # ...
-	</div>
-	<div id="vrowlist" class="modal">
-		<!-- will be populated with list of rows -->
-	</div>
 	<div id="vtab">
 		<table>
 			<thead>
@@ -248,7 +251,7 @@ var ROWS = [
 	'あくけこさしすせそたちつてとな',
 	'いうえおかき'
 ];
-var COLUMNS = [];
+var BOOTHS = [];
 var MAXNCOL = 0;
 var active_day = -1;
 var active_row = 'Ａ';
@@ -298,6 +301,8 @@ function hide_viewctls(e) {
 	var modals = ecn('viewctl');
 	for (var a = 0, aa = modals.length; a<aa; a++)
 		modals[a].style.display = 'none';
+	
+	ebi('site').style.paddingTop = '2.5em';  // ¯\_(ツ)_/¯
 }
 function show(html_id) {
 	ebi(html_id).style.display = 'block';
@@ -315,7 +320,7 @@ function ev_chday(e) {
 	e.preventDefault();
 	hide_modals();
 	var words = this.innerHTML.split(' ');
-	var nday = parseInt(words[words.length-1]);
+	var nday = parseInt(words[words.length-1], 10);
 	load_day(nday);
 }
 
@@ -329,7 +334,7 @@ function load_day(day) {
 		if (loaded == null)
 			active_day = 2;
 		else
-			active_day = parseInt(loaded);
+			active_day = parseInt(loaded, 10);
 	}
 	else
 		active_day = day;
@@ -502,7 +507,7 @@ function goto_row(row) {
 		ebi('brow_next').innerHTML = ALLROWS[ridx+1];
 	}
 	
-	COLUMNS = [];
+	BOOTHS = [];
 	for (var a = 0, aa = dbday.length; a<aa; a++) {
 		var rday = dbday[a]['loc'].slice(0, 1);
 		var rrow = dbday[a]['loc'].slice(2, 3);
@@ -510,32 +515,64 @@ function goto_row(row) {
 		if (rday != active_day) continue;
 		if (rrow != row) continue;
 		
-		COLUMNS.push(dbday[a]['loc'].slice(3));
+		//BOOTHS.push(dbday[a]['loc'].slice(3));
+		BOOTHS.push(dbday[a]);
 	}
-	//alert(COLUMNS);
-	COLUMNS.sort();
+	
+	// should be safe since everything until the int is identical
+	BOOTHS.sort((a,b) => (a.loc.localeCompare(b.loc)));
+	
+	var html = [];
+	for (var a = 0, aa = BOOTHS.length; a<aa; a++)
+	{
+		var ypos = BOOTHS[a]['loc'].slice(3);
+		html.push('<tr id="c' + ypos + '"><td>?</td><td>' + BOOTHS[a]['loc'] + '</td><td>' + BOOTHS[a]['kan'] + '</td><td>' + BOOTHS[a]['rom'] + '</td></tr>');
+	}
+	
+	if (html.length == 0)
+		html.push('<tr><td colspan="4">row ' + row + ' empty on day ' + active_day + '</td></tr>');
+	
+	ebi('tb').innerHTML = html.join('\n');
+	ebi('site').style.paddingTop = '8em';  // ¯\_(ツ)_/¯
+	
 	draw_tabh();
 }
 function draw_tabh() {
-	var dom = ebi('tabh_col');
-	if (dom.style.display == 'none')
+	var co = ebi('tabh_col');
+	if (co.style.display == 'none')
 		return;
 	
-	var co = ebi('tabh_col');
 	var width =
-		parseInt(getComputedStyle(co)['width']) /
+		parseInt(getComputedStyle(co)['width'], 10) /
 		parseFloat(getComputedStyle(co)['font-size']);
 	
-	//var step = Math.ceil(COLUMNS.length / (width/3.5));
+	//var step = Math.ceil(BOOTHS.length / (width/3.5));
 	var free = Math.floor(width/3.5);
 	var step = Math.ceil(MAXNCOL / free);
 	if (step < 1)
 		step = 1;
 	
 	var html = [];
-	for (var a = 0; a < COLUMNS.length; a += step)
-		html.push('<a href="#">' + COLUMNS[a] + '</a>');
-	dom.innerHTML = html.join('');
+	for (var a = 0; a < BOOTHS.length; a += step)
+	{
+		var sbooth = BOOTHS[a]['loc'].slice(3);
+		
+		// please don't look
+		var ypos = parseInt(sbooth.slice(0, 2), 10);
+		if (ypos > 3)
+			ypos -= 3;
+		
+		var scrpos = '00' + ypos;
+		scrpos = scrpos.slice(-2);
+		scrpos = scrpos + sbooth.slice(2);
+		// it's ok now
+		
+		if (a == 0)
+			html.push('<a href="#">' + sbooth + '</a>');
+		else
+			html.push('<a href="#c' + scrpos + '">' + sbooth + '</a>');
+	}
+	co.innerHTML = html.join('');
 }
 function ev_steprow() {
 	if (this.classList.contains('off'))
