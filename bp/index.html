@@ -387,7 +387,7 @@ a#bdel_yes {
 </div>
 <div id="vdl" class="modal">
 	downloading database for day <span id="dl_day">N</span> ...<br /><br />
-	<span id="dl_perc">N</span>% done
+	<span id="dl_progress">N</span> done
 </div>
 <div id="vrowlist" class="modal">
 	<!-- will be populated with list of rows -->
@@ -869,10 +869,16 @@ function dl_error() {
 	alert('error downloading db from server');
 }
 function dl_progress(e) {
-	if (e.lengthComputable) {
-		var perc = e.loaded / e.total * 100;
-		ebi('dl_perc').innerHTML = Math.round(perc);
-	}
+	var progress = '???';
+	if (e.lengthComputable)
+		progress = Math.round(e.loaded / e.total * 100) + '%';
+	else
+		try {
+			progress = Math.round(e.loaded / 1024) + ' KiB';
+		}
+		catch(ex) { }
+
+	ebi('dl_progress').innerHTML = progress;
 }
 function ev_dload() {
 	var url = 'lkrxy' + active_day + '.json?_=' + Date.now();
@@ -884,7 +890,7 @@ function ev_dload() {
 	req.send();
 
 	ebi('dl_day').innerHTML = active_day;
-	ebi('dl_perc').innerHTML = '0';
+	ebi('dl_progress').innerHTML = '0%';
 	hide_modals();
 	show('vdl');
 }
@@ -1581,8 +1587,12 @@ function full_localstore() {
 	show('vpurgedb');
 }
 function ev_purge_day(e) {
-	localStorage.removeItem('day' + this.getAttribute('nday'));
-	put_day_db();
+	ebi('purgelist').innerHTML = '<h2>writing...</h2>';
+	var nday = this.getAttribute('nday');
+	lol(function() { lol(function() {
+		localStorage.removeItem('day' + nday);
+		put_day_db();
+	})});
 }
 
 
