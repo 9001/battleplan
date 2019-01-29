@@ -330,7 +330,7 @@ a#bdel_yes {
 			<!-- will be automatically populated with a cell jumplist which fits the device screen -->
 		</div>
 		<div id="tabh_txt" class="viewctl"
-			><input id="trow_in" value="paste here" class="notyet"
+			><input id="trow_in" value="paste here"
 			><input id="trow_out" value="parser out"
 			></input>
 		</div>
@@ -1253,6 +1253,44 @@ function ev_tsch_input(e) {
 
 	ebi('site').style.paddingTop = '4em';  // ¯\_(ツ)_/¯
 }
+function ev_trowin_input(e) {
+	if (e !== undefined)
+		e.preventDefault();
+
+	BOOTHS = [];
+	
+	var txt = ebi('trow_in').value;
+	var m = RLOC.exec(txt);
+	if (!m) {
+		ebi('trow_out').value = 'bad syntax';
+	}
+	else {
+		// var DH = '0123456789';
+		// var UH = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+		// var LH = 'abcdefghijklmnopqrstuvwxyz';
+		// var DF = '０１２３４５６７８９';
+		// var UF = 'ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺ';
+		// var LF = 'ａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚ';
+		
+		var find =
+			tl(m[1], UH+LH+LF, UF+UF+UF) +
+			tl(m[2], DF, DH) +
+			tl(m[3], UH+UF+LF, LH+LH+LH);
+		
+		ebi('trow_out').value = find;
+		
+		BOOTHS = dbday.filter(o => {
+			return o['loc'].indexOf(find) !== -1;
+		});
+		BOOTHS.sort(locsort);
+	}
+	
+	render = function() {
+		empty_row_msg = 'no search results';
+		draw_tbody(false);
+	};
+	render();
+}
 
 ebi('bmenu').onclick = show_menu;
 ebi('bmenu_day').onclick = show_chday;
@@ -1271,6 +1309,7 @@ ebi('brow_next').onclick = ev_steprow;
 ebi('bmenu_chk').onclick = ev_added;
 ebi('trow_in').onfocus = ev_trowin_focus;
 ebi('trow_in').onblur = ev_trowin_blur;
+ebi('trow_in').oninput = ev_trowin_input;
 ebi('bmenu_import').onclick = ev_import;
 ebi('bmenu_export').onclick = ev_export;
 ebi('export_download').onclick = ev_export_file;
@@ -1294,6 +1333,8 @@ window.onresize = draw_th;
 hide_viewctls();
 if (load_day())
 	ev_added();
+
+//ev_row();
 
 
 /*
