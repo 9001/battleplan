@@ -61,13 +61,6 @@ a {
 	overflow: hidden;
 	text-align: center;
 }
-x#tabh_row a:nth-child(2) {
-	text-align: center;
-	background: #222;
-}
-x#tabh_row a:nth-child(3) {
-	text-align: right;
-}
 #brow_prev:before {
 	content: '« ';
 }
@@ -166,6 +159,10 @@ td:nth-child(2) {
 }
 #tb tr:hover td {
 	background: #333;
+	border-left: .2em solid #fc0;
+}
+#tb tr:hover td:nth-child(2) {
+	border-left: none;
 }
 #ladd_kan {
 	display: block;
@@ -210,11 +207,12 @@ td:nth-child(2) {
 .nudged {
 	background: #999;
 }
-.sc5 td { background: hsl(240,70%,25%) }
-.sc6 td { background: hsl(280,70%,25%) }
-.sc7 td { background: hsl(0,50%,30%) }
-.sc8 td { background: hsl(30,70%,30%) }
-.sc9 td { background: hsl(90,70%,30%) }
+.sc1 td, .sc2 td, .sc3 td, .sc4 td { color: #444; }
+.sc5 td { background: hsl(240,20%,20%); color: #777 }
+.sc6 td { background: hsl(280,70%,30%) }
+.sc7 td { background: hsl(  0,50%,30%) }
+.sc8 td { background: hsl( 30,70%,30%) }
+.sc9 td { background: hsl( 90,70%,30%) }
 
 
 </style>
@@ -240,7 +238,7 @@ td:nth-child(2) {
 	</div>
 </div>
 <div id="vmenu" class="modal">
-	<a href="#" id="bmenu_cancel">《 Cancel</a>
+	<a href="#" class="bcancel">《 Cancel</a>
 	<a href="#" id="bmenu_day">📆 Change day (now: #)</a>
 	<a href="#" id="bmenu_chk">📌 View added booths</a>
 	<a href="#" id="bmenu_srch">🔍 Search for circle</a>
@@ -252,11 +250,13 @@ td:nth-child(2) {
 	<a href="#" id="bmenu_dload">📲 Download DB: Day #</a>
 </div>
 <div id="vday" class="modal">
+	<a href="#" class="bcancel">《 Cancel</a>
 	<a href="#" id="bmenu_day1">土 / 1</a>
 	<a href="#" id="bmenu_day2">日 / 2</a>
 	<a href="#" id="bmenu_day3">月 / 3</a>
 </div>
 <div id="vsrchtype" class="modal">
+	<a href="#" class="bcancel">《 Cancel</a>
 	<a href="#" id="bmenu_srchrow">Search by row/column</a>
 	<a href="#" id="bmenu_srchname">Search by circle name</a>
 </div>
@@ -267,9 +267,10 @@ td:nth-child(2) {
 	<!-- will be populated with list of rows -->
 </div>
 <div id="addctx" class="modal">
-	<a href="#" id="badd_exit">《 cancel</a> <!-- ❮⫷ -->
-	<a href="#" id="badd_urls">🔗 manage URLs</a>
-	<a href="#" id="badd_rem">✘ delete from list</a>
+	<a href="#" class="bcancel">《 Cancel</a> <!-- ❮⫷ -->
+	<a href="#" id="badd_gotit">💯 Set "Purchased"</a> <!-- 🔔 -->
+	<a href="#" id="badd_urls">🔗 Manage URLs</a>
+	<a href="#" id="badd_rem">✘ Delete from list</a>
 	<div id="addctxinf">
 		<span id="ladd_kan">// kanji</span>
 		<span id="ladd_loc">// location</span>
@@ -318,6 +319,7 @@ var active_row = 'Ａ';
 var dbday = [];
 var dbsel = [];
 var lol = window.requestAnimationFrame;
+var render = null;  // fp
 
 
 var ALLROWS = '';
@@ -363,6 +365,51 @@ function toast(html) {
 	document.body.appendChild(div);
 	setTimeout(function() { nudgetoast(div); }, 100);
 	setTimeout(function() { hidetoast(div); }, 3000);
+}
+function toast_tab(tab) {
+	var ncells = 0;
+	for (var a = 0; a < tab.length; a++)
+		if (ncells < tab[a].length)
+			ncells = tab[a].length;
+	
+	html = ['<table>'];
+	for (var a = 0; a < tab.length; a++)
+	{
+		html.push('<tr>');
+		var len = tab[a].length;
+		for (var b = 0; b < len; b++)
+		{
+			if (b == len - 1 && len < ncells)
+				html.push('<td colspan="' +
+					((ncells-len)-1) + '">' +
+					tab[a][b] + '</td>');
+			else
+				html.push('<td>' + tab[a][b] + '</td>');
+		}
+		html.push('</tr>');
+	}
+	html.push('</table>');
+	toast(html.join('\n'));
+}
+function locsort(a, b) {
+	var la = a['loc'];
+	var lb = b['loc'];
+	
+	var da = la.slice(0, 1);
+	var db = lb.slice(0, 1);
+	if (da < db) return -1;
+	if (da > db) return -1;
+	
+	var ha = la.slice(2, 3);
+	var hb = lb.slice(2, 3);
+	if (ha === hb)
+		return la.localeCompare(lb);
+	
+	var nha = ALLROWS.indexOf(ha);
+	var nhb = ALLROWS.indexOf(hb);
+	if (nha < nhb) return -1;
+	if (nha > nhb) return 1;
+	return 0;
 }
 
 
@@ -480,6 +527,7 @@ function load_day(day) {
 	}
 	
 	load_sel();
+	hide_modals();
 	return true;
 }
 function load_sel() {
@@ -551,7 +599,7 @@ function ev_cir(sortfunc, only_faved) {
 		dbd.sort(sortfunc);
 		for (var a = 0; a < dbd.length; a++)
 		{
-			var score = -1;
+			var score = '-';
 			for (var b = 0, bb = dbsel.length; b<bb; b++)
 				if (dbsel[b].loc == dbd[a].loc)
 				{
@@ -559,7 +607,7 @@ function ev_cir(sortfunc, only_faved) {
 					break;
 				}
 			
-			if (only_faved && score == -1)
+			if (only_faved && score === '-')
 				continue;
 
 			html.push('<tr class="sc' + score +
@@ -572,18 +620,27 @@ function ev_cir(sortfunc, only_faved) {
 	})});
 }
 function ev_cirkan() {
-	ev_cir((a,b) => (a.kan.localeCompare(b.kan)), false);
+	render = function() { 
+		ev_cir((a,b) => (a.kan.localeCompare(b.kan)), false);
+	};
+	render();
 }
 function ev_cirrom() {
-	ev_cir((a,b) => (a.rom.localeCompare(b.rom)), false);
+	render = function() {
+		ev_cir((a,b) => (a.rom.localeCompare(b.rom)), false);
+	};
+	render();
 }
 function ev_row() {
-	hide_modals();
-	hide_viewctls();
-	show('tabh_row');
-	show('tabh_col');
-	show('tabh_txt');
-	goto_row(active_row);
+	render = function() {
+		hide_modals();
+		hide_viewctls();
+		show('tabh_row');
+		show('tabh_col');
+		show('tabh_txt');
+		goto_row(active_row);
+	};
+	render();
 }
 function ev_srch() {
 	hide_modals();
@@ -643,17 +700,8 @@ function goto_row(row) {
 	// should be safe since everything until the int is identical
 	BOOTHS.sort((a,b) => (a.loc.localeCompare(b.loc)));
 	
-	var html = [];
-	for (var a = 0, aa = BOOTHS.length; a<aa; a++)
-	{
-		var ypos = BOOTHS[a]['loc'].slice(3);
-		html.push('<tr id="c' + ypos + '"><td>?</td><td>' + BOOTHS[a]['loc'] + '</td><td>' + esc(BOOTHS[a]['kan']) + '</td><td>' + esc(BOOTHS[a]['rom']) + '</td></tr>');
-	}
-	
-	if (html.length == 0)
-		html.push('<tr><td colspan="4">row ' + row + ' empty on day ' + active_day + '</td></tr>');
-	
-	ebi('tb').innerHTML = html.join('\n');
+	draw_tbody();
+
 	ebi('site').style.paddingTop = '8em';  // ¯\_(ツ)_/¯
 	
 	var rows = ebi('tb').getElementsByTagName('tr');
@@ -661,6 +709,28 @@ function goto_row(row) {
 		rows[a].onclick = ev_rowclick;
 	
 	draw_tabh();
+}
+function draw_tbody() {
+	var html = [];
+	for (var a = 0, aa = BOOTHS.length; a<aa; a++)
+	{
+		var loc = BOOTHS[a]['loc'];
+		var score = '-';
+		for (var b = 0, bb = dbsel.length; b<bb; b++)
+			if (loc == dbsel[b]['loc'])
+			{
+				score = dbsel[b]['sc'];
+				break;
+			}
+		
+		var ypos = loc.slice(3);
+		html.push('<tr id="c' + ypos + '" class="sc' + score + '"><td>' + score + '</td><td>' + BOOTHS[a]['loc'] + '</td><td>' + esc(BOOTHS[a]['kan']) + '</td><td>' + esc(BOOTHS[a]['rom']) + '</td></tr>');
+	}
+	
+	if (html.length == 0)
+		html.push('<tr><td colspan="4">row ' + row + ' empty on day ' + active_day + '</td></tr>');
+	
+	ebi('tb').innerHTML = html.join('\n');
 }
 function draw_tabh() {
 	var co = ebi('tabh_col');
@@ -718,6 +788,7 @@ function ev_rowclick(e) {
 	ebi('ladd_rom').textContent = romaji;
 	ebi('ladd_loc').textContent = booth;
 	show('addctx');
+	ebi('trow_out').value = booth;
 }
 function set_score(loc, score) {
 	for (var a = 0, aa = dbsel.length; a<aa; a++)
@@ -743,17 +814,27 @@ function ev_score(e) {
 	
 	set_score(loc, score);
 	hide_modals();
-	toast('[' + score + ']<br />' +
-		loc + '<br />' +
-		ebi('ladd_kan') + '<br />' +
-		ebi('ladd_rom'));
+	toast_tab([
+		['score', score],
+		['loc', loc],
+		[ebi('ladd_kan').textContent],
+		[ebi('ladd_rom').textContent]
+	]);
+	render();
 }
 function ev_added() {
-	ev_cir((a,b) => (a.loc.localeCompare(b.loc)), true);
+	ev_cir(locsort, true);
+}
+function ev_trowin_focus(e) {
+	if (this.value == 'paste here')
+		this.value = '';
+}
+function ev_trowin_blur(e) {
+	if (this.value == '')
+		this.value = 'paste here';
 }
 
 ebi('bmenu').onclick = show_menu;
-ebi('bmenu_cancel').onclick = hide_modals;
 ebi('bmenu_day').onclick = show_chday;
 ebi('bmenu_day1').onclick = ev_chday;
 ebi('bmenu_day2').onclick = ev_chday;
@@ -768,9 +849,15 @@ ebi('bmenu_srchname').onclick = ev_srchname;
 ebi('brow_list').onclick = ev_listrows;
 ebi('brow_prev').onclick = ev_steprow;
 ebi('brow_next').onclick = ev_steprow;
-ebi('badd_exit').onclick = hide_modals;
 ebi('bmenu_chk').onclick = ev_added;
 window.onresize = draw_tabh;
+ebi('trow_in').onfocus = ev_trowin_focus;
+ebi('trow_in').onblur = ev_trowin_blur;
+
+var t = ecn('bcancel');
+for (var a=0; a<t.length; a++)
+	t[a].onclick = hide_modals;
+
 
 
 // state init
