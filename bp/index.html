@@ -277,11 +277,11 @@ td:nth-child(2) {
 	border: none;
 	outline: none;
 }
-#vimport>div {
+div.center {
 	margin: 1em 0;
 	text-align: center;
 }
-#vimport>div>div {
+div.center>div {
 	display: inline-block;
 	text-align: left;
 }
@@ -453,6 +453,13 @@ canvas {
 		<input id="tqnote" value="paste stuff here" sample="paste stuff here" />
 		<a href="#" id="bqnote">Add URL/note</a>
 	</div>
+	<div class="center"><div id="addctx_exit_act">
+		<input type="radio" name="addctx_exit_act" id="raddlist" name="raddlist">
+		<label for="raddlist">return to list</label><br />
+		
+		<input type="radio" name="addctx_exit_act" id="raddnext" name="raddnext">
+		<label for="raddnext">go to next booth</label>
+	</div></div>
 </div>
 <div id="vexport" class="modal">
 	<a href="#" class="bcancel">《 Cancel</a> <!-- ❮⫷ -->
@@ -462,7 +469,7 @@ canvas {
 </div>
 <div id="vimport" class="modal">
 	<a href="#" class="bcancel">《 Cancel</a> <!-- ❮⫷ -->
-	<div><div>
+	<div class="center"><div>
 		<input type="radio" name="rimport" id="rimport_drop" name="rimport_drop" checked>
 		<label for="rimport_drop">delete existing list</label><br />
 		
@@ -559,7 +566,7 @@ function esc(txt) {
 }
 window.onerror = function(msg, url, lineNo, columnNo, error) {
 	window.onerror = undefined;
-	var html = ['<h1>you hit a bug!</h1><p>please screenshot this error and send me a copy arigathanks gozaimuch</p><p>',
+	var html = ['<h1>you hit a bug!</h1><p>please screenshot this error and send me a copy arigathanks gozaimuch (ed/irc.rizon.net or ed#2644)</p><p>',
 		esc(String(msg)), '</p><p>', esc(url + ' @' + lineNo + ':' + columnNo), '</p>'];
 	
 	if (error) {
@@ -657,6 +664,12 @@ try {
 catch(ex) {
 	croak('could not write to localStorage; need this for the list of circles/booths');
 }
+
+var addctx_exit_act = localStorage.getItem('addctx_exit_act') || 'list';
+if (addctx_exit_act == 'list')
+	ebi('raddlist').checked = true;
+else
+	ebi('raddnext').checked = true;
 
 
 function ebi(elm_id) {
@@ -1298,74 +1311,12 @@ function get_tsel(loc, create_if_404) {
 	set_score(loc, '-');
 	return get_tsel(loc);
 }
-var last_rowclick = null;
 function ev_rowclick(e, tgt) {
 	if (e !== undefined)
 		e.preventDefault();
 	
-	if (tgt !== undefined)
-		last_rowclick = tgt;
-	else
-		tgt = last_rowclick;
-
 	var loc = tb_fields(tgt)['loc'];
-	var bscore = ebi('addctxscore').getElementsByTagName('a');
-	for (var a = 0; a < bscore.length; a++)
-		bscore[a].classList.remove('act');
-	
-	var tday = get_tday(loc);
-	var tsel = get_tsel(loc);
-	if (tday == null) {
-		alert('could not find entry in dbday??');
-		return;
-	}
-	
-	var score = '-';
-	if (tsel != null)
-	{
-		score = tsel['sc'];
-		if (score !== '-')
-		{
-			bscore[parseInt(score)-1].classList.add('act');
-		}
-	}
-
-	ebi('ladd_kan').textContent = tday['kan']
-	ebi('ladd_rom').textContent = tday['rom']
-	ebi('ladd_loc').textContent = loc;
-	
-	if (tsel && tsel['done']) {
-		ebi('badd_done').textContent = '🔔 Set "Must Buy"';
-		ebi('badd_done').style.background =
-			'linear-gradient(90deg,#2c2c2c,#664422)';
-	}
-	else {
-		ebi('badd_done').textContent = '💚 Set "Purchased"';
-		ebi('badd_done').style.background =
-			'linear-gradient(90deg,#2c2c2c,#446622)';
-	}
-	
-	var html = [];
-	if (tsel && tsel['url'])
-		for (var a = 0; a < tsel['url'].length; a++)
-		{
-			var url = esc(tsel['url'][a]);
-			html.push('<a target="_blank" href="' + url + '">🔖 ' + url + '</a>');
-		}
-	
-	if (tday['url'])
-		for (var a = 0; a < tday['url'].length; a++)
-		{
-			var url = esc(tday['url'][a]);
-			html.push('<a target="_blank" href="' + url + '">🔗 ' + url + '</a>');
-		}
-	
-	if (html.length > 0)
-		html.push('🔗 = added by circle<br />🔖 = added by (You)'); <!-- 🍆 -->
-	
-	ebi('addctxlinks').innerHTML = html.join('\n');
-	ebi('trow_out').value = loc;
-	show_excl('addctx');
+	open_addctx(loc);
 }
 function set_score(loc, score) {
 	for (var a = 0, aa = dbsel.length; a < aa; a++)
@@ -1398,6 +1349,14 @@ function ev_score(e) {
 		[ebi('ladd_rom').textContent]
 	], 'sc' + score);
 	refresh();
+	
+	if (addctx_exit_act == 'next') {
+		var nextbooth = get_next_booth();
+		if (!nextbooth)
+			return alert('no more booths in this row');
+		
+		open_addctx(nextbooth);
+	}
 }
 function ev_added() {
 	hide_viewctls();
@@ -1681,6 +1640,7 @@ function ev_trowin_input(e) {
 	BOOTHS = [];
 	
 	var txt = ebi('trow_in').value;
+	txt = txt.replace(/ブロック/gu, '');
 	var m = RLOC.exec(txt);
 	if (!m) {
 		ebi('trow_out').value = 'bad syntax';
@@ -2140,7 +2100,7 @@ function ev_add_qnote(e) {
 	if (add_url(loc, txt))
 		ebi('tqnote').value = sample;
 	
-	ev_rowclick();
+	open_addctx();
 }
 function ev_dbg(e) {
 	if (e !== undefined)
@@ -2148,6 +2108,92 @@ function ev_dbg(e) {
 
 	v = prompt('give me javascript', 'localStorage.zsel2.length');
 	alert(eval(v));
+}
+function ev_addctx_exit_action(e) {
+	var name = this.getAttribute('id');
+	
+	if (name == 'raddlist')
+		addctx_exit_act = 'list';
+	
+	if (name == 'raddnext')
+		addctx_exit_act = 'next';
+	
+	localStorage.setItem('addctx_exit_act', addctx_exit_act);
+}
+function get_next_booth(last_booth) {
+	if (last_booth === undefined)
+		last_booth = ebi('ladd_loc').textContent;
+	
+	var found = false;
+	for (var a = 0; a < BOOTHS.length; a++)
+		if (BOOTHS[a]['loc'] == last_booth)
+			found = true;
+		else if (found == true)
+			return BOOTHS[a]['loc'];
+	
+	return null;
+}
+function open_addctx(loc) {
+	if (loc === undefined)
+		loc = ebi('ladd_loc').textContent;
+	
+	var bscore = ebi('addctxscore').getElementsByTagName('a');
+	for (var a = 0; a < bscore.length; a++)
+		bscore[a].classList.remove('act');
+	
+	var tday = get_tday(loc);
+	var tsel = get_tsel(loc);
+	if (tday == null) {
+		alert('could not find entry in dbday??');
+		return;
+	}
+	
+	var score = '-';
+	if (tsel != null)
+	{
+		score = tsel['sc'];
+		if (score !== '-')
+		{
+			bscore[parseInt(score)-1].classList.add('act');
+		}
+	}
+
+	ebi('ladd_kan').textContent = tday['kan']
+	ebi('ladd_rom').textContent = tday['rom']
+	ebi('ladd_loc').textContent = loc;
+	
+	if (tsel && tsel['done']) {
+		ebi('badd_done').textContent = '🔔 Set "Must Buy"';
+		ebi('badd_done').style.background =
+			'linear-gradient(90deg,#2c2c2c,#664422)';
+	}
+	else {
+		ebi('badd_done').textContent = '💚 Set "Purchased"';
+		ebi('badd_done').style.background =
+			'linear-gradient(90deg,#2c2c2c,#446622)';
+	}
+	
+	var html = [];
+	if (tsel && tsel['url'])
+		for (var a = 0; a < tsel['url'].length; a++)
+		{
+			var url = esc(tsel['url'][a]);
+			html.push('<a target="_blank" href="' + url + '">🔖 ' + url + '</a>');
+		}
+	
+	if (tday['url'])
+		for (var a = 0; a < tday['url'].length; a++)
+		{
+			var url = esc(tday['url'][a]);
+			html.push('<a target="_blank" href="' + url + '">🔗 ' + url + '</a>');
+		}
+	
+	if (html.length > 0)
+		html.push('🔗 = added by circle<br />🔖 = added by (You)'); <!-- 🍆 -->
+	
+	ebi('addctxlinks').innerHTML = html.join('\n');
+	ebi('trow_out').value = loc;
+	show_excl('addctx');
 }
 
 
@@ -2204,6 +2250,11 @@ ebi('dbg').onclick = ev_dbg;
 var t = ecn('bcancel');
 for (var a=0; a<t.length; a++)
 	t[a].onclick = ev_cancel;
+
+var t = ebi('addctx_exit_act').getElementsByTagName('input');
+for (var a=0; a<t.length; a++)
+	t[a].onchange = ev_addctx_exit_action;
+
 
 window.onresize = ev_resize;
 
