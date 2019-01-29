@@ -1,0 +1,60 @@
+<!DOCTYPE html><html lang="en"><head><style>
+div { max-width: 40em; font-family: sans-serif }
+code { color: #7b4 }
+</style></head><body><div>
+this document is regarding <a href="https://dootnode.org/ed/c95/bp/">battleplan</a>
+
+<h1>current features:</h1><ul>
+
+<li>browse booths at comiket</li>
+
+<li>search for circles</li>
+
+<li>add booths to your shopping list by rating them from 1-9</li>
+
+<li>shopping list is color-coded according to score and sorted by rows, same order as in the comiket hall</li>
+
+<li>draw your shopping list onto the comiket map in realtime, right on your phone</li>
+
+<li>downloads all the booths to your web browser localStorage (cache) for less data consumption, similarly saves your shopping list to localStorage as well, no dependency on any sort of server</li>
+
+<li>from the shopping list page: switch an entry between purchased and todo with two taps, or browse the links in the catalog, or add additional links (crossfades) and notes, change rating, etc</li>
+
+<li>copy an entire tweet into the "paste here" field on the "Show all booths" page to automatically detect the first comiket booth and display it below -- try this example: 2日目(日曜日)東シ-81aにて頒布予定です。<br /><strong>note: you need to have bp set to the correct day first</strong></li>
+
+<li>export your shopping list to a json file which can be imported to a laptop or whatever (currently imports will overwrite the current shopping list, a merge feature will be added)</li>
+
+<li>possible to do all this fully offline by saving the html file and json files to your phone (more on this later, requires any android phone, works without root) <strong>termux + <code>python3 -m http.server</code></strong> for example</li>
+
+</ul>
+<h1>running bp offline (for Android)</h1><ul>
+
+<li>install <a href="https://termux.com/">termux</a></li>
+
+<li>to either install or upgrade your offline bp installation, paste the following into your terminal and hit enter:<br /><code>pkg install -y wget; wget -qO- https://dootnode.org/ed/c95/bp/bp-android.sh | bash</code></li>
+
+<li>to launch bp, paste this and hit enter:<br /><code>~/bp/run</code></li>
+
+<li>note that the shopping list in your local installation is different from the online version -- use the import/export feature 5o synchronize them manually</li>
+
+</ul>
+<h1>running bp offline (for iPhone/iPad)</h1><ul>
+
+<li>using safari reading list: open the battleplan website in safari, tap the box with the arrow escaping upwards at the bottom of the screen, "Add to Reading List", and choose to make it available offline. Then tap the book icon at the bottom and select battleplan</li>
+
+<li>make sure to download all the days before disconnecting from the internet</li>
+
+<li>to update your offline battleplan installation, open reading list, hit edit, select battleplan, hit delete. Navigate to the battleplan website, download the days, re-add it to reading list</li>
+
+<li>deleting/re-adding battleplan to the reading list SHOULD not delete your shopping list, but always make backups to be safe</li>
+
+</ul>
+<h1>features to be added SoonTM:</h1><ul>
+
+<li>nothing requested</li>
+
+</ul>
+<h1>cheat codes:</h1><ul>
+
+<li>to erase your entire shopping list, paste the following in the text import box: <code>{"x":[]}</code>
+
