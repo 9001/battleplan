@@ -139,7 +139,7 @@ a {
 .modal {
 	background: #222; 232;
 	position: fixed;
-	overflow: scroll;
+	overflow: auto;
 	top: 0;
 	left: 0;
 	right: 0;
@@ -330,12 +330,18 @@ a#bdel_yes {
 #added_inf {
 	padding: .2em .3em;
 }
-#added_inf span:after {
-	content: ': ';
-}
 #added_inf span {
 	color: #c37;
 	font-size: .8em;
+}
+#vmap {
+	top: 2.2em;
+	height: calc(100% - 2.2em);
+}
+canvas {
+	width: 100%;
+	height: 100%;
+	background: #000;
 }
 
 
@@ -374,6 +380,7 @@ a#bdel_yes {
 <div id="vmenu" class="modal">
 	<a href="#" class="bcancel">《 Cancel</a>
 	<a href="#" id="bmenu_chk">📌 View shopping list</a>
+	<a href="#" id="bmenu_map">🗺 Draw map</a>
 	<a href="#" id="bmenu_srch">🔍 Search for circle</a>
 	<a href="#" id="bmenu_row">⽥ Show all booths</a> <!-- ⺇ -->
 	<a href="#" id="bmenu_cir">⭕ Show all circles (slow!!)</a>
@@ -465,6 +472,12 @@ a#bdel_yes {
 	<div id="lurl_cur"></div>
 	<a href="#" id="burl_del">Delete</a>
 </div>
+<div id="vmaphall" class="modal">
+	<a href="#" class="bcancel">《 Cancel</a>
+	<a href="#" id="bmaphall_e123">東123</a>
+	<a href="#" id="bmaphall_e456">東456</a>
+	<a href="#" id="bmaphall_w12">西12</a>
+</div>
 <div id="vpurgedb" class="modal">
 	<p>could not write the database into localStore; it is probably full.</p>
 	<p>delete the database of another day below by clicking it</p>
@@ -484,6 +497,9 @@ a#bdel_yes {
 			</thead>
 			<tbody id="tb"></tbody>
 		</table>
+	</div>
+	<div id="vmap" class="modal">
+		<canvas id="map" class="viewctl"></canvas>
 	</div>
 </div>
 <script src="lz-string.min.js"></script>
@@ -745,6 +761,7 @@ function show(html_id) {
 }
 function show_menu(e) {
 	e.preventDefault();
+	hide_modals();
 	show('vmenu');
 }
 function show_chday(e) {
@@ -1449,6 +1466,7 @@ function ev_remove_ok(e) {
 	
 	save_sel();
 	refresh();
+	hide_modals();
 }
 function ev_mousedown(e) {
 	e.currentTarget.mdt = Date.now();
@@ -1633,7 +1651,7 @@ function ev_url_edit_save(e) {
 			ev_urls();
 			return;
 		}
-		
+	
 	alert('could not find url [' + orig + ']\nwas going to replace with [' + repl + ']');
 }
 function ev_url_delete(e) {
@@ -1691,6 +1709,217 @@ function ev_purge_day(e) {
 		put_day_db();
 	})});
 }
+function ev_map_sel_hall(e) {
+	if (e !== undefined)
+		e.preventDefault();
+	
+	hide_modals();
+	show('vmaphall');
+}
+
+var ctx = ebi('map').getContext('2d');
+var ctxr = (window.devicePixelRatio || 1) / (
+	ctx.webkitBackingStorePixelRatio ||
+	ctx.mozBackingStorePixelRatio ||
+	ctx.msBackingStorePixelRatio ||
+	ctx.oBackingStorePixelRatio ||
+	ctx.BackingStorePixelRatio || 1);
+
+function ev_showmap(e) {
+	if (e !== undefined)
+		e.preventDefault();
+	
+	inf(['drawing map']);
+	var that = this;
+	
+	lol(function() { lol(function() {
+		var sz = 9; // box size
+		
+		var mainhall = that.textContent;
+		var subhalls = [];
+		var rows = '';
+		
+		if (mainhall == '東123')
+			subhalls = ['e1','e2','e3'];
+		
+		if (mainhall == '東456')
+			subhalls = ['e6','e5','e4'];
+		
+		if (mainhall == '西12')
+			subhalls = ['w1a','w1b','w2a','w2b'];
+		
+		for (var a = 0; a < HALLS.length; a++)
+			for (var b = 0; b < subhalls.length; b++)
+				if (HALLS[a] == subhalls[b])
+					rows += ROWS[a];
+		
+		rows = rows.split('');
+		//alert('showing map for ' + mainhall + ' (' + subhalls.join(',') + '); rows ' + rows.join(','));
+		
+		var rcol = {
+			"1": "444",
+			"2": "444",
+			"3": "444",
+			"4": "444",
+			"5": "hsl(240,20%,20%)",
+			"6": "hsl(  0,40%,30%)",
+			"7": "hsl( 35,70%,30%)",
+			"8": "hsl( 90,70%,30%)",
+			"9": "#fff"
+		};
+		
+		var minx =  99999;
+		var maxx = -99999;
+		var miny =  99999;
+		var maxy = -99999;
+		var rowmm = [];
+		for (var a = 0; a < rows.length; a++)
+			rowmm.push([99999,-99999,99999,-99999]);
+		
+		var booths = [];
+		for (var a = 0, aa = dbday.length; a < aa; a++) {
+			var tday = dbday[a];
+			var loc = tday['loc'];
+			var row = loc.slice(2, 3);
+			var ridx = rows.indexOf(row);
+			if (ridx === -1)
+				continue;
+			
+			booths.push(dbday[a]);
+			var x = parseInt(tday['x'], 10);
+			var y = parseInt(tday['y'], 10);
+			minx = Math.min(minx, x);
+			maxx = Math.max(maxx, x);
+			miny = Math.min(miny, y);
+			maxy = Math.max(maxy, y);
+			rowmm[ridx][0] = Math.min(rowmm[ridx][0], x);
+			rowmm[ridx][1] = Math.max(rowmm[ridx][1], x);
+			rowmm[ridx][2] = Math.min(rowmm[ridx][2], y);
+			rowmm[ridx][3] = Math.max(rowmm[ridx][3], y);
+		}
+
+		var box = ebi('vmap');
+		var can = ebi('map');
+		//sw = box.innerWidth - box.offsetLeft;
+		//sh = box.innerHeight - box.offsetTop;
+		//var sw = parseInt(getComputedStyle(box)['width'], 10);
+		//var sh = parseInt(getComputedStyle(box)['height'], 10);
+		var sw = (maxx - minx) + minx * 2 + sz;
+		var sh = (maxy - miny) + miny * 2 + sz;
+		map.width = sw * ctxr;
+		map.height = sh * ctxr;
+		map.style.width = sw + 'px';
+		map.style.height = sh + 'px';
+		ctx.setTransform(ctxr, 0, 0, ctxr, 0, 0);
+		ctx.lineCap = 'butt';
+		ctx.strokeStyle = '#351';
+		
+		ctx.fillStyle = '#bbb';
+		ctx.font = '24px sans-serif';
+		for (var a = 0; a < rows.length; a++) {
+			var minx = rowmm[a][0];
+			var maxx = rowmm[a][1];
+			var miny = rowmm[a][2];
+			var maxy = rowmm[a][3];
+			if (minx == 99999)
+				continue;
+			
+			var x, y;
+			if (mainhall != '西12') {
+				x = (minx + (maxx-minx)/2) - sz;
+				y = (miny + (maxy-miny)/2) + sz * 1.5;
+				if (maxx-minx>128 && maxy-miny>128) {
+					x = minx - sz;
+					y = miny;
+				}
+			}
+			else {
+				ctx.beginPath();
+				ctx.moveTo(0, 380);
+				ctx.lineTo(1000, 380);
+				ctx.stroke();
+				
+				ctx.beginPath();
+				ctx.moveTo(500, 0);
+				ctx.lineTo(500, 1000);
+				ctx.stroke();
+
+				x = (minx + (maxx-minx)/2) - sz;
+				if (maxy - miny < 200)
+					y = (miny + (maxy-miny)/2) + sz * 0.5;
+				else if (miny < 200)
+					y = (miny + (maxy-miny)/3.7) + sz * 0.5;
+				else
+					y = (miny + (maxy-miny)/2.8) + sz * 0.5;
+				
+				if (maxx-minx>128 && maxy-miny>128) {
+					x = minx - sz;
+					y = miny;
+				}
+			}
+			ctx.fillText(rows[a], x, y);
+		}
+		
+		//ctx.translate(-0.5, -0.5);
+		for (var b = 0; b < 2; b++) {
+			for (var a = 0, aa = booths.length; a < aa; a++) {
+				var tday = booths[a];
+				var loc = tday['loc'];
+				var tsel = get_tsel(loc);
+				
+				var fill = tsel && tsel['sc'] !== '-';
+				if (fill && b==0 || !fill && b==1)
+					continue;
+				
+				var x = parseInt(tday['x'], 10);
+				var y = parseInt(tday['y'], 10);
+				
+				ctx.fillStyle = '#000';
+				if (tsel && rcol[tsel['sc']])
+					ctx.fillStyle = rcol[tsel['sc']];
+				
+				ctx.beginPath();
+				if (loc.slice(-1) == 'a') {
+					ctx.moveTo(x, y+sz);
+					ctx.lineTo(x, y);
+					ctx.lineTo(x+sz, y);
+				}
+				else {
+					ctx.moveTo(x+sz, y);
+					ctx.lineTo(x+sz, y+sz);
+					ctx.lineTo(x, y+sz);
+				}
+				ctx.closePath();
+				
+				if (fill)
+					ctx.fill();
+				else {
+					ctx.save();
+					ctx.clip();
+					ctx.stroke();
+					ctx.stroke();
+					ctx.stroke();
+					ctx.restore();
+				}
+			}
+			//ctx.translate(0.5, 0.5);
+		}
+		hide_modals();
+		show('vmap');
+		show('map');
+	})});
+	
+	// a and b share coordinate pairs,
+	// need to check whether a table is divided into a/b
+	// and render it as a triangle;
+	// convention top-left is a, bottom-right is b
+}
+function ev_resize(e) {
+	draw_th(e);
+	
+	//if (ebi('vmap').style.display !== 'none')
+	//	render();
+}
 
 
 ebi('bmenu').onclick = show_menu;
@@ -1727,12 +1956,17 @@ ebi('burl_new').onclick = ev_url_new;
 ebi('burl_add').onclick = ev_url_new_done;
 ebi('burl_edit').onclick = ev_url_edit_save;
 ebi('burl_del').onclick = ev_url_delete;
+ebi('bmenu_map').onclick = ev_map_sel_hall;
+ebi('bmaphall_e123').onclick = ev_showmap
+ebi('bmaphall_e456').onclick = ev_showmap
+ebi('bmaphall_w12').onclick = ev_showmap
+
 
 var t = ecn('bcancel');
 for (var a=0; a<t.length; a++)
 	t[a].onclick = hide_modals;
 
-window.onresize = draw_th;
+window.onresize = ev_resize;
 
 
 // state init
@@ -1741,6 +1975,7 @@ load_day();
 
 //ev_row();
 //ev_import();
+//ev_map_sel_hall();
 
 
 /*
