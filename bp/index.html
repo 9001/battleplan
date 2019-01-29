@@ -3,6 +3,9 @@
 
 	battleplan <ed@irc.rizon.net>, MIT-licensed
 	https://dootnode.org/ed/c95/bp.html
+	
+	TODO:
+		https://github.com/nodeca/pako  // for localstore
 
 -->
 <meta charset="utf-8">
@@ -383,7 +386,8 @@ a#bdel_yes {
 	<a href="#" id="bmenu_cirrom">Sort by Romaji</a>
 </div>
 <div id="vdl" class="modal">
-	Downloading day # ...
+	downloading database for day <span id="dl_day">N</span> ...<br /><br />
+	<span id="dl_perc">N</span>% done
 </div>
 <div id="vrowlist" class="modal">
 	<!-- will be populated with list of rows -->
@@ -453,6 +457,11 @@ a#bdel_yes {
 	<div id="lurl_cur"></div>
 	<a href="#" id="burl_del">Delete</a>
 </div>
+<div id="vpurgedb" class="modal">
+	<p>could not write the database into localStore; it is probably full.</p>
+	<p>delete the database of another day below by clicking it, afterwards day <span id="attempted_day">N</span> will be attempted again:</p>
+	<div id="purgelist"></div>
+</div>
 <div id="site">
 	<div id="vtab">
 		<table>
@@ -495,6 +504,9 @@ var dbsel = [];
 var lol = window.requestAnimationFrame;
 var render = null;  // fp
 var empty_row_msg = '???';
+var busted_localstore = false;
+var pending_day_db = null;
+//var nfail = 1;
 
 
 var ALLROWS = '';
@@ -527,9 +539,25 @@ function tl(txt, from, to) {
 }
 
 
-active_row = localStorage.getItem('activerow');
-if (active_row == null)
-	active_row = 'Ａ';
+function croak(msg) {
+	document.body.textContent = msg;
+	throw msg;
+}
+try {
+	active_row = localStorage.getItem('activerow');
+	if (active_row == null)
+		active_row = 'Ａ';
+}
+catch(ex) {
+	croak('could not read from localStorage; need this for the list of circles/booths');
+}
+
+try {
+	localStorage.setItem('activerow', active_row);
+}
+catch(ex) {
+	croak('could not write to localStorage; need this for the list of circles/booths');
+}
 
 
 function ebi(elm_id) {
@@ -740,7 +768,6 @@ function load_day(day) {
 	localStorage.setItem('activeday', active_day);
 	ebi('bmenu_day').innerHTML = '📆 Change day (now: ' + active_day + ')';
 	ebi('bmenu_dload').innerHTML = '📲 Download DB for Day ' + active_day;
-	ebi('vdl').innerHTML = 'downloading database for day ' + active_day + ' ...';
 	
 	loaded = localStorage.getItem('day' + active_day);
 	if (loaded == null)
@@ -793,7 +820,13 @@ function load_sel() {
 	return true;
 }
 function save_sel() {
-	localStorage.setItem('sel' + active_day, JSON.stringify(dbsel));
+	try {
+		localStorage.setItem('sel' + active_day, JSON.stringify(dbsel));
+	}
+	catch (ex) {
+		busted_localstore = true;
+		alert("could not save your shopping list! you can rescue day " + active_day + " with the export feature until you refresh the website.\n\n(is your localStorage full?)");
+	}
 }
 function showmsg(color, lines) {
 	var s1 = '<tr><td colspan="4" style="color:#' + color + '">';
@@ -806,33 +839,52 @@ function warn(lines) { showmsg('fc0', lines); }
 function inf(lines) { showmsg('ad6', lines); }
 
 
+function put_day_db(jsontext) {
+	if (jsontext === undefined)
+		jsontext = pending_day_db;
+	else
+		pending_day_db = jsontext;
+	
+	try {
+		//if (nfail-- > 0) throw 42;
+		localStorage.setItem('day' + active_day, jsontext);
+		load_day();
+		return true;
+	}
+	catch (ex) {
+		full_localstore();
+		return false;
+	}
+}
 function dl_done(v) {
 	if (this.status != 200)
 	{
 		alert('** ERROR ' + this.status + ' FROM SERVER **\n\n' + this.responseText);
 		return;
 	}
-	localStorage.setItem('day' + active_day, this.responseText);
-	return load_day();
 	
-	hide_modals();
-	inf([
-		"<strong>== Downloaded day " + active_day + " ==</strong>",
-		"You may have any number of days downloaded;",
-		"Select any day (this or another one) to continue"
-	]);
+	return put_day_db(this.responseText);
 }
 function dl_error() {
-	alert('error');
+	alert('error downloading db from server');
+}
+function dl_progress(e) {
+	if (e.lengthComputable) {
+		var perc = e.loaded / e.total * 100;
+		ebi('dl_perc').innerHTML = Math.round(perc);
+	}
 }
 function ev_dload() {
 	var url = 'lkrxy' + active_day + '.json?_=' + Date.now();
 	var req = new XMLHttpRequest();
 	req.onload = dl_done;
 	req.onerror = dl_error;
+	req.onprogress = dl_progress;
 	req.open('GET', url, true);
 	req.send();
 
+	ebi('dl_day').innerHTML = active_day;
+	ebi('dl_perc').innerHTML = '0';
 	hide_modals();
 	show('vdl');
 }
@@ -1205,6 +1257,9 @@ function gen_export() {
 		
 		ret['sel'+a] = JSON.parse(kt);
 	}
+	if (busted_localstore) {
+		ret['sel'+active_day] = dbsel;
+	}
 	return JSON.stringify(ret).replace(/},{"loc":"/g, '},\n{"loc":"');
 }
 function ev_export_file(e) {
@@ -1504,6 +1559,32 @@ function ev_url_delete(e) {
 	save_sel();
 	ev_urls();
 }
+function full_localstore() {
+	var html = [];
+	for (var a = 1; a <= 3; a++) {
+		try {
+			var len = localStorage.getItem('day' + a).length;
+			html.push('<a href="#" nday="' + a + '">day ' + a + ' (' + Math.round(len/1024) + ' KiB)</a>');
+		}
+		catch { }
+	}
+	if (html.length == 0)
+		html.push('<h1>actually nevermind you broke it</h1><p>check if your disk is full i guess</p>');
+	
+	ebi('purgelist').innerHTML = html.join('\n');
+	ebi('attempted_day').innerHTML = active_day;
+	var links = ebi('purgelist').getElementsByTagName('a');
+	for (var a = 0; a < links.length; a++)
+		links[a].onclick = ev_purge_day;
+	
+	hide_modals();
+	show('vpurgedb');
+}
+function ev_purge_day(e) {
+	localStorage.removeItem('day' + this.getAttribute('nday'));
+	put_day_db();
+}
+
 
 
 ebi('bmenu').onclick = show_menu;
