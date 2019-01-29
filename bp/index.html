@@ -2,7 +2,7 @@
 <!--
 
 	battleplan <ed@irc.rizon.net>, MIT-licensed
-	https://dootnode.org/ed/c95/bp.html
+	https://dootnode.org/ed/c95/bp/
 
 -->
 <meta charset="utf-8">
@@ -134,20 +134,23 @@ a {
 	margin: 0 .5%;
 	padding: 0;
 }
-#vrowlist>* {
+#vrowlist>a {
+	margin: 1em;
+}
+#vrowlistb>* {
 	font-size: 1.5em;
 }
-#vrowlist span {
+#vrowlistb span {
 	display: inline-block;
 	text-align: left;
 }
-#vrowlist a {
+#vrowlistb a {
 	display: inline-block;
 	background: #333;
 	padding: .1em .2em;
 	text-decoration: none;
 }
-#vrowlist hr {
+#vrowlistb hr {
 	border-top: 1px solid #333;
 	border-bottom: 1px solid #000;
 	border-width: 1px 0;
@@ -351,6 +354,22 @@ a#bdel_yes {
 	color: #c37;
 	font-size: .8em;
 }
+#added_jump {
+	padding: .2em .3em;
+}
+#added_jump {
+	color: #d95;
+}
+#added_jump a {
+	color: #fff;
+	font-size: 1.2em;
+	text-decoration: none;
+	border-bottom: .2em solid #09f;
+}
+#added_jump span {
+	color: #c37;
+	font-size: .8em;
+}
 #vmap {
 	top: 2.2em;
 	height: calc(100% - 2.2em);
@@ -395,6 +414,7 @@ h3 {
 		<h1 id="tabh_h1" class="viewctl"></h1>
 		
 		<div id="added_inf" class="viewctl">// info about added items</div>
+		<div id="added_jump" class="viewctl">// jumplist</div>
 		
 		<div id="tabh_row" class="viewctl"
 			><a href="#" id="brow_prev">//? <!-- jump to previous row -->
@@ -445,7 +465,10 @@ h3 {
 	<span id="dl_progress">N</span> done
 </div>
 <div id="vrowlist" class="modal">
-	<!-- will be populated with list of rows -->
+	<a href="#" class="bcancel">《 Cancel</a>
+	<div id="vrowlistb">
+		<!-- will be populated with list of rows -->
+	</div>
 </div>
 <div id="addctx" class="modal">
 	<a href="#" class="bcancel">《 Cancel</a> <!-- ❮⫷ -->
@@ -561,7 +584,7 @@ h3 {
 		</table>
 	</div>
 	<div id="vmap" class="modal">
-		<canvas id="map" class="viewctl"></canvas>
+		<canvas id="map"></canvas>
 	</div>
 </div>
 <script>
@@ -663,6 +686,7 @@ var pending_day_db = null;
 var nfail = 0;
 var sortkey1 = 'loc';
 var sortkey2 = 'kan';
+var should_restore_scroll = false;
 
 
 var ALLROWS = '';
@@ -731,6 +755,7 @@ function ecn(classname) {
 
 
 function tab(tid) {
+	persist_scroll();
 	var tabs = ebi('topleft').getElementsByTagName('a');
 	for (var a = 0; a < tabs.length; a++)
 		tabs[a].classList.remove('act');
@@ -855,9 +880,9 @@ for (var a = 0; a < ROWS.length; a++) {
 		html.push('<a href="#">' + ROWS[a][b] + '</a>');
 	html.push('<hr />');
 }
-ebi('vrowlist').innerHTML = html.join('\n');
+ebi('vrowlistb').innerHTML = html.join('\n');
 
-var links = ebi('vrowlist').getElementsByTagName('a');
+var links = ebi('vrowlistb').getElementsByTagName('a');
 for (var a = 0, aa = links.length; a<aa; a++)
 	links[a].onclick = ev_jumprow;
 
@@ -892,7 +917,7 @@ function hide_viewctls(e) {
 	for (var a = 0, aa = modals.length; a<aa; a++)
 		modals[a].style.display = 'none';
 	
-	ebi('site').style.paddingTop = '4.5em';  // ¯\_(ツ)_/¯
+	ev_resize();
 }
 function show(html_id) {
 	ebi(html_id).style.display = 'block';
@@ -1109,14 +1134,25 @@ function ev_dload() {
 }
 
 var scroll_obj = null;
-var scroll_pos = null;
+var scroll_pos = [0,0];
 function persist_scroll() {
 	var vtab = ebi('vtab');
 	if (vtab.style.display === 'none')
 		return;
+	
+	var idx = -1;
+	
+	if (ebi('added_jump').style.display === 'block')
+		idx = 0;
+	
+	if (ebi('tabh_row').style.display === 'block')
+		idx = 1
+	
+	if (idx < 0)
+		return;
 
 	if (scroll_obj !== null) {
-		scroll_pos = scroll_obj.scrollTop;
+		scroll_pos[idx] = scroll_obj.scrollTop;
 		return;
 	}
 	
@@ -1124,14 +1160,25 @@ function persist_scroll() {
 	var o2 = document.body;
 	
 	var obj = o1.scrollTop > o2.scrollTop ? o1 : o2;
-	scroll_pos = obj.scrollTop;
+	scroll_pos[idx] = obj.scrollTop;
 	
-	if (scroll_pos > 0)
+	if (scroll_pos[idx] > 0)
 		scroll_obj = obj;
 }
 function restore_scroll() {
+	var idx = -1;
+	
+	if (ebi('added_jump').style.display === 'block')
+		idx = 0;
+	
+	if (ebi('tabh_row').style.display === 'block')
+		idx = 1
+	
+	if (idx < 0)
+		return;
+
 	if (scroll_obj !== null)
-		scroll_obj.scrollTop = scroll_pos;
+		scroll_obj.scrollTop = scroll_pos[idx];
 }
 
 function refresh() {
@@ -1151,6 +1198,8 @@ function ev_cir(sortfunc, only_faved) {
 		BOOTHS = JSON.parse(JSON.stringify(dbday));
 		BOOTHS.sort(sortfunc);
 		draw_tbody(only_faved);
+		if (should_restore_scroll)
+			restore_scroll();
 	})});
 }
 function ev_cirkan() {
@@ -1170,13 +1219,14 @@ function ev_cirrom() {
 	ev_cir((a,b) => (a.rom.localeCompare(b.rom)), false);
 }
 function ev_row() {
+	should_restore_scroll = ebi('tabh_row').style.display === 'none';
 	render = function() {
 		hide_modals();
 		hide_viewctls();
+		tab('tbmenu_row');
 		show('tabh_row');
 		show('tabh_col');
 		show('tabh_txt');
-		tab('tbmenu_row');
 		goto_row(active_row);
 	};
 	default_intxt_if_box('trow_in', 'tabh_txt');
@@ -1239,8 +1289,7 @@ function goto_row(row) {
 	empty_row_msg = 'row ' + row + ' empty on day ' + active_day;
 	draw_tbody(false);
 
-	ebi('site').style.paddingTop = '10em';  // ¯\_(ツ)_/¯
-	
+	ev_resize();
 	draw_th();
 }
 function draw_tbody(only_faved) {
@@ -1436,6 +1485,7 @@ function ev_score(e) {
 	}
 }
 function ev_added() {
+	should_restore_scroll = ebi('added_jump').style.display === 'none';
 	hide_viewctls();
 	tab('tbmenu_chk');
 	ebi('tabh_h1').innerHTML = 'Shopping list';
@@ -1443,7 +1493,7 @@ function ev_added() {
 		ev_cir(locsort, true);
 		show('tabh_h1');
 		show('added_inf');
-		ebi('site').style.paddingTop = '6em';
+		show('added_jump');
 		
 		var have = 0;
 		var todo = 0;
@@ -1472,8 +1522,44 @@ function ev_added() {
 			html.push('<span>' + scorekeys[a] + '</span>' + scores[scorekeys[a]]);
 		
 		ebi('added_inf').innerHTML = html.join(' ');
+		
+		html = [];
+		have = 0;
+		todo = 0;
+		var last_row = null;
+		var first_in_row = null;
+		for (var a = 0, aa = dbsel.length; a<aa; a++) {
+			var loc = dbsel[a]['loc'];
+			var row = loc.slice(2, 3);
+			if (last_row != row) {
+				if (todo > 0)
+					html.push(
+						'<a href="#c' + first_in_row + '">' + last_row + '</a>' +
+						todo + '<span>/' + have + '</span>');
+				have = 0;
+				todo = 0;
+				last_row = row;
+				first_in_row = loc;
+			}
+			
+			if (dbsel[a]['done'])
+				have++;
+			else if (dbsel[a]['sc'] >= 5)
+				todo++;
+			
+			if (a == aa-1)  // :shrug:
+				if (todo > 0)
+					html.push(
+						'<a href="#c' + first_in_row + '">' + last_row + '</a>' +
+						todo + '/<span>' + have + '</span>');
+		}
+		ebi('added_jump').innerHTML = html.join(' ');
+		ev_resize();
 	};
 	render();
+	
+	if (should_restore_scroll)
+		restore_scroll();
 }
 function ev_focus(e) {
 	var sample = this.getAttribute('sample');
@@ -1643,9 +1729,15 @@ function ev_remove_ok(e) {
 	hide_modals();
 }
 function ev_mousedown(e) {
+	if (e.button > 1)
+		return;
+	
 	e.currentTarget.mdt = Date.now();
 }
 function ev_mouseup(e) {
+	if (e.button > 1)
+		return;
+	
 	var now = Date.now();
 	var tgt = e.currentTarget;
 	if (now - parseFloat(tgt.mdt) < 200)
@@ -1701,8 +1793,7 @@ function ev_tsch_input(e) {
 		draw_tbody(false);
 	};
 	render();
-
-	ebi('site').style.paddingTop = '6em';  // ¯\_(ツ)_/¯
+	ev_resize();
 }
 function ev_trowin_input(e) {
 	if (e !== undefined)
@@ -2120,7 +2211,6 @@ function show_map() {
 		}
 		hide_modals();
 		show('vmap');
-		show('map');
 	})});
 }
 function ev_showmap(e) {
@@ -2135,6 +2225,9 @@ function ev_resize(e) {
 	
 	//if (ebi('vmap').style.display !== 'none')
 	//	render();
+	
+	var h = parseInt(getComputedStyle(ebi('topnav'))['height'], 10);
+	ebi('site').style.paddingTop = h + 'px';
 }
 function ev_cancel(e) {
 	hide_modals(e);
