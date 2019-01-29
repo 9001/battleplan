@@ -460,6 +460,12 @@ canvas {
 		<input type="radio" name="addctx_exit_act" id="raddnext" name="raddnext">
 		<label for="raddnext">go to next booth</label>
 	</div></div>
+	<!-- div class="grid2"><a
+		href="#" id="bgotoprevsel">previous<a><a
+		href="#" id="bgotonextsel">nextious</a></div>
+	<div class="grid2"><a
+		href="#" id="bgotoprevday">previous<a><a
+		href="#" id="bgotonextday">nextious</a></div -->
 </div>
 <div id="vexport" class="modal">
 	<a href="#" class="bcancel">《 Cancel</a> <!-- ❮⫷ -->
@@ -494,7 +500,7 @@ canvas {
 	<a href="#" id="bdel_yes">DELET</a>
 </div>
 <div id="vurls" class="modal">
-	<a href="#" class="bcancel" invoke="ev_rowclick">《 Back</a>
+	<a href="#" class="bcancel" invoke="open_addctx">《 Back</a>
 	<a href="#" id="burl_new">💬 Add new</a> <!-- 🏵 -->
 	<div id="vurls_list">
 		<!-- will be the url list -->
@@ -1293,12 +1299,33 @@ function tb_fields(tgt) {
 		"romaji": tds[3].textContent
 	};
 }
-function get_tday(loc) {
+function get_ibooth(loc) {
+	for (var a = 0, aa = BOOTHS.length; a < aa; a++)
+		if (loc == BOOTHS[a]['loc'])
+			return a;
+	
+	return -1;
+}
+function get_tbooth(loc) {
+	var idx = get_ibooth(loc);
+	if (idx < 0)
+		return null;
+	
+	return BOOTHS[idx];
+}
+function get_iday(loc) {
 	for (var a = 0, aa = dbday.length; a < aa; a++)
 		if (loc == dbday[a]['loc'])
-			return dbday[a];
+			return a;
 	
-	return null;
+	return -1;
+}
+function get_tday(loc) {
+	var idx = get_iday(loc);
+	if (idx < 0)
+		return null;
+	
+	return dbday[idx];
 }
 function get_tsel(loc, create_if_404) {
 	for (var a = 0, aa = dbsel.length; a < aa; a++)
@@ -1827,12 +1854,19 @@ function ev_purge_day(e) {
 		put_day_db();
 	})});
 }
+var active_map = null;
 function ev_map_sel_hall(e) {
 	if (e !== undefined)
 		e.preventDefault();
 	
-	hide_modals();
-	show_excl('vmaphall');
+	var box = ebi('vmap');
+	if (box.style.display == 'block' || active_map == null) {
+		hide_modals();
+		show_excl('vmaphall');
+		return;
+	}
+	
+	show_map(active_map);
 }
 
 var ctx = ebi('map').getContext('2d');
@@ -1843,18 +1877,14 @@ var ctxr = (window.devicePixelRatio || 1) / (
 	ctx.oBackingStorePixelRatio ||
 	ctx.BackingStorePixelRatio || 1);
 
-function ev_showmap(e) {
-	if (e !== undefined)
-		e.preventDefault();
-	
+function show_map() {
 	tab('tbmenu_map');
 	inf(['drawing map']);
-	var that = this;
 	
 	lol(function() { lol(function() {
 		var sz = 10; // box size
 		
-		var mainhall = that.textContent;
+		var mainhall = active_map;
 		var subhalls = [];
 		var rows = '';
 		
@@ -2060,11 +2090,13 @@ function ev_showmap(e) {
 		show('vmap');
 		show('map');
 	})});
+}
+function ev_showmap(e) {
+	if (e !== undefined)
+		e.preventDefault();
 	
-	// a and b share coordinate pairs,
-	// need to check whether a table is divided into a/b
-	// and render it as a triangle;
-	// convention top-left is a, bottom-right is b
+	active_map = this.textContent;
+	show_map();
 }
 function ev_resize(e) {
 	draw_th(e);
@@ -2190,6 +2222,9 @@ function open_addctx(loc) {
 	
 	if (html.length > 0)
 		html.push('🔗 = added by circle<br />🔖 = added by (You)'); <!-- 🍆 -->
+	
+	//var iday = get_iday(loc);
+	//if (iday <= 0)
 	
 	ebi('addctxlinks').innerHTML = html.join('\n');
 	ebi('trow_out').value = loc;
