@@ -1,6 +1,8 @@
 # battleplan
 offline comiket shopping list webapp
 
+**live here:** https://dootnode.org/ed/c95/bp/
+
 maintainers: see the tools folder for a separate readme
 
 # fair warning
@@ -20,6 +22,9 @@ I'd really like to clean this up but my todo-list is already killing me for the 
 * note: you need to have bp set to the correct day first
 * export your shopping list to a json file which can be imported to a laptop or whatever (currently imports will overwrite the current shopping list, a merge feature will be added)
 * possible to do all this fully offline by saving the html file and json files to your phone
+
+# feature wishlist
+* click the map to show nearby circles on your shopping list
 
 # use it online
 * https://dootnode.org/ed/c95/bp/
