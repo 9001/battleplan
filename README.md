@@ -3,6 +3,11 @@ offline comiket shopping list webapp
 
 maintainers: see the tools folder for a separate readme
 
+# fair warning
+this was thrown together in a rush starting one week before comiket, and this definitely shows in the quality of the code
+
+I'd really like to clean this up but my todo-list is already killing me for the next 6 months mengo
+
 # features
 * browse booths at comiket
 * search for circles
@@ -41,6 +46,3 @@ maintainers: see the tools folder for a separate readme
 
 # maintenance forecast
 * database files will be available for summerket 2019
-
-# remaining work to be done
-* lots of cleanup, probably not until the next winterket orz
