@@ -1,7 +1,7 @@
 # battleplan
 offline comiket shopping list webapp
 
-**user's guide:** [MANUAL.md](manual.md)
+**user's guide:** [MANUAL.md](MANUAL.md)
 
 **live here:** https://dootnode.org/ed/c95/bp/
 
