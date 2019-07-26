@@ -729,7 +729,6 @@ var nfail = 0;
 var sortkey1 = 'loc';
 var sortkey2 = 'kan';
 var active_tab = null;
-var should_restore_scroll = false;
 var shitty_canvas_performance = false;  // TODO: set true for iOS
 
 
@@ -859,8 +858,10 @@ function ecn(classname) {
 }
 
 
-function tab(tid) {
-	persist_scroll();
+function tab(tid, skip_persist) {
+	if (!skip_persist)
+		persist_scroll();
+	
 	active_tab = tid;
 	var tabs = ebi('topleft').getElementsByTagName('a');
 	for (var a = 0; a < tabs.length; a++)
@@ -1275,7 +1276,6 @@ function restore_scroll() {
 
 function refresh() {
 	//var t = document.getElementsByTagName('*'); for (var a=0, aa=t.length; a<aa; a++) if (t[a].scrollTop > 0) alert(t[a].scrollTop + ' for ' + t[a].tagName + ' / ' + t[a].id);
-	persist_scroll();
 	render();
 	
 	lol(function() { lol(function() {
@@ -1308,11 +1308,10 @@ function ev_row(e) {
 	if (e !== undefined)
 		e.preventDefault();
 	
-	should_restore_scroll = ebi('tabh_row').style.display === 'none';
 	render = function() {
 		hide_modals();
 		hide_viewctls();
-		tab('tbmenu_row');
+		tab('tbmenu_row', true);
 		show('tabh_row');
 		show('tabh_col');
 		show('tabh_txt');
@@ -1429,11 +1428,9 @@ function draw_tbody(only_faved) {
 		rows[a].onmouseup = ev_mouseup;
 	}
 	draw_th();
-	
-	if (should_restore_scroll) {
-		should_restore_scroll = false;
+	lol(function() { lol(function() {
 		restore_scroll();
-	}
+	})});
 }
 function draw_th() {
 	var co = ebi('tabh_col');
@@ -1580,7 +1577,6 @@ function ev_score(e) {
 	}
 }
 function ev_added() {
-	should_restore_scroll = ebi('added_jump').style.display === 'none';
 	hide_viewctls();
 	tab('tbmenu_chk');
 	render = function() {
@@ -2525,6 +2521,7 @@ function ev_resize(e) {
 }
 function ev_cancel(e) {
 	hide_modals(e);
+	restore_scroll();
 	
 	var backto = this.getAttribute('goto');
 	if (backto != null)
