@@ -2,7 +2,7 @@
 <!--
 
 	battleplan <ed@irc.rizon.net>, MIT-licensed
-	https://dootnode.org/ed/c95/bp/
+	https://dootnode.org/ed/c96/bp/
 
 -->
 <meta charset="utf-8">
@@ -451,9 +451,24 @@ h3 {
 </div>
 <div id="vday" class="modal">
 	<a href="#" class="bcancel">《 Cancel</a>
-	<a href="#" id="bmenu_day1">土 / 1</a>
-	<a href="#" id="bmenu_day2">日 / 2</a>
-	<a href="#" id="bmenu_day3">月 / 3</a>
+	<!--
+		https://ja.wikipedia.org/wiki/%E6%9B%9C%E6%97%A5
+		1 月曜日 mon
+		2 火曜日 tue
+		3 水曜日 wed
+		4 木曜日 thu
+		5 金曜日 fri
+		6 土曜日 sat
+		7 日曜日 sun
+
+		https://www.comiket.co.jp/index_e.html
+		August 9,10,11,12 in 2019
+		fri sat sun mon 金 土 日 月
+	-->
+	<a href="#" id="bmenu_day1">金 / 1</a>
+	<a href="#" id="bmenu_day2">土 / 2</a>
+	<a href="#" id="bmenu_day3">日 / 3</a>
+	<a href="#" id="bmenu_day4">月 / 4</a>
 	<a href="#" id="dbg">debug</a>
 </div>
 <div id="vcirtype" class="modal">
@@ -561,10 +576,12 @@ h3 {
 	<a href="#" id="burl_del">Delete</a>
 </div>
 <div id="vmaphall" class="modal">
+	<!-- 東|123|456|西 -->
 	<a href="#" class="bcancel">《 Cancel</a>
-	<a href="#" id="bmaphall_e123">東123</a>
-	<a href="#" id="bmaphall_e456">東456</a>
+	<a href="#" id="bmaphall_s12">南12</a>
+	<a href="#" id="bmaphall_s34">南34</a>
 	<a href="#" id="bmaphall_w12">西12</a>
+	<a href="#" id="bmaphall_w34">西34</a>
 </div>
 <div id="vpurgedb" class="modal">
 	<p>could not write the database into localStore; it is probably full.</p>
@@ -658,19 +675,19 @@ window.onerror = function(msg, url, lineNo, columnNo, error) {
 
 // だけど僕はそのままの
 
-var DAYS = ['土','日','月'];
-var HALLS = ['e1','e2','e3','e6','e5','e4','w1a','w1b','w2a','w2b'];
+var DAYS = ['金', '土', '日', '月'];
+var HALLS = ['s1','s2','s3','s4','w1a','w1b','w2a','w2b','w3a','w3b'];
 var ROWS = [
-	'ＡＢＣＤＥＦＧＨＩＪＫＬ',
-	'ＭＮＯＰＱＲＳＴＵＶＷＸＹＺ',
-	'アイウエオカキクケコサ',
-	'シスセソタチツテトナニヌネ',
-	'ノハパヒピフプヘペホポマ',
-	'ミムメモヤユヨラリルレロ',
-	'れにぬねのはひふへほまみむめも',
-	'やゆよらりる',
-	'あくけこさしすせそたちつてとな',
-	'いうえおかき'
+	"アイウエオカキクケコ",
+	"サシスセソタチツテト",
+	"ナニヌネノハヒフヘホ",
+	"マミムメモヤユヨラリ",
+	"れぬねのはひふへほまみむめも",
+	"やゆよらりる",
+	"あくけこさしすせそたちつてと",
+	"いうえおかき",
+	"ＡＢＣＤＥＦＧＨＩＪＫＬ",
+	"ＭＮＯＰＱＲ"
 ];
 var sc_col = {
 	"-": "#000",
@@ -1044,7 +1061,7 @@ function load_day(day) {
 	{
 		loaded = localStorage.getItem('activeday');
 		if (loaded == null)
-			active_day = 2;
+			active_day = 4;
 		else
 			active_day = parseInt(loaded, 10);
 	}
@@ -1055,12 +1072,7 @@ function load_day(day) {
 	ebi('bmenu_day').innerHTML = '📆 Change day (now: ' + active_day + ')';
 	ebi('bmenu_dload').innerHTML = '📲 Download DB for Day ' + active_day;
 	
-	var compressed = true;
-	loaded = localStorage.getItem('zday' + active_day);
-	if (loaded == null) {
-		loaded = localStorage.getItem('day' + active_day);
-		compressed = false;
-	}
+	loaded = localStorage.getItem('z96day' + active_day);
 	if (loaded == null) {
 		warn([
 			"<strong>== Day " + active_day + " database not downloaded ==</strong>",
@@ -1070,14 +1082,14 @@ function load_day(day) {
 		]);
 		return false;
 	}
-	if (compressed)
-		try {
-			loaded = LZString.decompressFromUTF16(loaded);
-		}
-		catch (ex) {
-			loaded = '[]';
-			alert('failed to unpack the circle/booth database; you will still be able to export your JSON while I figure out what went wrong (sorry)');
-		}
+	
+	try {
+		loaded = LZString.decompressFromUTF16(loaded);
+	}
+	catch (ex) {
+		loaded = '[]';
+		alert('failed to unpack the circle/booth database; you will still be able to export your JSON while I figure out what went wrong (sorry)');
+	}
 	
 	dbday = JSON.parse(loaded);
 	
@@ -1110,12 +1122,7 @@ function load_day(day) {
 	//return true;
 }
 function load_sel() {
-	var compressed = true;
-	loaded = localStorage.getItem('zsel' + active_day);
-	if (loaded == null) {
-		loaded = localStorage.getItem('sel' + active_day);
-		compressed = false;
-	}
+	loaded = localStorage.getItem('z96sel' + active_day);
 	if (loaded == null) {
 		dbsel = [];
 		inf([
@@ -1125,13 +1132,13 @@ function load_sel() {
 		]);
 		return true;
 	}
-	if (compressed)
-		try {
-			loaded = LZString.decompressFromUTF16(loaded);
-		}
-		catch (ex) {
-			croak('failed to unpack your shopping list database (fuck)');
-		}
+
+	try {
+		loaded = LZString.decompressFromUTF16(loaded);
+	}
+	catch (ex) {
+		croak('failed to unpack your shopping list database (fuck)');
+	}
 	
 	dbsel = JSON.parse(loaded);
 	return true;
@@ -1140,8 +1147,7 @@ function save_sel() {
 	try {
 		var jsontxt = JSON.stringify(dbsel);
 		var packed = LZString.compressToUTF16(jsontxt);
-		localStorage.setItem('zsel' + active_day, packed);
-		localStorage.removeItem('sel' + active_day);
+		localStorage.setItem('z96sel' + active_day, packed);
 	}
 	catch (ex) {
 		busted_localstore = true;
@@ -1168,7 +1174,8 @@ function put_day_db(jsontxt) {
 	try {
 		if (nfail-- > 0) throw 42;
 		localStorage.removeItem('day' + active_day);
-		localStorage.setItem('zday' + active_day, pending_day_db);
+		localStorage.removeItem('zday' + active_day);
+		localStorage.setItem('z96day' + active_day, pending_day_db);
 	}
 	catch (ex) {
 		full_localstore();
@@ -1673,38 +1680,32 @@ function ev_export(e) {
 }
 function gen_export() {
 	var ret = {};
-	for (var a = 1; a <= 3; a++) {
+	for (var a = 1; a <= 4; a++) {
 		try {
-			var kt = localStorage.getItem('sel'+a);
-			if (kt != null)
-				ret['sel'+a] = JSON.parse(kt);
-		}
-		catch(ex) {
-			alert('failed to export Uncompressed selection db ' + a);
-		}
-		
-		try {
-			kt = localStorage.getItem('zsel'+a);
+			var kt = localStorage.getItem('z96sel'+a);
 			if (kt != null) {
 				var unpacked = LZString.decompressFromUTF16(kt);
-				ret['sel'+a] = JSON.parse(unpacked);
+				ret['c96sel'+a] = JSON.parse(unpacked);
 			}
 		}
 		catch(ex) {
-			alert('failed to export Compressed selection db ' + a);
+			alert('failed to export selection db ' + a);
 		}
 	}
 	if (busted_localstore) {
 		alert('emergency export of day ' + active_day + ' in effect');
-		ret['sel'+active_day] = dbsel;
+		ret['c96sel'+active_day] = dbsel;
 	}
-	for (var a = 1; a <= 3; a++) {
-		if (!ret['sel'+a])
+	for (var a = 1; a <= 4; a++) {
+		if (!ret['c96sel'+a])
 			continue;
 
-		ret['sel'+a].sort(locsort);
+		ret['c96sel'+a].sort(locsort);
 	}
-	return JSON.stringify(ret).replace(/},{"loc":"/g, '},\n{"loc":"');
+	return JSON.stringify(ret
+		).replace(/{"loc":"/g, '\n{"loc":"'
+		).replace(/}],"/g, '}],\n"'
+		);
 }
 function ev_export_file(e) {
 	if (e !== undefined)
@@ -1735,9 +1736,9 @@ function import_text(txt) {
 			json_err(ex, txt);
 			return;
 		}
-		for (var a = 1; a <= 3; a++) {
-			var uk = 'sel' + a;
-			var ck = 'zsel' + a;
+		for (var a = 1; a <= 4; a++) {
+			var uk = 'c96sel' + a;
+			var ck = 'z96sel' + a;
 			localStorage.removeItem(uk);
 			localStorage.removeItem(ck);
 			if (iv[uk]) {
@@ -2093,7 +2094,7 @@ function ev_url_delete(e) {
 }
 function full_localstore() {
 	var html = [];
-	var keys = ['day1','day2','day3','zday1','zday2','zday3'];
+	var keys = ['day1','day2','day3','zday1','zday2','zday3','z96day1','z96day2','z96day3','z96day4'];
 	for (var a = 0; a < keys.length; a++)
 		try {
 			var len = localStorage.getItem(keys[a]).length;
@@ -2162,14 +2163,17 @@ function show_map() {
 		var subhalls = [];
 		var rows = '';
 		
-		if (mainhall == '東123')
-			subhalls = ['e1','e2','e3'];
+		if (mainhall == '南12')
+			subhalls = ['s1','s2'];
 		
-		if (mainhall == '東456')
-			subhalls = ['e6','e5','e4'];
+		if (mainhall == '南34')
+			subhalls = ['s3','s4'];
 		
 		if (mainhall == '西12')
 			subhalls = ['w1a','w1b','w2a','w2b'];
+		
+		if (mainhall == '西34')
+			subhalls = ['w3a','w3b'];
 		
 		for (var a = 0; a < HALLS.length; a++)
 			for (var b = 0; b < subhalls.length; b++)
@@ -2225,7 +2229,7 @@ function show_map() {
 		ctx.lineCap = 'butt';
 		ctx.strokeStyle = '#231';
 		
-		ctx.fillStyle = '#bbb';
+		ctx.fillStyle = '#573';
 		ctx.font = '24px sans-serif';
 		for (var a = 0; a < rows.length; a++) {
 			var minx = rowmm[a][0];
@@ -2236,24 +2240,70 @@ function show_map() {
 				continue;
 			
 			var x, y;
-			if (mainhall != '西12') {
+			if (mainhall != '西12' && mainhall != '西34') {  // c96
 				x = (minx + (maxx-minx)/2) - sz * 0.5;
-				y = (miny + (maxy-miny)/2) + sz * 1.5;
+				y = [
+					miny - sz * 1,
+					maxy + sz * 3.5
+				];
 				if (maxx-minx>128 && maxy-miny>128) {
-					x = minx - sz;
-					y = miny;
+					x = [
+						minx - sz,
+						maxx - sz
+					];
+					y = [
+						miny - sz * 0.5,
+						maxy + sz * 1
+					];
 				}
 			}
 			else {
-				ctx.beginPath();
-				ctx.moveTo(0, 380);
-				ctx.lineTo(1000, 380);
-				ctx.stroke();
-				
-				ctx.beginPath();
-				ctx.moveTo(500, 0);
-				ctx.lineTo(500, 1000);
-				ctx.stroke();
+				if (mainhall != '西34') {  // c96: no room split
+					ctx.beginPath();
+					ctx.moveTo(0, 380);
+					ctx.lineTo(1000, 380);
+					ctx.stroke();
+					
+					ctx.beginPath();
+					ctx.moveTo(500, 0);
+					ctx.lineTo(500, 1000);
+					ctx.stroke();
+				}
+				else {  // c96: multirow rows
+					var ostroke = ctx.strokeStyle;
+					ctx.strokeStyle = '#341';
+					
+					// vertical bars; x y1 y2
+					var bartab = [
+						[235, 59, 240],  // gf
+						[325, 59, 240],  // fe
+						[390, 59, 240],  // ed
+						[515, 59, 240],  // dc
+						[616, 59, 240],  // cb
+						[720, 59, 240]   // ba
+					];
+					for (var b = 0; b < bartab.length; b++) {
+						ctx.beginPath();
+						ctx.moveTo(bartab[b][0], bartab[b][1]);
+						ctx.lineTo(bartab[b][0], bartab[b][2]);
+						ctx.stroke();
+					}
+
+					// horizontal bars; y x1 x2
+					bartab = [
+						[ 59, 235, 720],  // ga upper
+						[240, 235, 720],  // ga lower
+						[389,  57, 243]   // roomsplit
+					];
+					for (var b = 0; b < bartab.length; b++) {
+						ctx.beginPath();
+						ctx.moveTo(bartab[b][1], bartab[b][0]);
+						ctx.lineTo(bartab[b][2], bartab[b][0]);
+						ctx.stroke();
+					}
+
+					ctx.strokeStyle = ostroke;
+				}
 
 				x = (minx + (maxx-minx)/2) - sz * 0.5;
 				if (maxy - miny < 200)
@@ -2264,11 +2314,26 @@ function show_map() {
 					y = (miny + (maxy-miny)/2.8) + sz * 0.5;
 				
 				if (maxx-minx>128 && maxy-miny>128) {
-					x = minx - sz;
-					y = miny;
+					x = [
+						minx - sz,
+						maxx - sz
+					];
+					y = [
+						miny - sz * 0.5,
+						maxy + sz * 1
+					];
 				}
 			}
-			ctx.fillText(rows[a], x, y);
+
+			if (!Array.isArray(x))
+				x = [x];
+			
+			if (!Array.isArray(y))
+				y = [y];
+			
+			for (var b = 0; b < x.length; b++)
+				for (var c = 0; c < y.length; c++)
+					ctx.fillText(rows[a], x[b], y[c]);
 		}
 		
 		ctx.fillStyle = '#351';
@@ -2436,6 +2501,19 @@ function ev_showmap(e) {
 	active_map = this.textContent;
 	show_map();
 }
+function canpos() {
+	var can = ebi('map');
+	can.onclick = function(e) {
+		var rect = can.getBoundingClientRect(),
+			scaleX = can.width / (rect.width * ctxr),
+			scaleY = can.height / (rect.height * ctxr),
+			x = (e.clientX - rect.left) * scaleX,
+			y = (e.clientY - rect.top) * scaleY;
+	
+		alert(Math.floor(x) + '  ' + Math.floor(y));
+	};
+}
+//canpos();
 function ev_resize(e) {
 	draw_th(e);
 	
@@ -2680,6 +2758,7 @@ ebi('bmenu_day').onclick = show_chday;
 ebi('bmenu_day1').onclick = ev_chday;
 ebi('bmenu_day2').onclick = ev_chday;
 ebi('bmenu_day3').onclick = ev_chday;
+ebi('bmenu_day4').onclick = ev_chday;
 ebi('bmenu_dload').onclick = ev_dload;
 //ebi('tbmenu_cir').onclick = ev_cirtype;
 ebi('bmenu_cir').onclick = ev_cirtype;
@@ -2715,9 +2794,10 @@ ebi('burl_edit').onclick = ev_url_edit_save;
 ebi('burl_del').onclick = ev_url_delete;
 ebi('tbmenu_map').onclick = ev_map_sel_hall;
 ebi('bmenu_map').onclick = ev_map_sel_hall;
-ebi('bmaphall_e123').onclick = ev_showmap
-ebi('bmaphall_e456').onclick = ev_showmap
+ebi('bmaphall_s12').onclick = ev_showmap
+ebi('bmaphall_s34').onclick = ev_showmap
 ebi('bmaphall_w12').onclick = ev_showmap
+ebi('bmaphall_w34').onclick = ev_showmap
 ebi('bqnote').onclick = ev_add_qnote;
 ebi('tqnote').onfocus = ev_focus;
 ebi('tqnote').onblur = ev_blur;
