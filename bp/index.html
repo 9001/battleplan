@@ -1055,6 +1055,14 @@ function ev_chday(e) {
 		load_day(nday);
 	})});
 }
+function err_no_data() {
+	warn([
+		"<strong>== Day " + active_day + " database not downloaded ==</strong>",
+		"Use the menu button top right;",
+		"optionally change to another day first,",
+		"then press «<u>Download DB</u>» to continue"
+	]);
+}
 function load_day(day) {
 	var loaded;
 	
@@ -1069,18 +1077,14 @@ function load_day(day) {
 	else
 		active_day = day;
 	
+	dbday = [];
 	localStorage.setItem('activeday', active_day);
 	ebi('bmenu_day').innerHTML = '📆 Change day (now: ' + active_day + ')';
 	ebi('bmenu_dload').innerHTML = '📲 Download DB for Day ' + active_day;
 	
 	loaded = localStorage.getItem('z96day' + active_day);
 	if (loaded == null) {
-		warn([
-			"<strong>== Day " + active_day + " database not downloaded ==</strong>",
-			"Use the menu button top right;",
-			"optionally change to another day first,",
-			"then press «<u>Download DB</u>» to continue"
-		]);
+		err_no_data();
 		return false;
 	}
 	
@@ -1333,6 +1337,11 @@ function ev_jumprow(e) {
 	if (e !== undefined)
 		e.preventDefault();
 
+	// todo: oop views
+	scroll_pos[1] = 0;
+	if (scroll_obj !== null)
+		scroll_obj.scrollTop = 0;
+	
 	goto_row(this.innerHTML);
 }
 function goto_row(row) {
@@ -1416,8 +1425,13 @@ function draw_tbody(only_faved) {
 	}
 	
 	if (html.length == 0)
+	{
+		if (dbday.length == 0)
+			return err_no_data();
+
 		html.push('<tr><td colspan="4">' +
 			empty_row_msg + '</td></tr>');
+	}
 	
 	ebi('tb').innerHTML = html.join('\n');
 	
@@ -1472,6 +1486,11 @@ function draw_th() {
 function ev_steprow() {
 	if (this.classList.contains('off'))
 		return;
+	
+	// todo: oop views
+	scroll_pos[1] = 0;
+	if (scroll_obj !== null)
+		scroll_obj.scrollTop = 0;
 	
 	goto_row(this.innerHTML);
 }
@@ -1823,7 +1842,11 @@ function ev_mouseup(e) {
 	var tgt = e.currentTarget;
 	if (now - parseFloat(tgt.mdt) < 200)
 		lol(function() { lol(function() {
-			window[tgt.getAttribute('act')](e, tgt);
+			var fn = tgt.getAttribute('act');
+			if (window[fn])
+				window[fn](e, tgt);
+			else
+				console.log('undefined function: ' + fn);
 		})});
 }
 function default_intxt_if_box(intxt, box) {
