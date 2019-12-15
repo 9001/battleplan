@@ -4,12 +4,12 @@ set -e
 f() {
     d="$1"
     k="$2"
-    printf '"c96sel%s":[\n' $d
+    printf '"c97sel%s":[\n' $d
     while IFS=' ' read -r r b1 b2; do
         [ -z "$c" ] || [ "$c" -le 6 ] && c=10
         c=$((c-1))
-        # {"c96sel2":[{"loc":"2南ネ01b","sc":"8"},
-        # {"loc":"2南ネ02a","sc":"9"}],"c96sel4":[]}
+        # {"c97sel2":[{"loc":"2南ネ01b","sc":"8"},
+        # {"loc":"2南ネ02a","sc":"9"}],"c97sel4":[]}
         printf '%s{"loc":"%s%s%s%02da","sc":"%s"}\n' "$co" "$d" "$k" "$r" "$b1" "$c"
         printf  ',{"loc":"%s%s%s%02db","sc":"%s"}\n'       "$d" "$k" "$r" "$b2" "$c"
         co=,

@@ -2,7 +2,7 @@
 <!--
 
 	battleplan <ed@irc.rizon.net>, MIT-licensed
-	https://dootnode.org/ed/c96/bp/
+	https://dootnode.org/ed/c97/bp/
 
 -->
 <meta charset="utf-8">
@@ -462,13 +462,13 @@ h3 {
 		7 日曜日 sun
 
 		https://www.comiket.co.jp/index_e.html
-		August 9,10,11,12 in 2019
-		fri sat sun mon 金 土 日 月
+		Dec 28,29,30,31 in 2019
+		sat sun mon tue 土 日 月 火
 	-->
-	<a href="#" id="bmenu_day1">金 / 1</a>
-	<a href="#" id="bmenu_day2">土 / 2</a>
-	<a href="#" id="bmenu_day3">日 / 3</a>
-	<a href="#" id="bmenu_day4">月 / 4</a>
+	<a href="#" id="bmenu_day1">土 / 1</a>
+	<a href="#" id="bmenu_day2">日 / 2</a>
+	<a href="#" id="bmenu_day3">月 / 3</a>
+	<a href="#" id="bmenu_day4">火 / 4</a>
 	<a href="#" id="dbg">debug</a>
 </div>
 <div id="vcirtype" class="modal">
@@ -675,7 +675,7 @@ window.onerror = function(msg, url, lineNo, columnNo, error) {
 
 // だけど僕はそのままの
 
-var DAYS = ['金', '土', '日', '月'];
+var DAYS = ['土', '日', '月', '火'];
 var HALLS = ['s1','s2','s3','s4','w1a','w1b','w2a','w2b','w3a','w3b'];
 var ROWS = [
 	"アイウエオカキクケコ",
@@ -1082,7 +1082,7 @@ function load_day(day) {
 	ebi('bmenu_day').innerHTML = '📆 Change day (now: ' + active_day + ')';
 	ebi('bmenu_dload').innerHTML = '📲 Download DB for Day ' + active_day;
 	
-	loaded = localStorage.getItem('z96day' + active_day);
+	loaded = localStorage.getItem('z97day' + active_day);
 	if (loaded == null) {
 		err_no_data();
 		return false;
@@ -1127,7 +1127,7 @@ function load_day(day) {
 	//return true;
 }
 function load_sel() {
-	loaded = localStorage.getItem('z96sel' + active_day);
+	loaded = localStorage.getItem('z97sel' + active_day);
 	if (loaded == null) {
 		dbsel = [];
 		inf([
@@ -1152,7 +1152,7 @@ function save_sel() {
 	try {
 		var jsontxt = JSON.stringify(dbsel);
 		var packed = LZString.compressToUTF16(jsontxt);
-		localStorage.setItem('z96sel' + active_day, packed);
+		localStorage.setItem('z97sel' + active_day, packed);
 	}
 	catch (ex) {
 		busted_localstore = true;
@@ -1180,7 +1180,7 @@ function put_day_db(jsontxt) {
 		if (nfail-- > 0) throw 42;
 		localStorage.removeItem('day' + active_day);
 		localStorage.removeItem('zday' + active_day);
-		localStorage.setItem('z96day' + active_day, pending_day_db);
+		localStorage.setItem('z97day' + active_day, pending_day_db);
 	}
 	catch (ex) {
 		full_localstore();
@@ -1697,10 +1697,10 @@ function gen_export() {
 	var ret = {};
 	for (var a = 1; a <= 4; a++) {
 		try {
-			var kt = localStorage.getItem('z96sel'+a);
+			var kt = localStorage.getItem('z97sel'+a);
 			if (kt != null) {
 				var unpacked = LZString.decompressFromUTF16(kt);
-				ret['c96sel'+a] = JSON.parse(unpacked);
+				ret['c97sel'+a] = JSON.parse(unpacked);
 			}
 		}
 		catch(ex) {
@@ -1709,13 +1709,13 @@ function gen_export() {
 	}
 	if (busted_localstore) {
 		alert('emergency export of day ' + active_day + ' in effect');
-		ret['c96sel'+active_day] = dbsel;
+		ret['c97sel'+active_day] = dbsel;
 	}
 	for (var a = 1; a <= 4; a++) {
-		if (!ret['c96sel'+a])
+		if (!ret['c97sel'+a])
 			continue;
 
-		ret['c96sel'+a].sort(locsort);
+		ret['c97sel'+a].sort(locsort);
 	}
 	return JSON.stringify(ret
 		).replace(/{"loc":"/g, '\n{"loc":"'
@@ -1752,8 +1752,8 @@ function import_text(txt) {
 			return;
 		}
 		for (var a = 1; a <= 4; a++) {
-			var uk = 'c96sel' + a;
-			var ck = 'z96sel' + a;
+			var uk = 'c97sel' + a;
+			var ck = 'z97sel' + a;
 			localStorage.removeItem(uk);
 			localStorage.removeItem(ck);
 			if (iv[uk]) {
@@ -2113,7 +2113,7 @@ function ev_url_delete(e) {
 }
 function full_localstore() {
 	var html = [];
-	var keys = ['day1','day2','day3','zday1','zday2','zday3','z96day1','z96day2','z96day3','z96day4'];
+	var keys = ['day1','day2','day3','zday1','zday2','zday3','z97day1','z97day2','z97day3','z97day4'];
 	for (var a = 0; a < keys.length; a++)
 		try {
 			var len = localStorage.getItem(keys[a]).length;
@@ -2259,7 +2259,7 @@ function show_map() {
 				continue;
 			
 			var x, y;
-			if (mainhall != '西12' && mainhall != '西34') {  // c96
+			if (mainhall != '西12' && mainhall != '西34') {  // c97
 				x = (minx + (maxx-minx)/2) - sz * 0.5;
 				y = [
 					miny - sz * 1,
@@ -2277,7 +2277,7 @@ function show_map() {
 				}
 			}
 			else {
-				if (mainhall != '西34') {  // c96: no room split
+				if (mainhall != '西34') {  // c97: no room split
 					ctx.beginPath();
 					ctx.moveTo(0, 380);
 					ctx.lineTo(1000, 380);
@@ -2288,7 +2288,7 @@ function show_map() {
 					ctx.lineTo(500, 1000);
 					ctx.stroke();
 				}
-				else {  // c96: multirow rows
+				else {  // c97: multirow rows
 					var ostroke = ctx.strokeStyle;
 					ctx.strokeStyle = '#341';
 					

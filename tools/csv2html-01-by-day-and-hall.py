@@ -39,7 +39,7 @@ all_halls = {
     "w2a": w2a,
     "w2b": w2b,
 }
-all_days = ["金", "土", "日", "月"]
+all_days = ['土', '日', '月', '火']
 
 genres_jp = {
     "111": "創作(少年)",
@@ -69,12 +69,10 @@ genres_jp = {
     "400": "FC(ジャンプその他)",
     "431": "黒子のバスケ",
     "432": "ハイキュー！！",
-    "433": "ワールドトリガー",
     "500": "アニメ(その他)",
     "511": "アニメ(少女)",
     "531": "ガンダム",
     "532": "TIGER＆BUNNY",
-    "533": "おそ松さん",
     "534": "ユーリ!!! on ICE",
     "535": "ガルパン",
     "600": "評論・情報",
@@ -86,65 +84,61 @@ genres_jp = {
     "813": "FC(少女・青年)",
     "831": "ヘタリア",
     "833": "進撃の巨人",
-    "835": "血界戦線",
     "836": "名探偵コナン",
     "900": "その他",
     "911": "コスプレ",
     "912": "男性向",
-    "999": "ノンジャンル",
+    "999": "ノンジャンル"
 }
 
 genres_en = {  # thx google tl
-    "111": "Creation (boy)",
-    "112": "Creation (Girl)",
-    "113": "Creation (JUNE / BL)",
+    "111": "Creation/Boy",
+    "112": "Creation/Girl",
+    "113": "Creation/BL",
     "114": "History and Creation (literary arts and novels)",
     "115": "Academic",
-    "116": "Original Goods",
-    "211": "Galgue",
-    "212": "Digital (Others)",
+    "116": "OC/Misc",
+    "211": "Galge",
+    "212": "Digital/Misc",
     "213": "Doujin Software",
     "221": "TYPE-MOON",
-    "232": "Idol Master",
-    "233": "Love Live!",
-    "234": "Touhou Project",
-    "300": "Games (Others)",
-    "311": "Game (No Power Required)",
-    "312": "Game (Net Social)",
-    "313": "Game (RPG)",
-    "314": "Game (Love)",
-    "315": "Game (for social women)",
-    "321": "Square Enix (RPG)",
-    "331": "Kan Colle",
-    "332": "Token Ranbu",
-    "333": "Ensemble Stars!",
+    "232": "IM@S",
+    "233": "LoveLive",
+    "234": "TOUHOU HIJACK",
+    "300": "Games/Misc",
+    "311": "Games/Analogue",
+    "312": "Games/Net/Social",
+    "313": "Games/RPG",
+    "314": "Games/Love",
+    "315": "Games/SocialWomen",
+    "321": "Square Enix",
+    "331": "Kancolle",
+    "332": "Tokuen Ranbu",
+    "333": "Ensemble Stars",
     "334": "Azur Lane",
-    "400": "FC (Jump Other)",
-    "431": "Kuroko's Basketball",
-    "432": "Haikyu !!",
-    "433": "World Trigger",
-    "500": "Anime (Others)",
-    "511": "Anime (Girl)",
+    "400": "FC/ShonenJump",
+    "431": "Kuroko no Basuke",
+    "432": "Haikyu",
+    "500": "Anime/Misc",
+    "511": "Anime/Shoujo",
     "531": "Gundam",
-    "532": "TIGER & BUNNY",
-    "533": "Osomatsu-san",
-    "534": "Yuri !!! on ICE",
-    "535": "Galpan",
-    "600": "Criticism & Information",
-    "611": "Railway / Travel / Mechamy",
-    "700": "TV · Film · Entertainment · Special Effects",
-    "711": "Music (Western Music / Japanese Music / Male Idol)",
-    "811": "FC (Novel)",
-    "812": "FC (boy)",
-    "813": "FC (Girl / Youth)",
+    "532": "TIGER&BUNNY",
+    "534": "Yuri on ice",
+    "535": "Garupan",
+    "600": "Critic/Info",
+    "611": "Rail/Travel/Mechamy",
+    "700": "TV/Movies/VFX",
+    "711": "Music/Western/MaleIdol",
+    "811": "FC/Novels",
+    "812": "FC/Shonen",
+    "813": "FC/Shoujo",
     "831": "Hetalia",
     "833": "Attack on Titan",
-    "835": "Blood Front",
     "836": "Detective Conan",
-    "900": "Others",
+    "900": "Misc",
     "911": "Cosplay",
-    "912": "For men",
-    "999": "Non-Genre",
+    "912": "For dudes",
+    "999": "Unclassified",
 }
 
 
@@ -336,7 +330,7 @@ def main():
                     rdh = [x for x in rd if x["row"] == row]
                     if not rdh:
                         f.write(
-                            b'<img class="nothing" src="/ed/c96/img2/nothing.png" />'
+                            b'<img class="nothing" src="/ed/c97/img2/nothing.png" />'
                         )
 
                     for v in rdh:
@@ -359,7 +353,7 @@ def main():
                                 )
 
                         f.write(
-                            u'<div class="c"><img src="/ed/c96/img/{}.png"><h1>{}</h1><h2>{} | {}</h2><span class="genre">{}</span>{}</div>\n'.format(
+                            u'<div class="c"><img src="/ed/c97/img/{}.png"><h1>{}</h1><h2>{} | {}</h2><span class="genre">{}</span>{}</div>\n'.format(
                                 v["imageid"],
                                 html.escape(v["cirnam1"]),
                                 v["loc"],

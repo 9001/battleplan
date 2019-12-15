@@ -3,7 +3,7 @@ offline comiket shopping list webapp
 
 **user's guide:** [MANUAL.md](MANUAL.md)
 
-**live here:** https://dootnode.org/ed/c96/bp/
+**live here:** https://dootnode.org/ed/c97/bp/
 
 maintainers: see the tools folder for a separate readme
 
@@ -29,7 +29,7 @@ I'd really like to clean this up but my todo-list is already killing me for the 
 * click the map to show nearby circles on your shopping list
 
 # use it online
-* https://dootnode.org/ed/c96/bp/
+* https://dootnode.org/ed/c97/bp/
 * each comiket day has its own database of circle locations + URLs, taking roughly 200KB to download
 * bp will download the database into your browser cache (LocalStorage) to prevent excessive data usage
 * once the website has loaded (and the database has been downloaded at some point), the webapp will no longer need an internet connection until you refresh the browser tab
@@ -37,7 +37,7 @@ I'd really like to clean this up but my todo-list is already killing me for the 
 # use it offline: Android
 * install [termux](https://termux.com/)
 * to either install or upgrade your offline bp installation, paste the following into your terminal and hit enter:  
-  `pkg install -y wget; wget -qO- https://dootnode.org/ed/c96/bp/bp-android.sh | bash`
+  `pkg install -y wget; wget -qO- https://dootnode.org/ed/c97/bp/bp-android.sh | bash`
 * to launch bp, paste this and hit enter:  
   `~/bp/run`
 * note that the shopping list in your local installation is different from the online version -- use the import/export feature to synchronize them manually

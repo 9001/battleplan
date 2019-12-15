@@ -41,7 +41,7 @@ all_halls = {
     "w3a": w3a,
     "w3b": w3b,
 }
-all_days = ["金", "土", "日", "月"]
+all_days = ['土', '日', '月', '火']
 
 
 def main():
@@ -133,7 +133,7 @@ def main():
 
                     ret.append(entry)
 
-        with open("../json/lkrxy{}.json".format(nday), "wb") as f:
+        with open("../bp/lkrxy{}.json".format(nday), "wb") as f:
             f.write(
                 json.dumps(ret, sort_keys=True)
                 .replace('"}, {"kan": "', '"},\n{"kan": "')

@@ -12,7 +12,7 @@ lkrxy4.json
 EOF
 
 #cat files.list | xargs rm || true
-cat files.list | sed -r 's@^@https://dootnode.org/ed/c96/bp/@' | wget -Ni-
+cat files.list | sed -r 's@^@https://dootnode.org/ed/c97/bp/@' | wget -Ni-
 
 cat >run <<'EOF'
 printf '\n\nbp is now available at:\nhttp://127.0.0.1:1616/\n\n(long-tap the screen, select "more" » "Select URL" and then long-tap the link there)\n\n'
