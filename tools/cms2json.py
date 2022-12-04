@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
-import romkan
-import jaconv
+import cutlet
 import json
 
 
 DAYS = "土 日".split()
 HALLS = "e123 e456 w12".split()
 CJ = "/home/ed/Downloads/c101/m"
+
+
+katsu = cutlet.Cutlet()
 
 
 def gen(nday, cday, hall):
@@ -35,16 +37,26 @@ def gen(nday, cday, hall):
             cj = json.loads(f.read().decode("utf-8", "replace"))
 
         kanji = cj["Name"]
-        romaji = jaconv.h2z(kanji)
-        romaji = romkan.to_roma(romaji)
+        romaji = katsu.romaji(kanji)
 
-        ret.append({
+        urls = []
+        ks = "Author WebSite PixivUrl TwitterUrl NiconicoUrl ClipstudioUrl" #Description
+        for k in ks.split():
+            v = cj.get(k, "")
+            if v and v not in urls:
+                urls.append(v)
+
+        ent = {
             "loc": f"{nday}{kan_ew}{booth}",
             "kan": kanji,
             "rom": romaji,
             "x": f"{x*10}",
             "y": f"{y*10}",
-        })
+        }
+        if urls:
+            ent["url"] = urls
+        
+        ret.append(ent)
     
     return ret
 

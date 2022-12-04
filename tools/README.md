@@ -7,7 +7,11 @@ currently the only data source so use this
 * grab `map-{hall}.json` from https://webcatalog-free.circle.ms/Map/GetMapDataFromExcel?hall=$hall
 * grab `booth-{d}-{hall}.json` from https://webcatalog-free.circle.ms/Map/GetMapping2?day=Day$d&hall=$hall
 * magically obtain the circle info
-* `python3 -m pip install --user -U romkan jaconv`
+* ```
+  yum install mecab-devel
+  python3 -m pip install --user -U fugashi[unidic] cutlet
+  python3 -m unidic download
+  ```
 * `./cms2json.py`
 
 ----
