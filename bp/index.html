@@ -2,7 +2,7 @@
 <!--
 
 	battleplan <ed@irc.rizon.net>, MIT-licensed
-	https://dootnode.org/ed/c97/bp/
+	https://ocv.me/bp/101/
 
 -->
 <meta charset="utf-8">
@@ -467,8 +467,8 @@ h3 {
 	-->
 	<a href="#" id="bmenu_day1">土 / 1</a>
 	<a href="#" id="bmenu_day2">日 / 2</a>
-	<a href="#" id="bmenu_day3">月 / 3</a>
-	<a href="#" id="bmenu_day4">火 / 4</a>
+	<!--a href="#" id="bmenu_day3">月 / 3</a>
+	<a href="#" id="bmenu_day4">火 / 4</a-->
 	<a href="#" id="dbg">debug</a>
 </div>
 <div id="vcirtype" class="modal">
@@ -578,16 +578,19 @@ h3 {
 <div id="vmaphall" class="modal">
 	<!-- 東|123|456|西 -->
 	<a href="#" class="bcancel">《 Cancel</a>
-	<a href="#" id="bmaphall_s12">南12</a>
-	<a href="#" id="bmaphall_s34">南34</a>
+	<a href="#" id="bmaphall_e123">東123</a>
+	<a href="#" id="bmaphall_e456">東456</a>
 	<a href="#" id="bmaphall_w12">西12</a>
-	<a href="#" id="bmaphall_w34">西34</a>
+	<!--a href="#" id="bmaphall_w34">西34</a-->
 </div>
 <div id="vpurgedb" class="modal">
 	<p>could not write the database into localStore; it is probably full.</p>
 	<p>delete the database of another day below by clicking it</p>
 	<p>afterwards, another attempt will be made to save the day <span id="attempted_day">N</span> DB:</p>
 	<div id="purgelist"></div>
+	<p>--</p>
+	<p>if nothing else works, you can try deleting absolutely everything including your shopping-list and all data from previous comikets:</p>
+	<a href="#" id="purgeall">WIPE ALL DATA</a>
 </div>
 <div id="vsrchcfg" class="modal">
 	<a href="#" class="bcancel" invoke="ev_tsch_input">《 Apply</a>
@@ -675,19 +678,19 @@ window.onerror = function(msg, url, lineNo, columnNo, error) {
 
 // だけど僕はそのままの
 
-var DAYS = ['土', '日', '月', '火'];
-var HALLS = ['s1','s2','s3','s4','w1a','w1b','w2a','w2b','w3a','w3b'];
-var ROWS = [
-	"アイウエオカキクケコ",
-	"サシスセソタチツテト",
-	"ナニヌネノハヒフヘホ",
-	"マミムメモヤユヨラリ",
-	"れぬねのはひふへほまみむめも",
-	"やゆよらりる",
-	"あくけこさしすせそたちつてと",
-	"いうえおかき",
-	"ＡＢＣＤＥＦＧＨＩＪＫＬ",
-	"ＭＮＯＰＱＲ"
+var DAYS = ['土', '日'];  //, '月', '火'];
+var HALLS = ['e1','e2','e3','e4','e5','e6','w1a','w1b','w2a','w2b'];
+var ROWS = [  // wall first, then right-to-left
+	"ABCDEFGHIJKLM",  //e1
+	"NOPQRSTUVWXY",  //e2
+	"Zアイウエオカキクケコサ",  //e3
+	"シスセソタチツテトナニヌネ",  //e6
+	"ノハパヒピフプヘペホポマ",  //e5
+	"ミムメモヤユヨラリルレロ",  //e4
+	"あきくけこさしすせそたち",  //w2t
+	"いうえおか",  //w2b
+	"めつてとなにぬねのはひふ",  //w1t
+	"へほまみむ"  //w1b
 ];
 var sc_col = {
 	"-": "#000",
@@ -720,7 +723,7 @@ var active_day = -1;
 var active_row;
 var dbday = [];
 var dbsel = [];
-var lol = window.requestAnimationFrame;
+var lol = window.requestAnimationFrame.bind(window);
 var render = null;  // fp
 var empty_row_msg = '???';
 var busted_localstore = false;
@@ -1070,7 +1073,7 @@ function load_day(day) {
 	{
 		loaded = localStorage.getItem('activeday');
 		if (loaded == null)
-			active_day = 4;
+			active_day = 2;
 		else
 			active_day = parseInt(loaded, 10);
 	}
@@ -1082,7 +1085,7 @@ function load_day(day) {
 	ebi('bmenu_day').innerHTML = '📆 Change day (now: ' + active_day + ')';
 	ebi('bmenu_dload').innerHTML = '📲 Download DB for Day ' + active_day;
 	
-	loaded = localStorage.getItem('z97day' + active_day);
+	loaded = localStorage.getItem('z101day' + active_day);
 	if (loaded == null) {
 		err_no_data();
 		return false;
@@ -1127,7 +1130,7 @@ function load_day(day) {
 	//return true;
 }
 function load_sel() {
-	loaded = localStorage.getItem('z97sel' + active_day);
+	loaded = localStorage.getItem('z101sel' + active_day);
 	if (loaded == null) {
 		dbsel = [];
 		inf([
@@ -1152,7 +1155,7 @@ function save_sel() {
 	try {
 		var jsontxt = JSON.stringify(dbsel);
 		var packed = LZString.compressToUTF16(jsontxt);
-		localStorage.setItem('z97sel' + active_day, packed);
+		localStorage.setItem('z101sel' + active_day, packed);
 	}
 	catch (ex) {
 		busted_localstore = true;
@@ -1173,6 +1176,8 @@ function inf(lines)  { showmsg('ad6', lines); }
 
 
 function put_day_db(jsontxt) {
+	ebi('purgeall').onclick = null;
+
 	if (jsontxt !== undefined)
 		pending_day_db = LZString.compressToUTF16(jsontxt);
 	
@@ -1180,7 +1185,7 @@ function put_day_db(jsontxt) {
 		if (nfail-- > 0) throw 42;
 		localStorage.removeItem('day' + active_day);
 		localStorage.removeItem('zday' + active_day);
-		localStorage.setItem('z97day' + active_day, pending_day_db);
+		localStorage.setItem('z101day' + active_day, pending_day_db);
 	}
 	catch (ex) {
 		full_localstore();
@@ -1697,10 +1702,10 @@ function gen_export() {
 	var ret = {};
 	for (var a = 1; a <= 4; a++) {
 		try {
-			var kt = localStorage.getItem('z97sel'+a);
+			var kt = localStorage.getItem('z101sel'+a);
 			if (kt != null) {
 				var unpacked = LZString.decompressFromUTF16(kt);
-				ret['c97sel'+a] = JSON.parse(unpacked);
+				ret['c101sel'+a] = JSON.parse(unpacked);
 			}
 		}
 		catch(ex) {
@@ -1709,13 +1714,13 @@ function gen_export() {
 	}
 	if (busted_localstore) {
 		alert('emergency export of day ' + active_day + ' in effect');
-		ret['c97sel'+active_day] = dbsel;
+		ret['c101sel'+active_day] = dbsel;
 	}
 	for (var a = 1; a <= 4; a++) {
-		if (!ret['c97sel'+a])
+		if (!ret['c101sel'+a])
 			continue;
 
-		ret['c97sel'+a].sort(locsort);
+		ret['c101sel'+a].sort(locsort);
 	}
 	return JSON.stringify(ret
 		).replace(/{"loc":"/g, '\n{"loc":"'
@@ -1752,8 +1757,8 @@ function import_text(txt) {
 			return;
 		}
 		for (var a = 1; a <= 4; a++) {
-			var uk = 'c97sel' + a;
-			var ck = 'z97sel' + a;
+			var uk = 'c101sel' + a;
+			var ck = 'z101sel' + a;
 			localStorage.removeItem(uk);
 			localStorage.removeItem(ck);
 			if (iv[uk]) {
@@ -2113,7 +2118,7 @@ function ev_url_delete(e) {
 }
 function full_localstore() {
 	var html = [];
-	var keys = ['day1','day2','day3','zday1','zday2','zday3','z97day1','z97day2','z97day3','z97day4'];
+	var keys = ['z101day1','z101day2']; //,'z101day3','z101day4'];
 	for (var a = 0; a < keys.length; a++)
 		try {
 			var len = localStorage.getItem(keys[a]).length;
@@ -2136,12 +2141,20 @@ function full_localstore() {
 	
 	hide_modals();
 	show('vpurgedb');
+	ebi('purgeall').onclick = ev_purge_all;
 }
 function ev_purge_day(e) {
 	ebi('purgelist').innerHTML = '<h2>writing...</h2>';
 	var key = this.getAttribute('skey');
 	lol(function() { lol(function() {
 		localStorage.removeItem(key);
+		put_day_db();
+	})});
+}
+function ev_purge_all(e) {
+	ebi('purgelist').innerHTML = '<h2>writing...</h2>';
+	lol(function() { lol(function() {
+		localStorage.clear();
 		put_day_db();
 	})});
 }
@@ -2176,23 +2189,22 @@ function show_map() {
 	inf(['drawing map']);
 	
 	lol(function() { lol(function() {
-		var sz = 10; // box size
+		var sz = 12, // box size; webcata uses 10
+			font1 = '24px sans-serif',
+			font2 = '8px sans-serif';
 		
 		var mainhall = active_map;
 		var subhalls = [];
 		var rows = '';
 		
-		if (mainhall == '南12')
-			subhalls = ['s1','s2'];
+		if (mainhall == '東123')
+			subhalls = ['e1','e2','e3'];
 		
-		if (mainhall == '南34')
-			subhalls = ['s3','s4'];
+		if (mainhall == '東456')
+			subhalls = ['e4','e5','e6'];
 		
 		if (mainhall == '西12')
 			subhalls = ['w1a','w1b','w2a','w2b'];
-		
-		if (mainhall == '西34')
-			subhalls = ['w3a','w3b'];
 		
 		for (var a = 0; a < HALLS.length; a++)
 			for (var b = 0; b < subhalls.length; b++)
@@ -2220,8 +2232,8 @@ function show_map() {
 				continue;
 			
 			booths.push(dbday[a]);
-			var x = parseInt(tday['x'], 10);
-			var y = parseInt(tday['y'], 10);
+			var x = parseInt(tday['x'], 10) * sz/10;
+			var y = parseInt(tday['y'], 10) * sz/10;
 			minx = Math.min(minx, x);
 			maxx = Math.max(maxx, x);
 			miny = Math.min(miny, y);
@@ -2240,16 +2252,16 @@ function show_map() {
 		//var sh = parseInt(getComputedStyle(box)['height'], 10);
 		var sw = (maxx - minx) + minx * 2 + sz;
 		var sh = (maxy - miny) + miny * 2 + sz;
-		map.width = sw * ctxr;
-		map.height = sh * ctxr;
+		map.width = sw * ctxr + sz * 4;
+		map.height = sh * ctxr + sz * 4;
 		map.style.width = sw + 'px';
 		map.style.height = sh + 'px';
-		ctx.setTransform(ctxr, 0, 0, ctxr, 0, 0);
+		ctx.setTransform(ctxr, 0, 0, ctxr, sz * 2, sz);
 		ctx.lineCap = 'butt';
 		ctx.strokeStyle = '#231';
 		
 		ctx.fillStyle = '#573';
-		ctx.font = '24px sans-serif';
+		ctx.font = font1;
 		for (var a = 0; a < rows.length; a++) {
 			var minx = rowmm[a][0];
 			var maxx = rowmm[a][1];
@@ -2259,89 +2271,46 @@ function show_map() {
 				continue;
 			
 			var x, y;
-			if (mainhall != '西12' && mainhall != '西34') {  // c97
-				x = (minx + (maxx-minx)/2) - sz * 0.5;
-				y = [
-					miny - sz * 1,
-					maxy + sz * 3.5
-				];
-				if (maxx-minx>128 && maxy-miny>128) {
-					x = [
-						minx - sz,
-						maxx - sz
-					];
-					y = [
-						miny - sz * 0.5,
-						maxy + sz * 1
-					];
-				}
+			if (mainhall != '西12') {
+				ctx.beginPath();
+				ctx.moveTo(38.5 * sz, 0);
+				ctx.lineTo(38.5 * sz, 100 * sz);
+				ctx.stroke();
+				
+				ctx.beginPath();
+				ctx.moveTo(74.5 * sz, 0);
+				ctx.lineTo(74.5 * sz, 100 * sz);
+				ctx.stroke();
 			}
 			else {
-				if (mainhall != '西34') {  // c97: no room split
-					ctx.beginPath();
-					ctx.moveTo(0, 380);
-					ctx.lineTo(1000, 380);
-					ctx.stroke();
-					
-					ctx.beginPath();
-					ctx.moveTo(500, 0);
-					ctx.lineTo(500, 1000);
-					ctx.stroke();
-				}
-				else {  // c97: multirow rows
-					var ostroke = ctx.strokeStyle;
-					ctx.strokeStyle = '#341';
-					
-					// vertical bars; x y1 y2
-					var bartab = [
-						[235, 59, 240],  // gf
-						[325, 59, 240],  // fe
-						[390, 59, 240],  // ed
-						[515, 59, 240],  // dc
-						[616, 59, 240],  // cb
-						[720, 59, 240]   // ba
-					];
-					for (var b = 0; b < bartab.length; b++) {
-						ctx.beginPath();
-						ctx.moveTo(bartab[b][0], bartab[b][1]);
-						ctx.lineTo(bartab[b][0], bartab[b][2]);
-						ctx.stroke();
-					}
+				ctx.beginPath();
+				ctx.moveTo(45.5 * sz, 0);
+				ctx.lineTo(45.5 * sz, 100 * sz);
+				ctx.stroke();
 
-					// horizontal bars; y x1 x2
-					bartab = [
-						[ 59, 235, 720],  // ga upper
-						[240, 235, 720],  // ga lower
-						[389,  57, 243]   // roomsplit
-					];
-					for (var b = 0; b < bartab.length; b++) {
-						ctx.beginPath();
-						ctx.moveTo(bartab[b][1], bartab[b][0]);
-						ctx.lineTo(bartab[b][2], bartab[b][0]);
-						ctx.stroke();
-					}
+				ctx.beginPath();
+				ctx.moveTo(0, 30.5 * sz);
+				ctx.lineTo(100 * sz, 30.5 * sz);
+				ctx.stroke();
+			}
 
-					ctx.strokeStyle = ostroke;
-				}
+			x = (minx + (maxx-minx)/2) + sz * 0.5;
+			if (maxy - miny < 26 * sz)
+				y = 11.8 * sz;
+			else if (miny < 20 * sz)
+				y = (miny + (maxy-miny)/1.9) + sz * 0.5;  //e123,456
+			else
+				y = (miny + (maxy-miny)/1.82) + sz * 0.5;
 
-				x = (minx + (maxx-minx)/2) - sz * 0.5;
-				if (maxy - miny < 200)
-					y = (miny + (maxy-miny)/2) + sz * 0.8;
-				else if (miny < 200)
-					y = (miny + (maxy-miny)/3.7) + sz * 0.5;
-				else
-					y = (miny + (maxy-miny)/2.8) + sz * 0.5;
-				
-				if (maxx-minx>128 && maxy-miny>128) {
-					x = [
-						minx - sz,
-						maxx - sz
-					];
-					y = [
-						miny - sz * 0.5,
-						maxy + sz * 1
-					];
-				}
+			if (maxx-minx>12.8*sz && maxy-miny>12.8*sz) {  // walls
+				x = [
+					minx + sz * 2.1,
+					maxx - sz * 1.1
+				];
+				y = [
+					miny + sz * 3,
+					maxy + sz * 1
+				];
 			}
 
 			if (!Array.isArray(x))
@@ -2351,19 +2320,21 @@ function show_map() {
 				y = [y];
 			
 			for (var b = 0; b < x.length; b++)
-				for (var c = 0; c < y.length; c++)
-					ctx.fillText(rows[a], x[b], y[c]);
+				for (var c = 0; c < y.length; c++) {
+					var tw = ctx.measureText(rows[a]).width;
+					ctx.fillText(rows[a], x[b]-tw/2, y[c]);
+				}
 		}
 		
 		ctx.fillStyle = '#351';
-		ctx.font = '7px sans-serif';
+		ctx.font = font2;
 		if (!shitty_canvas_performance) {
 			var last_loc = null;
 			for (var a = 0; a < booths.length; a++) {
 				var tday = booths[a];
 				var loc = tday['loc'];
-				var x = parseInt(tday['x'], 10)+(1);
-				var y = parseInt(tday['y'], 10)+(sz-2);
+				var x = parseInt(tday['x'], 10) * sz/10 +(1.5);
+				var y = parseInt(tday['y'], 10) * sz/10 +(sz-3);
 				
 				var tsel = get_tsel(loc);
 				var scored = tsel && tsel['sc'] !== '-';
@@ -2375,7 +2346,7 @@ function show_map() {
 				if (loc == last_loc && !scored)
 					continue;
 				
-				ctx.fillText(loc, x, y);
+				ctx.fillText(loc.replace(/^0/, ' '), x, y);
 				last_loc = loc;
 			}
 		}
@@ -2392,8 +2363,8 @@ function show_map() {
 				if (fill && b==0 || !fill && b==1)
 					continue;
 				
-				var x = parseInt(tday['x'], 10);
-				var y = parseInt(tday['y'], 10);
+				var x = parseInt(tday['x'], 10) * sz/10;
+				var y = parseInt(tday['y'], 10) * sz/10;
 				
 				ctx.fillStyle = '#000';
 				if (tsel && sc_col[tsel['sc']])
@@ -2489,8 +2460,8 @@ function show_map() {
 			for (var a = 0; a < booths.length; a++) {
 				var tday = booths[a];
 				var loc = tday['loc'];
-				var x = parseInt(tday['x'], 10)+(1);
-				var y = parseInt(tday['y'], 10)+(sz-2);
+				var x = parseInt(tday['x'], 10) * sz/10 +(1);
+				var y = parseInt(tday['y'], 10) * sz/10 +(sz-2);
 				
 				var tsel = get_tsel(loc);
 				var scored = tsel && tsel['sc'] !== '-';
@@ -2776,9 +2747,12 @@ ebi('bmenu').onclick = show_menu;
 ebi('tbmenu_day').onclick = show_chday;
 ebi('bmenu_day').onclick = show_chday;
 ebi('bmenu_day1').onclick = ev_chday;
-ebi('bmenu_day2').onclick = ev_chday;
-ebi('bmenu_day3').onclick = ev_chday;
-ebi('bmenu_day4').onclick = ev_chday;
+try {
+	ebi('bmenu_day2').onclick = ev_chday;
+	ebi('bmenu_day3').onclick = ev_chday;
+	ebi('bmenu_day4').onclick = ev_chday;
+}
+catch (ex) { }
 ebi('bmenu_dload').onclick = ev_dload;
 //ebi('tbmenu_cir').onclick = ev_cirtype;
 ebi('bmenu_cir').onclick = ev_cirtype;
@@ -2814,10 +2788,13 @@ ebi('burl_edit').onclick = ev_url_edit_save;
 ebi('burl_del').onclick = ev_url_delete;
 ebi('tbmenu_map').onclick = ev_map_sel_hall;
 ebi('bmenu_map').onclick = ev_map_sel_hall;
-ebi('bmaphall_s12').onclick = ev_showmap
-ebi('bmaphall_s34').onclick = ev_showmap
+ebi('bmaphall_e123').onclick = ev_showmap
+ebi('bmaphall_e456').onclick = ev_showmap
 ebi('bmaphall_w12').onclick = ev_showmap
-ebi('bmaphall_w34').onclick = ev_showmap
+try {
+	ebi('bmaphall_w34').onclick = ev_showmap
+}
+catch(ex) { }
 ebi('bqnote').onclick = ev_add_qnote;
 ebi('tqnote').onfocus = ev_focus;
 ebi('tqnote').onblur = ev_blur;
@@ -2851,6 +2828,10 @@ lol(function() { lol(function() {
 //ev_row();
 //ev_import();
 //ev_map_sel_hall();
+
+//active_map = '東123';
+//active_map = '西12';
+//setTimeout(show_map, 10);
 
 
 /*

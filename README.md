@@ -3,14 +3,14 @@ offline comiket shopping list webapp
 
 **user's guide:** [MANUAL.md](MANUAL.md)
 
-**live here:** https://dootnode.org/ed/c97/bp/
+**live here:** https://ocv.me/bp/101/
 
 maintainers: see the tools folder for a separate readme
 
 # fair warning
 this was thrown together in a rush starting one week before comiket, and this definitely shows in the quality of the code
 
-I'd really like to clean this up but my todo-list is already killing me for the next 6 months mengo
+I'd really like to clean this up but that's not happening haha
 
 # features
 * browse booths at comiket
@@ -29,7 +29,7 @@ I'd really like to clean this up but my todo-list is already killing me for the 
 * click the map to show nearby circles on your shopping list
 
 # use it online
-* https://dootnode.org/ed/c97/bp/
+* https://ocv.me/bp/101/
 * each comiket day has its own database of circle locations + URLs, taking roughly 200KB to download
 * bp will download the database into your browser cache (LocalStorage) to prevent excessive data usage
 * once the website has loaded (and the database has been downloaded at some point), the webapp will no longer need an internet connection until you refresh the browser tab
@@ -37,7 +37,7 @@ I'd really like to clean this up but my todo-list is already killing me for the 
 # use it offline: Android
 * install [termux](https://termux.com/)
 * to either install or upgrade your offline bp installation, paste the following into your terminal and hit enter:  
-  `pkg install -y wget; wget -qO- https://dootnode.org/ed/c97/bp/bp-android.sh | bash`
+  `pkg install -y wget; wget -qO- https://ocv.me/bp/101/bp-android.sh | bash`
 * to launch bp, paste this and hit enter:  
   `~/bp/run`
 * note that the shopping list in your local installation is different from the online version -- use the import/export feature to synchronize them manually
@@ -52,4 +52,4 @@ I'd really like to clean this up but my todo-list is already killing me for the 
 * to erase your entire shopping list, paste the following in the text import box: `{"x":[]}`
 
 # maintenance forecast
-* database files will be available for summerket 2019
+* cloudy
