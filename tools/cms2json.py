@@ -8,6 +8,7 @@ import json
 
 DAYS = "土 日".split()
 HALLS = "e123 e456 w12".split()
+CJ = "/home/ed/Downloads/c101/m"
 
 
 def gen(nday, cday, hall):
@@ -28,10 +29,19 @@ def gen(nday, cday, hall):
     for booth, ids in bj.items():
         # カ04a: {wid:16806471 id:10000270}
         x, y = hmap[booth.rstrip("ab")]["locate"]
+        
+        wid = ids["wid"]
+        with open(f"{CJ}/{wid}/{wid}.json", "rb") as f:
+            cj = json.loads(f.read().decode("utf-8", "replace"))
+
+        kanji = cj["Name"]
+        romaji = jaconv.h2z(kanji)
+        romaji = romkan.to_roma(romaji)
+
         ret.append({
             "loc": f"{nday}{kan_ew}{booth}",
-            "kan": f"kan{ids['id']}",
-            "rom": f"rom{ids['id']}",
+            "kan": kanji,
+            "rom": romaji,
             "x": f"{x*10}",
             "y": f"{y*10}",
         })
