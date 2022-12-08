@@ -7,12 +7,24 @@ index.html
 lz-string.min.js
 lkrxy1.json
 lkrxy2.json
-lkrxy3.json
-lkrxy4.json
 EOF
 
 #cat files.list | xargs rm || true
 cat files.list | sed -r 's@^@https://ocv.me/bp/101/@' | wget -Ni-
+
+while true; do
+    echo
+    read -u1 -n1 -rp 'download pictures (226 MiB)? y/n: ' r
+    echo
+    case $r in
+        [Yy]* ) pics=1; break;;
+        [Nn]* ) pics=; break;;
+    esac
+done
+[ $pics ] && {
+    command -v zstd || pkg install -y zstd
+    wget -O- https://ocv.me/bp/101/i.tzst | zstd -d | tar -x
+}
 
 cat >run <<'EOF'
 printf '\n\nbp is now available at:\nhttp://127.0.0.1:1616/\n\n(long-tap the screen, select "more" » "Select URL" and then long-tap the link there)\n\n'

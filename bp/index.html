@@ -16,6 +16,7 @@ html, body {
 	color: #ccc;
 	background: #222;
 	font-family: sans-serif;
+	touch-action: manipulation;
 }
 #tabh_txt input {
 	color: #fc7;
@@ -230,9 +231,34 @@ td:nth-child(2) {
 #addctxinf {
 	text-align: center;
 }
-#addctxscore {
+#addctxsp {
+	table-layout: fixed;
+	width: calc(100% - 1em);
+	margin: .5em 0 0 .5em;
+}
+#addctxsp td {
+	width: 50%;
+	border: none;
+}
+#addctxsp.ni #addctxpic {
+	width: 0;
+}
+#addctxsp.ni #addctxscore {
+	width: calc( 100% - 1em );
 	text-align: center;
-	padding-top: .5em;
+}
+#addctxpic {
+	text-align: right;
+	padding: .4em 1em 0 0;
+}
+#addctxpic img {
+	height: 12.2em;
+}
+#addctxsp.ni #addctxpic {
+	background: #555;
+}
+#addctxscore {
+	padding: 0;
 }
 #addctxscore>a {
 	display: inline-block;
@@ -377,10 +403,19 @@ canvas {
 	margin: 1%;
 	display: inline-block;
 }
+.grid2 a span {
+	margin-left: .5em;
+	font-weight: bold;
+	font-size: 1.7em;
+	line-height: 0;
+}
 h3 {
 	margin: 1em 0 0 0;
 	padding: 0;
 	text-align: center;
+}
+.grid2+h3 {
+	margin: 0;
 }
 #vsrchcfg {
 	text-align: center;
@@ -496,7 +531,21 @@ h3 {
 		<span id="ladd_loc">// location</span>
 		<span id="ladd_rom">// romaji</span>
 	</div>
-	<div id="addctxscore"></div>
+	<table id="addctxsp"><tr>
+		<td id="addctxpic"></td>
+		<td id="addctxscore"></td>
+	</tr></table>
+	
+	<h3>navigate shopping list</h3>
+	<div class="grid2"><a
+		href="#" id="bgotoprevsel">previous</a><a
+		href="#" id="bgotonextsel">nextious</a></div>
+		
+	<h3>navigate booths</h3>
+	<div class="grid2"><a
+		href="#" id="bgotoprevday">previous</a><a
+		href="#" id="bgotonextday">nextious</a></div>
+	
 	<div id="addctxlinks"></div>
 	<div id="addctxqnote">
 		<input id="tqnote" value="paste stuff here" sample="paste stuff here" />
@@ -512,16 +561,6 @@ h3 {
 		<label for="selskipmin">min. score</label>
 		<input name="selskipmin" id="selskipmin" size="2" defval="0" />
 	</div></div>
-	
-	<h3>navigate shopping list</h3>
-	<div class="grid2"><a
-		href="#" id="bgotoprevsel">previous</a><a
-		href="#" id="bgotonextsel">nextious</a></div>
-		
-	<h3>navigate booths</h3>
-	<div class="grid2"><a
-		href="#" id="bgotoprevday">previous</a><a
-		href="#" id="bgotonextday">nextious</a></div>
 </div>
 <div id="vexport" class="modal">
 	<a href="#" class="bcancel">《 Cancel</a> <!-- ❮⫷ -->
@@ -781,6 +820,9 @@ catch(ex) {
 	croak('could not write to localStorage; need this for the list of circles/booths');
 }
 
+var enpic;
+setenpic(localStorage.getItem('enpic') != 'na');
+
 var addctx_exit_act = localStorage.getItem('addctx_exit_act') || 'list';
 if (addctx_exit_act == 'list')
 	ebi('raddlist').checked = true;
@@ -795,7 +837,7 @@ function cfg_int(name, maxlen) {
 	
 	var tv = localStorage.getItem(name) || defval;
 	tv = parseInt(tv);
-	window[name] = tv;
+	window[name] = obj.value = tv;
 	obj.oninput = ev_cfg_int_edit;
 }
 function ev_cfg_int_edit(e) {
@@ -2448,7 +2490,7 @@ function show_map() {
 					ctx.save();
 					ctx.clip();
 					var ntab = loc.slice(-3).slice(0,2);
-					ctx.fillText(ntab, x + 1, y + (sz-2));
+					ctx.fillText(ntab.replace(/^0/, ' '), x + 1.5, y + (sz-3));
 					ctx.restore();
 				}
 			}
@@ -2475,7 +2517,7 @@ function show_map() {
 				else
 					ctx.fillStyle = '#351';
 				
-				ctx.fillText(loc, x, y);
+				ctx.fillText(loc.replace(/^0/, ' '), x, y);
 				last_loc = loc;
 			}
 		}
@@ -2600,6 +2642,8 @@ function open_addctx(loc) {
 		}
 	}
 
+	drawpic(loc);
+
 	ebi('ladd_kan').textContent = tday['kan']
 	ebi('ladd_rom').textContent = tday['rom']
 	ebi('ladd_loc').textContent = loc;
@@ -2643,6 +2687,18 @@ function open_addctx(loc) {
 	show_excl('addctx');
 }
 
+function setenpic(en) {
+	if (en !== true && en !== false) en = !enpic;
+	ebi('addctxsp').classList[en?'remove':'add']('ni');
+	localStorage.setItem('enpic', en ? 'ye' : 'na');
+	enpic = en;
+	drawpic();
+}
+function drawpic(loc) {
+	loc = loc || ebi('ladd_loc').textContent;
+	ebi('addctxpic').innerHTML = enpic ? '<img src="i/' + loc + '.png" />' : '';
+}
+
 function ev_selskipmin_edit(e) {
 	ev_cfg_int_edit(e);
 	gen_navkeys();
@@ -2677,8 +2733,8 @@ function gen_navkeytxt(bid, loc) {
 	var tsel = get_tsel(loc);
 	obj.setAttribute('tgt', tday['loc']);
 	ebi(bid).innerHTML =
-		tday['loc'] + '<br />' +
-		(tsel == null ? '-' : tsel['sc']) + '<br />' +
+		tday['loc'] + '<span>' +
+		(tsel == null ? '-' : tsel['sc']) + '</span><br />' +
 		esc(tday['kan']) + '<br />' +
 		esc(tday['rom']);
 	
@@ -2778,6 +2834,7 @@ ebi('bimport_text').onclick = ev_import_text;
 ebi('badd_done').onclick = ev_purchased;
 ebi('badd_rem').onclick = ev_remove;
 ebi('bdel_yes').onclick = ev_remove_ok;
+ebi('addctxpic').onclick = setenpic;
 ebi('tsrch').onfocus = ev_focus;
 ebi('tsrch').onblur = ev_blur;
 ebi('tsrch').oninput = ev_tsch_input;
@@ -2832,6 +2889,8 @@ lol(function() { lol(function() {
 //active_map = '東123';
 //active_map = '西12';
 //setTimeout(show_map, 10);
+
+//setTimeout(function() { open_addctx('1東G15b'); }, 10);
 
 
 /*

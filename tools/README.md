@@ -7,12 +7,18 @@ currently the only data source so use this
 * grab `map-{hall}.json` from https://webcatalog-free.circle.ms/Map/GetMapDataFromExcel?hall=$hall
 * grab `booth-{d}-{hall}.json` from https://webcatalog-free.circle.ms/Map/GetMapping2?day=Day$d&hall=$hall
 * magically obtain the circle info
+* preprocess pics
+  ```
+  rm -rf i; mkdir i; cp -pR 1/*/*.png 2/*/*.png i/
+  find i -iname '*.png' | while IFS= read -r x; do convert $x -shave 7x7 +repage $x.png; mv $x.png $x; pngquant --strip --nofs --quality 50 --speed 1 --skip-if-larger - <$x >tf; [ -s tf ] && mv tf $x; done
+  ```
 * ```
   yum install mecab-devel
   python3 -m pip install --user -U fugashi[unidic] cutlet
   python3 -m unidic download
   ```
 * `./cms2json.py`
+* `tar -c i | zstd -T0 -9 > i.tzst`
 
 ----
 

@@ -3,11 +3,14 @@
 
 import cutlet
 import json
+import os
+import shutil
 
 
 DAYS = "土 日".split()
 HALLS = "e123 e456 w12".split()
 CJ = "/home/ed/Downloads/c101/m"
+CI = "/home/ed/Downloads/c101/i"
 
 
 katsu = cutlet.Cutlet()
@@ -57,6 +60,10 @@ def gen(nday, cday, hall):
             ent["url"] = urls
         
         ret.append(ent)
+        po = f"i/{ent['loc']}.png"
+        if not os.path.exists(po):
+            pi = f"{CI}/{ids['wid']}.png"
+            shutil.copy2(pi, po)
     
     return ret
 
