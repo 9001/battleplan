@@ -643,6 +643,9 @@ h3 {
 		<input type="checkbox" id="csrch_name_rom" defval="1">
 		<label for="csrch_name_rom">search name (romaji)</label><br />
 		
+		<input type="checkbox" id="csrch_loc" defval="1">
+		<label for="csrch_loc">search location (カ04)</label><br />
+		
 		<input type="checkbox" id="csrch_url_all" defval="0">
 		<label for="csrch_url_all">search URLs: All</label><br />
 		
@@ -1936,6 +1939,9 @@ function ev_tsch_input(e) {
 			if (csrch_name_rom && re.exec(o.rom.toLowerCase()))
 				return true;
 			
+			if (csrch_loc && re.exec(o.loc.toLowerCase()))
+				return true;
+			
 			if (o.url)
 				for (var a = 0; a < o.url.length; a++) {
 					var lcu = o.url[a].toLowerCase();
@@ -1961,6 +1967,9 @@ function ev_tsch_input(e) {
 				return true;
 			
 			if (csrch_name_rom && o.rom.toLowerCase().indexOf(txt) !== -1)
+				return true;
+			
+			if (csrch_loc && o.loc.toLowerCase().indexOf(wtxt) !== -1)
 				return true;
 			
 			if (o.url)
