@@ -147,7 +147,7 @@ a {
 	border-width: 1px 0;
 }
 .modal {
-	background: #222; 232;
+	background: #222;
 	position: fixed;
 	overflow: auto;
 	top: 0;
@@ -159,14 +159,18 @@ a {
 }
 .modal a {
 	color: #fff;
-	background: #333; 343;
+	background: #333;
 	display: block;
 	text-align: center;
 	text-decoration: none;
 	padding: .7em 0;
 }
 .modal a:hover {
-	background: #444; 454;
+	background: #444;
+}
+.modal a.zoomsel {
+	font-weight: bold;
+	text-decoration: underline;
 }
 #vdl {
 	position: fixed;
@@ -216,12 +220,12 @@ td:nth-child(2) {
 	padding: .5em .2em;
 }
 #ladd_rom, #ldel_rom {
-	background: #111; 120;
+	background: #111;
 	padding: .2em .3em;
 }
 #ladd_loc, #ldel_loc {
 	color: #fff;
-	background: #333; 453;
+	background: #333;
 	padding: .2em .3em;
 }
 #addctx>a {
@@ -559,7 +563,7 @@ h3 {
 		<label for="raddnext">go to next booth</label><br />
 		
 		<label for="selskipmin">min. score</label>
-		<input name="selskipmin" id="selskipmin" size="2" defval="0" />
+		<input name="selskipmin" id="selskipmin" size="2" defval="1" />
 	</div></div>
 </div>
 <div id="vexport" class="modal">
@@ -621,7 +625,18 @@ h3 {
 	<a href="#" id="bmaphall_e456">東456</a>
 	<a href="#" id="bmaphall_w12">西12</a>
 	<!--a href="#" id="bmaphall_w34">西34</a-->
+	<a href="#" id="bzoom">zoom</a>
 </div>
+<div id="vzoom" class="modal">
+	<a href="#" data-zoom="7">0.7x</a>
+	<a href="#" data-zoom="10">1.0x</a>
+	<a href="#" data-zoom="12">1.2x</a>
+	<a href="#" data-zoom="15">1.5x</a>
+	<a href="#" data-zoom="20">2.0x</a>
+	<a href="#" data-zoom="25">2.5x</a>
+	<a href="#" data-zoom="30">3.0x</a>
+</div>
+
 <div id="vpurgedb" class="modal">
 	<p>could not write the database into localStore; it is probably full.</p>
 	<p>delete the database of another day below by clicking it</p>
@@ -807,6 +822,16 @@ function tl(txt, from, to) {
 }
 
 
+var ebi = document.getElementById.bind(document),
+    QS = document.querySelector.bind(document),
+    QSA = document.querySelectorAll.bind(document);
+
+function ev(e) {
+	if (e && e.preventDefault)
+		e.preventDefault();
+}
+
+
 try {
 	active_row = localStorage.getItem('activerow');
 	if (active_row == null)
@@ -826,6 +851,9 @@ catch(ex) {
 var enpic;
 setenpic(localStorage.getItem('enpic') != 'na');
 
+var zoom;
+setzoom(localStorage.getItem('zoom'));
+
 var addctx_exit_act = localStorage.getItem('addctx_exit_act') || 'list';
 if (addctx_exit_act == 'list')
 	ebi('raddlist').checked = true;
@@ -839,12 +867,13 @@ function cfg_int(name, maxlen) {
 	var defval = obj.getAttribute('defval');
 	
 	var tv = localStorage.getItem(name) || defval;
-	tv = parseInt(tv);
+	tv = parseInt(tv, 10);
+	if (isNaN(tv)) tv = defval;
 	window[name] = obj.value = tv;
 	obj.oninput = ev_cfg_int_edit;
 }
 function ev_cfg_int_edit(e) {
-	e.preventDefault();
+	ev(e);
 	var that = e.currentTarget;
 	var name = that.getAttribute('id');
 	var maxlen = parseInt(that.getAttribute('maxlen'), 10);
@@ -853,7 +882,7 @@ function ev_cfg_int_edit(e) {
 		tv = tv.slice(-maxlen);
 	
 	tv = parseInt(tv, 10);
-	if (String(tv).length < 1)
+	if (isNaN(tv) || String(tv).length < 1)
 		tv = 0;
 	
 	that.value = tv;
@@ -879,7 +908,7 @@ function cfg_bool(name) {
 	tint_bool(name, tv);
 }
 function ev_cfg_bool_edit(e) {
-	e.preventDefault();
+	ev(e);
 	var that = e.currentTarget;
 	var name = that.getAttribute('id');
 	var tv = that.checked;
@@ -898,12 +927,6 @@ for (var a = 0, aa = csrch_opts.length; a < aa; a++) {
 	cfg_bool(name);
 }
 
-function ebi(elm_id) {
-	return document.getElementById(elm_id);
-}
-function ecn(classname) {
-	return document.getElementsByClassName(classname);
-}
 
 
 function tab(tid, skip_persist) {
@@ -1054,20 +1077,16 @@ for (var a = 0, aa = links.length; a<aa; a++)
 	links[a].onclick = ev_score;
 
 function hide_modals(e) {
-	if (e !== undefined)
-		e.preventDefault();
-	
-	var modals = ecn('modal');
+	ev(e);
+	var modals = QSA('.modal');
 	for (var a = 0, aa = modals.length; a<aa; a++)
 		modals[a].style.display = 'none';
 	
 	show('vtab');
 }
 function hide_viewctls(e) {
-	if (e !== undefined)
-		e.preventDefault();
-	
-	var modals = ecn('viewctl');
+	ev(e);
+	var modals = QSA('.viewctl');
 	for (var a = 0, aa = modals.length; a<aa; a++)
 		modals[a].style.display = 'none';
 	
@@ -1084,17 +1103,17 @@ function show_excl(html_id) {
 	show(html_id);
 }
 function show_menu(e) {
-	e.preventDefault();
+	ev(e);
 	hide_modals();
 	show_excl('vmenu');
 }
 function show_chday(e) {
-	e.preventDefault();
+	ev(e);
 	hide_modals();
 	show_excl('vday');
 }
 function ev_chday(e) {
-	e.preventDefault();
+	ev(e);
 	hide_modals();
 	var words = this.innerHTML.split(' ');
 	var nday = parseInt(words[words.length-1], 10);
@@ -1359,9 +1378,7 @@ function ev_cirrom() {
 	ev_cir((a,b) => (a.rom.localeCompare(b.rom)), false);
 }
 function ev_row(e) {
-	if (e !== undefined)
-		e.preventDefault();
-	
+	ev(e);
 	render = function() {
 		hide_modals();
 		hide_viewctls();
@@ -1384,9 +1401,7 @@ function ev_listrows() {
 	show_excl('vrowlist');
 }
 function ev_jumprow(e) {
-	if (e !== undefined)
-		e.preventDefault();
-
+	ev(e);
 	// todo: oop views
 	scroll_pos[1] = 0;
 	if (scroll_obj !== null)
@@ -1599,9 +1614,7 @@ function get_tsel(loc, create_if_404) {
 	return get_tsel(loc);
 }
 function ev_rowclick(e, tgt) {
-	if (e !== undefined)
-		e.preventDefault();
-	
+	ev(e);
 	var loc = tb_fields(tgt)['loc'];
 	open_addctx(loc);
 }
@@ -1621,9 +1634,7 @@ function set_score(loc, score) {
 	save_sel();
 }
 function ev_score(e) {
-	if (e !== undefined)
-		e.preventDefault();
-
+	ev(e);
 	var loc = ebi('ladd_loc').textContent;
 	var score = this.textContent;
 	
@@ -1728,17 +1739,13 @@ function ev_blur(e) {
 		this.value = sample;
 }
 function ev_import(e) {
-	if (e !== undefined)
-		e.preventDefault();
-
+	ev(e);
 	hide_modals();
 	ebi('import_file').value = '';
 	show_excl('vimport');
 }
 function ev_export(e) {
-	if (e !== undefined)
-		e.preventDefault();
-
+	ev(e);
 	ebi('export_text').value = gen_export();
 	hide_modals();
 	show_excl('vexport');
@@ -1773,9 +1780,7 @@ function gen_export() {
 		);
 }
 function ev_export_file(e) {
-	if (e !== undefined)
-		e.preventDefault();
-
+	ev(e);
 	var txt = gen_export();
 	push_file("battleplan-" + iso8601ish() + ".json", txt);
 }
@@ -1824,9 +1829,7 @@ function ev_import_file(e) {
 	};
 }
 function ev_import_text(e) {
-	if (e !== undefined)
-		e.preventDefault();
-
+	ev(e);
 	import_text(ebi('timport_text').value);
 }
 function ev_purchased(e) {
@@ -1850,9 +1853,7 @@ function ev_purchased(e) {
 	refresh();
 }
 function ev_remove(e) {
-	if (e !== undefined)
-		e.preventDefault();
-	
+	ev(e);
 	ebi('ldel_kan').textContent = ebi('ladd_kan').textContent;
 	ebi('ldel_rom').textContent = ebi('ladd_rom').textContent;
 	ebi('ldel_loc').textContent = ebi('ladd_loc').textContent;
@@ -1861,9 +1862,7 @@ function ev_remove(e) {
 	show_excl('vdelc');
 }
 function ev_remove_ok(e) {
-	if (e !== undefined)
-		e.preventDefault();
-	
+	ev(e);
 	var find = ebi('ldel_loc').textContent;
 	var rmlist = dbsel.filter(o => {
 		return o.loc === find;
@@ -1909,9 +1908,7 @@ function default_intxt_if_box(intxt, box) {
 	}
 }
 function ev_srch(e) {
-	if (e !== undefined)
-		e.preventDefault();
-
+	ev(e);
 	default_intxt_if_box('tsrch');
 	hide_modals();
 	hide_viewctls();
@@ -1925,9 +1922,7 @@ function ev_srch(e) {
 	})});
 }
 function ev_tsch_input(e) {
-	if (e !== undefined)
-		e.preventDefault();
-
+	ev(e);
 	var txt = ebi('tsrch').value.toLowerCase();
 	
 	if (csrch_regex) {
@@ -2008,9 +2003,7 @@ function ev_tsch_input(e) {
 	ev_resize();
 }
 function ev_trowin_input(e) {
-	if (e !== undefined)
-		e.preventDefault();
-
+	ev(e);
 	BOOTHS = [];
 	
 	var txt = ebi('trow_in').value;
@@ -2047,9 +2040,7 @@ function ev_trowin_input(e) {
 	render();
 }
 function ev_urls(e) {
-	if (e !== undefined)
-		e.preventDefault();
-
+	ev(e);
 	var loc = ebi('ladd_loc').textContent;
 	var tsel = get_tsel(loc, true);
 	if (tsel == null) {
@@ -2070,9 +2061,7 @@ function ev_urls(e) {
 	show_excl('vurls');
 }
 function ev_url_new(e) {
-	if (e !== undefined)
-		e.preventDefault();
-
+	ev(e);
 	hide_modals();
 	ebi('turl_add').value = '';
 	show('vurls_add');
@@ -2097,18 +2086,14 @@ function add_url(loc, txt) {
 	return true;
 }
 function ev_url_new_done(e) {
-	if (e !== undefined)
-		e.preventDefault();
-
+	ev(e);
 	var txt = ebi('turl_add').value;
 	var loc = ebi('ladd_loc').textContent;
 	add_url(loc, txt);
 	ev_urls();
 }
 function ev_url_mod(e) {
-	if (e !== undefined)
-		e.preventDefault();
-	
+	ev(e);
 	var txt = this.textContent;
 	ebi('turl_edit').value = txt;
 	ebi('lurl_cur').textContent = txt;
@@ -2117,9 +2102,7 @@ function ev_url_mod(e) {
 	show('vurls_edit');
 }
 function ev_url_edit_save(e) {
-	if (e !== undefined)
-		e.preventDefault();
-	
+	ev(e);
 	var orig = ebi('lurl_cur').textContent;
 	var repl = ebi('turl_edit').value;
 	
@@ -2147,9 +2130,7 @@ function ev_url_edit_save(e) {
 	alert('could not find url [' + orig + ']\nwas going to replace with [' + repl + ']');
 }
 function ev_url_delete(e) {
-	if (e !== undefined)
-		e.preventDefault();
-	
+	ev(e);
 	var orig = ebi('lurl_cur').textContent;
 	var loc = ebi('ladd_loc').textContent;
 	var tsel = get_tsel(loc, true);
@@ -2211,9 +2192,7 @@ function ev_purge_all(e) {
 }
 var active_map = null;
 function ev_map_sel_hall(e) {
-	if (e !== undefined)
-		e.preventDefault();
-	
+	ev(e);
 	var box = ebi('vmap');
 	if (box.style.display == 'block' || active_map == null) {
 		hide_modals();
@@ -2222,6 +2201,24 @@ function ev_map_sel_hall(e) {
 	}
 	
 	show_map(active_map);
+}
+
+function setzoom(v) {
+	v = parseInt(v) || 10;
+	zoom = isNaN(v) ? 10 : v;
+	if (active_map)
+		show_map();
+
+	localStorage.setItem('zoom', zoom);
+
+	var o = QSA('#vzoom a');
+	for (var a = 0; a < o.length; a++) {
+		o[a].onclick = ev_setzoom;
+		o[a].setAttribute('class', parseInt(o[a].getAttribute('data-zoom'), 10) == zoom ? 'zoomsel' : '');
+	}
+}
+function ev_setzoom(e) {
+	setzoom(parseInt(this.getAttribute('data-zoom'), 10));
 }
 
 var ctx = ebi('map').getContext('2d');
@@ -2305,8 +2302,8 @@ function show_map() {
 		var sh = (maxy - miny) + miny * 2 + sz;
 		map.width = sw * ctxr + sz * 4;
 		map.height = sh * ctxr + sz * 4;
-		map.style.width = sw + 'px';
-		map.style.height = sh + 'px';
+		map.style.width = (sw*zoom/10) + 'px';
+		map.style.height = (sh*zoom/10) + 'px';
 		ctx.setTransform(ctxr, 0, 0, ctxr, sz * 2, sz);
 		ctx.lineCap = 'butt';
 		ctx.strokeStyle = '#231';
@@ -2536,9 +2533,7 @@ function show_map() {
 	})});
 }
 function ev_showmap(e) {
-	if (e !== undefined)
-		e.preventDefault();
-	
+	ev(e);
 	active_map = this.textContent;
 	show_map();
 }
@@ -2577,9 +2572,7 @@ function ev_cancel(e) {
 		window[invoke]();
 }
 function ev_add_qnote(e) {
-	if (e !== undefined)
-		e.preventDefault();
-
+	ev(e);
 	var loc = ebi('ladd_loc').textContent;
 	var txtbox = ebi('tqnote');
 	var txt = txtbox.value;
@@ -2596,9 +2589,7 @@ function ev_add_qnote(e) {
 	open_addctx();
 }
 function ev_dbg(e) {
-	if (e !== undefined)
-		e.preventDefault();
-
+	ev(e);
 	v = prompt('give me javascript', 'localStorage.zsel2.length');
 	alert(eval(v));
 }
@@ -2714,9 +2705,7 @@ function ev_selskipmin_edit(e) {
 }
 
 function ev_boothnav(e) {
-	if (e !== undefined)
-		e.preventDefault();
-
+	ev(e);
 	var tgt = this.getAttribute('tgt');
 	if (tgt == '-')
 		return alert('cannot navigate in this direction; no more booths matching criteria');
@@ -2793,16 +2782,12 @@ function ev_scrollto(e) {
 		get_scroll_offset();
 	
 	if (scroll_obj !== null) {
-		if (e !== undefined)
-			e.preventDefault();
-		
+		ev(e);
 		scroll_obj.scrollTop = ofs - pad;
 	}
 }
 function ev_srchcfg(e) {
-	if (e !== undefined)
-		e.preventDefault();
-
+	ev(e);
 	hide_modals();
 	show_excl('vsrchcfg');
 }
@@ -2854,6 +2839,7 @@ ebi('burl_edit').onclick = ev_url_edit_save;
 ebi('burl_del').onclick = ev_url_delete;
 ebi('tbmenu_map').onclick = ev_map_sel_hall;
 ebi('bmenu_map').onclick = ev_map_sel_hall;
+ebi('bzoom').onclick = function () { show_excl('vzoom'); };
 ebi('bmaphall_e123').onclick = ev_showmap
 ebi('bmaphall_e456').onclick = ev_showmap
 ebi('bmaphall_w12').onclick = ev_showmap
@@ -2873,7 +2859,7 @@ ebi('bgotonextday').onclick = ev_boothnav;
 ebi('bsrchcfg').onclick = ev_srchcfg;
 
 
-var t = ecn('bcancel');
+var t = QSA('.bcancel');
 for (var a=0; a<t.length; a++)
 	t[a].onclick = ev_cancel;
 
