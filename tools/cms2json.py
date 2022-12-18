@@ -36,7 +36,7 @@ def gen(nday, cday, hall):
         x, y = hmap[booth.rstrip("ab")]["locate"]
         
         wid = ids["wid"]
-        with open(f"{CJ}/{wid}/{wid}.json", "rb") as f:
+        with open(f"{CJ}/{wid}.json", "rb") as f:
             cj = json.loads(f.read().decode("utf-8", "replace"))
 
         kanji = cj["Name"]
@@ -69,9 +69,9 @@ def gen(nday, cday, hall):
 
 
 def main():
-    ret = []
     for nday, cday in enumerate(DAYS, 1):
         print("writing day {}".format(cday))
+        ret = []
         for hall in HALLS:
             ret.extend(gen(nday, cday, hall))
     

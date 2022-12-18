@@ -1,7 +1,15 @@
-<!DOCTYPE html><html lang="en"><head><style>
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+html,body { background: #222; color: #ccc }
 div { max-width: 40em; font-family: sans-serif }
-code { color: #7b4 }
-</style></head><body><div>
+a { color: #fc5 }
+code { color: #7b4; font-family: monospace, monospace; padding: 0 .2em; background: #1a1a1a }
+</style>
+
+</head><body><div>
 this document is regarding <a href="https://ocv.me/bp/101/">battleplan</a>
 
 <h1>current features:</h1><ul>
@@ -35,7 +43,7 @@ this document is regarding <a href="https://ocv.me/bp/101/">battleplan</a>
 
 <li>to launch bp, paste this and hit enter:<br /><code>~/bp/run</code></li>
 
-<li>note that the shopping list in your local installation is different from the online version -- use the import/export feature 5o synchronize them manually</li>
+<li>note that the shopping list in your local installation is different from the online version -- use the import/export feature to synchronize them manually</li>
 
 </ul>
 <h1>running bp offline (for iPhone/iPad)</h1><ul>
@@ -49,6 +57,63 @@ this document is regarding <a href="https://ocv.me/bp/101/">battleplan</a>
 <li>deleting/re-adding battleplan to the reading list SHOULD not delete your shopping list, but always make backups to be safe</li>
 
 </ul>
+
+
+
+
+
+<div id="mp" class="mdo"><h1 id="how-to-battleplan"><a href="#how-to-battleplan" ctr="1">how to battleplan</a></h1>
+<p>The main menu is opened by clicking the top-right blue <code>=</code> icon. Some of the items in the menu are also available in the toolbar at the top. A quick summary:</p>
+<ul>
+<li>📌 opens the shopping list</li>
+<li>🗺 opens the hall map</li>
+<li>🔍 opens the search feature</li>
+<li>⽥ opens the row browser</li>
+<li>⭕ shows the complete list of circles</li>
+<li>📂 to restore shopping list from a backup</li>
+<li>💾 to create a backup of your shopping list</li>
+<li>📆 to select which day to work on</li>
+<li>📲 to download database for the current day</li>
+</ul>
+<h1 id="📆-04-iosys--find-a-dayflac"><a href="#📆-04-iosys--find-a-dayflac" ctr="2">📆 <code>04. IOSYS — Find a Day.flac</code></a></h1>
+<p>The first time you access bp, it will default to day 2. Choose which day to operate on with the calendar (📆) button in the toolbar or in the main menu.</p>
+<p>When you access a new day for the first time, its database must be downloaded. Click download (📲) in the main menu to download the database of the currently selected day.</p>
+<p>The comiket organizers may release updates to the database over time, so redownload each day occasionally to stay up to date.</p>
+<h1 id="🔍-01-yonder-voice--seekingflac"><a href="#🔍-01-yonder-voice--seekingflac" ctr="3">🔍 <code>01. Yonder Voice — SEEKING.flac</code></a></h1>
+<p>If you want to add a particular circle to your shopping list, you can use the 🔍search view. The default search term will be "stroemer", replace this with a circle name. Search results will be immediately displayed below.</p>
+<p>Click a search result to modify its shopping list entry (described two sections further down).</p>
+<p>By default, the search will scan through circle names in kanji, katakana and romaji. Change this by clicking <code>(settings)</code> under the search field. Twitter and pixiv is only searchable for the circles who remembered to mention their account names to the comiket organizers.</p>
+<p>If you enable <code>regex query</code>, you have to write your searches according to <a href="https://www.regular-expressions.info/quickstart.html">https://www.regular-expressions.info/quickstart.html</a></p>
+<h1 id="⽥-18-onoken--columnflac"><a href="#⽥-18-onoken--columnflac" ctr="4">⽥ <code>18. onoken — column.flac</code></a></h1>
+<p>If you know the location of a circle, for example 東ノ25a, use the ⽥row view. You can copy and paste any piece of text which contains a location into the top left textfield which says "paste here" and the circle will be displayed below.</p>
+<p>Click a search result to modify its shopping list entry (described in the next section).</p>
+<p>Click the ⽥ icon in the toolbar to reset/blank the search field; this will show all the booths in the selected row.</p>
+<p>You can click <code>List rows</code> to select a row of booths to display. To the left and right are buttons which will take you to the row of booths which are physically located next to the current row. This way you can walk through the comiket hall.</p>
+<h1 id="🖊-かめりあ--الت-حقق-من-ذل---check-this-outflac"><a href="#🖊-かめりあ--الت-حقق-من-ذل---check-this-outflac" ctr="5">🖊 <code>かめりあ — ‮!الت حقق من ذل‬‎ - !!check this out.flac</code></a></h1>
+<p>When clicking a search result, or an existing entry in your shopping list, you will see the shopping list editor.</p>
+<p>Starting with the colored numpad; this is where you score the circle on a scale from 1 to 9. This will change the color of this circle in the shopping list, on the map, and everywhere else.</p>
+<p>The topmost button switches between a green <code>💚 Set "Purchased"</code> and an orange <code>🔔 Set "Must Buy"</code>, use this button while at comiket to mark this circle as finished. Circles which are marked as <em>"Purchased"</em> will appear with a zebra-striped background in all lists, and will be faded down to a dark green on the map.</p>
+<p>All of the URLs which the circle provided to the comiket crew are displayed underneath the numpad. You can add your own URLs or notes to this circle using the textbox right below which says <em>"paste stuff here"</em>.</p>
+<p>Use the <code>Manage URLs</code> button to edit or delete any URLs or notes which you have added.</p>
+<p>When you change the score of a circle, or its purchased state, you are sent back to the shopping list. If you want to instead see the next circle in your shopping list, this can be configured using the two radio buttons which says "return to list" and "go to next booth".</p>
+<p>Finally, at the bottom of the shopping list editor are two pairs of buttons, "navigate shopping list" and "navigate booths". Use these to move to the previous or next circle in your shopping list, or to the previous/next booth in the row.</p>
+<p>If you want to filter out circles which you gave a score of less than 7, put 7 in the <code>min. score</code> textbox above. The navigation buttons for the shopping list will now skip all circles with low scores.</p>
+<h1 id="📌-04-yogurtbox--スケジュールflac"><a href="#📌-04-yogurtbox--スケジュールflac" ctr="6">📌 <code>04. Yogurtbox — スケジュール.flac</code></a></h1>
+<p>The shopping list displays all the circles you have assigned a score. They are grouped by rows (ア イ ウ エ オ etc.) and the rows appear in the same order that they will be physically in the halls.</p>
+<p>As you add circles to your shopping list, an information bar at the top is created. It shows the number of <code>done</code> circles (marked as purchased) and <code>todo</code> (left to buy), then the number of <code>todo</code> circles for each score.</p>
+<p>Immediately underneath is a list of all the rows you have circles in. Click a row to jump to its first circle in the shopping list.</p>
+<h1 id="🗺-06-めらみぽっぷ--a-sense-of-distanceflac"><a href="#🗺-06-めらみぽっぷ--a-sense-of-distanceflac" ctr="7">🗺 <code>06. めらみぽっぷ — A Sense Of Distance.flac</code></a></h1>
+<p>The map view draws a map of one comiket hall. Everything in your shopping list will appear on the map in different colors. If you have marked something as purchased, it will be a dark green. Otherwise, the booth will have the same color as in the shopping list, in other words decided by your rating.</p>
+<p>Currently the map is not interactive; you can only zoom and pan. Eventually you will be able to tap a location in the map to see which circles are nearby or something.</p>
+<h1 id="📂💾-03-nachi--turn-back-timeflac"><a href="#📂💾-03-nachi--turn-back-timeflac" ctr="8">📂💾 <code>03. Nachi — Turn Back Time.flac</code></a></h1>
+<p>Please make backups of your shopping list! Do that with the 💾export feature in the main menu. You can then either press the<br>💾download button, or select all of the text in the textbox below.</p>
+<p>To restore your shopping list, select 📂import in the main menu. Then, click the <em>"Browse..."</em> button to select a backup file. You may optionally paste the wall of text in the textbox below, followed by pressing the "📃 text import" button.</p>
+</div>
+
+
+
+
+
 <h1>features to be added SoonTM:</h1><ul>
 
 <li>nothing requested</li>

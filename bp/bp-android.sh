@@ -1,6 +1,8 @@
 set -e
-mkdir -p ~/bp
+mkdir -p ~/bp/bp-readme
 cd ~/bp
+
+src=https://ocv.me/bp/101
 
 cat >files.list <<'EOF'
 index.html
@@ -10,7 +12,8 @@ lkrxy2.json
 EOF
 
 #cat files.list | xargs rm || true
-cat files.list | sed -r 's@^@https://ocv.me/bp/101/@' | wget -Ni-
+cat files.list | sed -r "s@^@$src/@" | wget -Ni-
+(cd bp-readme && wget -N $src/bp-readme/index.html)
 
 while true; do
     echo
@@ -23,7 +26,7 @@ while true; do
 done
 [ $pics ] && {
     command -v zstd || pkg install -y zstd
-    wget -O- https://ocv.me/bp/101/i.tzst | zstd -d | tar -x
+    wget -O- $src/i.tzst | zstd -d | tar -x
 }
 
 cat >run <<'EOF'

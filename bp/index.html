@@ -487,6 +487,7 @@ h3 {
 	<a href="#" id="bmenu_export">💾 Export your list</a>
 	<a href="#" id="bmenu_day">📆 Change day (now: #)</a>
 	<a href="#" id="bmenu_dload">📲 Download DB for Day #</a>
+	<a href="bp-readme/">❓ Help</a>
 </div>
 <div id="vday" class="modal">
 	<a href="#" class="bcancel">《 Cancel</a>
@@ -1182,16 +1183,23 @@ function load_day(day) {
 			MAXNCOL = ncols;
 	}
 
-	//inf(['loadingu']);
-	//lol(function() { lol(function() {
-		for (var a = 0, aa = dbday.length; a<aa; a++)
-			dbday[a]['kar'] = dbday[a]['kan'] + ' ' +
-				tl(dbday[a]['kan'], UF+LF+DF, LH+LH+LH);
+	for (var a = 0, aa = dbday.length; a<aa; a++)
+		dbday[a]['kar'] = dbday[a]['kan'] + ' ' +
+			tl(dbday[a]['kan'], UF+LF+DF, LH+LH+LH);
 
-		load_sel();
-		ev_added();
-	//})});
-	//return true;
+	load_sel();
+
+	if (active_day == 2) {
+		var ds = {'1': [], '2': []}
+		for (var a = 0; a < dbsel.length; a++) {
+			var d = dbsel[a].loc[0];
+			ds[d].push(dbsel[a]);
+		}
+		if (ds['1'].length)
+			fix_day2(ds);
+	}
+
+	ev_added();
 }
 function load_sel() {
 	loaded = localStorage.getItem('z101sel' + active_day);
@@ -1225,6 +1233,25 @@ function save_sel() {
 		busted_localstore = true;
 		alert("could not save your shopping list! you can rescue day " + active_day + " with the export feature until you refresh the website.\n\n(is your localStorage full?)");
 	}
+}
+function fix_day2(ds) {
+	// first version of c101 day2 also included day2 booths; transfer any ratings to day1
+	dbsel = ds['2'];
+	save_sel();
+	active_day = 1;
+	load_sel();
+	var v = ds['1'];
+	for (var a = 0; a < v.length; a++) {
+		var found = false;
+		for (var b = 0; b < dbsel.length; b++)
+			if (dbsel[b].loc == v[a].loc)
+				found = true;
+		if (!found)
+			dbsel.push(v[a]);
+	}
+	save_sel();
+	active_day = 2;
+	load_sel();
 }
 function showmsg(color, lines) {
 	var s1 = '<tr><td colspan="4" style="color:#' + color + '">';
