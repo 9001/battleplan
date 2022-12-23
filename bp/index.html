@@ -434,6 +434,28 @@ h3 {
 }
 
 
+
+@media (min-width: 30em) {
+  #addctx > a {
+    display: inline-block;
+    width: calc(50% - 1.1em)
+  }
+}
+@media (min-width: 60em) {
+  #addctx > a {
+    display: inline-block;
+    width: calc(25% - 1.1em)
+  }
+  .p50 {
+	display: inline-block;
+	width: 50%;
+  }
+  #ladd_kan, #ldel_kan {
+	display: inline-block;
+	margin-right: .6em;
+  }
+}
+
 </style>
 </head><body>
 <div id="nojs" class="modal">
@@ -527,10 +549,11 @@ h3 {
 	</div>
 </div>
 <div id="addctx" class="modal">
-	<a href="#" class="bcancel">《 Cancel</a> <!-- ❮⫷ -->
-	<a href="#" id="badd_done">💯 Set "Purchased"</a> <!-- 🔔 -->
-	<a href="#" id="badd_urls">🔖 Manage URLs</a> <!-- 🏷 -->
-	<a href="#" id="badd_rem">✘ Delete from list</a>
+	<a href="#" class="bcancel">《 Cancel</a><a
+	   href="#" id="badd_done">💯 Set "Purchased"</a><a
+	   href="#" id="badd_urls">🔖 Manage <u>U</u>RLs</a><a
+	   href="#" id="badd_rem">✘ Delete from list</a>
+
 	<div id="addctxinf">
 		<span id="ladd_kan">// kanji</span>
 		<span id="ladd_loc">// location</span>
@@ -541,16 +564,18 @@ h3 {
 		<td id="addctxscore"></td>
 	</tr></table>
 	
-	<h3>navigate shopping list</h3>
-	<div class="grid2"><a
-		href="#" id="bgotoprevsel">previous</a><a
-		href="#" id="bgotonextsel">nextious</a></div>
-		
-	<h3>navigate booths</h3>
-	<div class="grid2"><a
-		href="#" id="bgotoprevday">previous</a><a
-		href="#" id="bgotonextday">nextious</a></div>
-	
+	<div class="p50">
+		<h3>navigate shopping list</h3>
+		<div class="grid2"><a
+			href="#" id="bgotoprevsel">previous</a><a
+			href="#" id="bgotonextsel">nextious</a></div>
+	</div><div class="p50">
+		<h3>navigate booths</h3>
+		<div class="grid2"><a
+			href="#" id="bgotoprevday">previous</a><a
+			href="#" id="bgotonextday">nextious</a></div>
+	</div>
+
 	<div id="addctxlinks"></div>
 	<div id="addctxqnote">
 		<input id="tqnote" value="paste stuff here" sample="paste stuff here" />
@@ -617,7 +642,7 @@ h3 {
 	<input id="turl_edit" />
 	<a href="#" id="burl_edit">Save edit</a>
 	<div id="lurl_cur"></div>
-	<a href="#" id="burl_del">Delete</a>
+	<a href="#" id="burl_del"><u>D</u>elete</a>
 </div>
 <div id="vmaphall" class="modal">
 	<!-- 東|123|456|西 -->
@@ -752,7 +777,7 @@ var ROWS = [  // wall first, then right-to-left
 ];
 var sc_col = {
 	"-": "#000",
-	"1": "#111",
+	"1": "#222",
 	"2": "#111",
 	"3": "#111",
 	"4": "#111",
@@ -764,7 +789,7 @@ var sc_col = {
 };
 var sc_fcol = {
 	"-": "#351",
-	"1": "#444",
+	"1": "#704",
 	"2": "#444",
 	"3": "#444",
 	"4": "#444",
@@ -1112,6 +1137,9 @@ function show_chday(e) {
 	ev(e);
 	hide_modals();
 	show_excl('vday');
+}
+function isvis(html_id) {
+	return ebi(html_id).style.display == 'block';
 }
 function ev_chday(e) {
 	ev(e);
@@ -2715,7 +2743,12 @@ function open_addctx(loc) {
 }
 
 function setenpic(en) {
-	if (en !== true && en !== false) en = !enpic;
+	if (en !== true && en !== false) {
+		if (enpic && en.target.nodeName.toLowerCase() != 'img')
+			return;
+
+		en = !enpic;
+	}
 	ebi('addctxsp').classList[en?'remove':'add']('ni');
 	localStorage.setItem('enpic', en ? 'ye' : 'na');
 	enpic = en;
@@ -2817,6 +2850,53 @@ function ev_srchcfg(e) {
 	ev(e);
 	hide_modals();
 	show_excl('vsrchcfg');
+}
+window.onkeydown = function(e) {
+	if (e.altKey || e.isComposing)
+		return;
+
+	var k = e.code + '',
+		ae = document.activeElement,
+		aet = ae && ae != document.body ? ae.nodeName.toLowerCase() : '';
+
+	if (k == 'Enter' && aet == 'input')
+		ae.nextElementSibling.onclick();
+
+	if (aet && aet != 'a' && aet != 'tr' && aet != 'pre')
+		return;
+
+	if (k == 'Escape')
+		for (var a of QSA('.bcancel'))
+			if (a.parentNode.style.display === 'block')
+				return a.onclick();
+
+	if (k == 'KeyM')
+		ev_map_sel_hall();
+
+	if (k == 'KeyU') {
+		if (isvis('addctx'))
+			return ev_urls();
+	}
+
+	if (k == 'KeyD') {
+		if (isvis('vurls_edit'))
+			return ev_url_delete();
+		
+		return show_chday();
+	}
+
+	if (k.indexOf('Digit') === 0) {
+		var n = parseInt(k.slice(-1));
+
+		if (isvis('addctx'))
+			return ebi('badd_r' + n).onclick();
+		
+		if (isvis('vmaphall'))
+			return QS('#vmaphall>a:nth-child(' + (n+1) + ')').onclick();
+		
+		if (isvis('vday'))
+			return QS('#vday>a:nth-child(' + (n+1) + ')').onclick();
+	}
 }
 
 
