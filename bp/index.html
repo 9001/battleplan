@@ -2641,9 +2641,12 @@ function ev_savecan(e) {
 		return alert('choose a map first');
 
 	var u = ebi('map').toDataURL('image/png'),
-		tab = window.open('about:blank', 'rendered map');
-
-	tab.document.write('<img src="' + u + '" />');
+		a = document.createElement('a');
+	
+	a.setAttribute('href', u);
+	a.setAttribute('download', '');
+	a.click();
+	
 	show_map(active_map);
 }
 //canpos();
