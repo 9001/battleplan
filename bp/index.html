@@ -665,6 +665,7 @@ h3 {
 	<a href="#" id="bmaphall_w12">西12</a>
 	<!--a href="#" id="bmaphall_w34">西34</a-->
 	<a href="#" id="bzoom">zoom</a>
+	<a href="#" id="bsave">save as image</a>
 </div>
 <div id="vzoom" class="modal">
 	<a href="#" data-zoom="7">0.7x</a>
@@ -2634,6 +2635,17 @@ function canpos() {
 		alert(Math.floor(x) + '  ' + Math.floor(y));
 	};
 }
+function ev_savecan(e) {
+	ev(e);
+	if (!active_map)
+		return alert('choose a map first');
+
+	var u = ebi('map').toDataURL('image/png'),
+		tab = window.open('about:blank', 'rendered map');
+
+	tab.document.write('<img src="' + u + '" />');
+	show_map(active_map);
+}
 //canpos();
 function ev_resize(e) {
 	draw_th(e);
@@ -2978,6 +2990,7 @@ ebi('burl_del').onclick = ev_url_delete;
 ebi('tbmenu_map').onclick = ev_map_sel_hall;
 ebi('bmenu_map').onclick = ev_map_sel_hall;
 ebi('bzoom').onclick = function () { show_excl('vzoom'); };
+ebi('bsave').onclick = ev_savecan;
 ebi('bmaphall_e123').onclick = ev_showmap
 ebi('bmaphall_e456').onclick = ev_showmap
 ebi('bmaphall_w12').onclick = ev_showmap
