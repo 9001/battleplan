@@ -175,6 +175,16 @@ a {
 	font-weight: bold;
 	text-decoration: underline;
 }
+.bcancel::before {
+	content: '«';
+	position: fixed;
+	top: .5em;
+	left: .5em;
+	padding: .7em;
+	color: #fff;
+	background: #333;
+	border-right: .1em solid #222;
+}
 #vdl {
 	position: fixed;
 	top: 0;
@@ -1137,7 +1147,8 @@ function hide_viewctls(e) {
 }
 function show(html_id) {
 	ebi(html_id).style.display = 'block';
-	ebi(html_id).scrollTop = 0;
+	if (scroll_obj)
+		scroll_obj.scrollTop = 0;
 }
 function show_excl(html_id) {
 	persist_scroll();
@@ -2901,7 +2912,7 @@ function ev_srchcfg(e) {
 	show_excl('vsrchcfg');
 }
 window.onkeydown = function(e) {
-	if (e.altKey || e.isComposing)
+	if (e.ctrlKey || e.altKey || e.metaKey || e.isComposing)
 		return;
 
 	var k = e.code + '',
