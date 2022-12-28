@@ -3057,7 +3057,10 @@ window.onkeydown = function(e) {
 		aet = ae && ae != document.body ? ae.nodeName.toLowerCase() : '';
 
 	if (k == 'Enter' && aet == 'input')
-		ae.nextElementSibling.onclick();
+		try {
+			ae.nextElementSibling.onclick();
+		}
+		catch (ex) {}
 
 	if (aet && aet != 'a' && aet != 'tr' && aet != 'pre')
 		return;
