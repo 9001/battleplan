@@ -175,15 +175,21 @@ a {
 	font-weight: bold;
 	text-decoration: underline;
 }
+.bcancel {
+	position: sticky;
+	top: 0;
+	box-shadow: 0 0 0 .4em #222;
+	margin-bottom: .4em;
+}
 .bcancel::before {
 	content: '«';
 	position: fixed;
-	top: .5em;
-	left: .5em;
-	padding: .7em;
+	bottom: .2em;
+	right: .2em;
+	padding: .7em .8em;
 	color: #fff;
 	background: #333;
-	border-right: .1em solid #222;
+	box-shadow: 0 0 0 .3em #222;
 }
 #vdl {
 	position: fixed;
