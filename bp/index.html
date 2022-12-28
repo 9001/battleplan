@@ -346,14 +346,6 @@ div.center>div {
 .nudged {
 	background: #999;
 }
-.sc1 td, .sc2 td, .sc3 td, .sc4 td { color: #444; }
-.sc5 td, .modal a.sc5 { background: hsl(240,20%,20%); color: #888 }
-.sc6 td, .modal a.sc6 { background: hsl(  0,40%,30%); }
-.sc7 td, .modal a.sc7 { background: hsl( 35,70%,30%); color: #fff }
-.sc8 td, .modal a.sc8 { background: hsl( 90,70%,30%); color: #fff }
-.sc9 td, .modal a.sc9 { background: hsl(180,70%,40%); color: #fff; text-shadow: 0 0 2px #000 }
-x.sc8 td { background: hsl(270,40%,40%); color: #fff }
-x.sc9 td { background: hsl( 90,70%,30%); color: #fff }
 #addctxscore>a.act {
 	border: .2em solid #fc0;
 	box-shadow: 0 0 .2em #000 inset;
@@ -458,28 +450,52 @@ h3 {
 	line-height: 2.2em;
 	display: inline-block;
 }
+#ccolors {
+	padding: .6em;
+	background: #000;
+}
+#vcolors p {
+	padding: 0;
+	margin: 1em;
+}
+#tcolors a {
+	padding: .1em .5em;
+}
+#tcolors input {
+	max-width: 10em;
+	color: #fff;
+	background: #222;
+	border: 1px solid #333;
+	border-width: 0 0 .1em 0;
+}
+#tcolors td {
+	padding: .3em;
+}
+#tcolors td:first-child {
+	padding: .3em .6em;
+}
 
 
 
 @media (min-width: 30em) {
-  #addctx > a {
-    display: inline-block;
-    width: calc(50% - 1.1em)
-  }
+	#addctx > a {
+		display: inline-block;
+		width: calc(50% - 1.1em)
+	}
 }
 @media (min-width: 60em) {
-  #addctx > a {
-    display: inline-block;
-    width: calc(25% - 1.1em)
-  }
-  .p50 {
-	display: inline-block;
-	width: 50%;
-  }
-  #ladd_kan, #ldel_kan {
-	display: inline-block;
-	margin-right: .6em;
-  }
+	#addctx > a {
+		display: inline-block;
+		width: calc(25% - 1.1em)
+	}
+	.p50 {
+		display: inline-block;
+		width: 50%;
+	}
+	#ladd_kan, #ldel_kan {
+		display: inline-block;
+		margin-right: .6em;
+	}
 }
 
 </style>
@@ -533,9 +549,30 @@ h3 {
 	<a href="#" id="bmenu_cir">⭕ Show all circles (slow!!)</a>
 	<a href="#" id="bmenu_import">📂 Import your list</a>
 	<a href="#" id="bmenu_export">💾 Export your list</a>
+	<a href="#" id="bmenu_settings">⚙️ Settings</a>
 	<a href="#" id="bmenu_day">📆 Change day (now: #)</a>
 	<a href="#" id="bmenu_dload">📲 Download DB for Day #</a>
 	<a href="bp-readme/">❓ Help</a>
+</div>
+<div id="vcfg" class="modal">
+	<a href="#" class="bcancel">《 Cancel</a>
+	<a href="#" id="bcfg_srch">Configure search</a>
+	<a href="#" id="bcfg_colors">Configure colors</a>
+</div>
+<div id="vcolors" class="modal">
+	<a href="#" class="bcancel">《 Apply</a>
+	<div id="ccolors"><table>
+		<thead>
+			<tr>
+				<th>sc</th>
+				<th>background</th>
+				<th>foreground</th>
+			</tr>
+		</thead>
+		<tbody id="tcolors"></tbody>
+	</table></div>
+	<p>colors are HSLa -- the 4th value (alpha) is optional</p>
+	<p>Hue is degrees, Saturation and Luminosity is percent, Alpha is float 0..1, space is optional</p>
 </div>
 <div id="vday" class="modal">
 	<a href="#" class="bcancel">《 Cancel</a>
@@ -802,30 +839,6 @@ var ROWS = [  // wall first, then right-to-left
 	"めつてとなにぬねのはひふ",  //w1t
 	"へほまみむ"  //w1b
 ];
-var sc_col = {
-	"-": "#000",
-	"1": "rgba(255,255,255,0.2)",
-	"2": "rgba(255,255,255,0.1)",
-	"3": "rgba(255,255,255,0.1)",
-	"4": "rgba(255,255,255,0.1)",
-	"5": "hsl(240,20%,20%)",
-	"6": "hsl(  0,40%,30%)",
-	"7": "hsl( 35,70%,30%)",
-	"8": "hsl( 90,70%,30%)",
-	"9": "hsl(180,70%,40%)"
-};
-var sc_fcol = {
-	"-": "#351",
-	"1": "#704",
-	"2": "#444",
-	"3": "#444",
-	"4": "#444",
-	"5": "hsl(240,20%,40%)",
-	"6": "hsl(  0,40%,50%)",
-	"7": "hsl( 35,70%,50%)",
-	"8": "hsl( 90,70%,50%)",
-	"9": "#fff"
-}
 
 var BOOTHS = [];
 var MAXNCOL = 0;
@@ -876,8 +889,8 @@ function tl(txt, from, to) {
 
 
 var ebi = document.getElementById.bind(document),
-    QS = document.querySelector.bind(document),
-    QSA = document.querySelectorAll.bind(document);
+	QS = document.querySelector.bind(document),
+	QSA = document.querySelectorAll.bind(document);
 
 function ev(e) {
 	if (e && e.preventDefault)
@@ -900,6 +913,112 @@ try {
 catch(ex) {
 	croak('could not write to localStorage; need this for the list of circles/booths');
 }
+
+var cc = function() {
+	var r = {},
+		html = [],
+		cs = localStorage.getItem('bpc'),
+		csd = [
+			[  '0, 0%, 0%',         '90, 67%, 20%'],  // -
+			[  '0, 0%, 100%, 0.2', '326, 100%, 23%'],  // 1
+			[  '0, 0%, 100%, 0.1',   '0, 0%, 100%, 0.3'],  // 2
+			[  '0, 0%, 100%, 0.1',   '0, 0%, 100%, 0.3'],  // 3
+			[  '0, 0%, 100%, 0.1',   '0, 0%, 100%, 0.3'],  // 4
+			['240, 20%, 20%',      '240, 20%, 40%'],  // 5
+			[  '0, 40%, 30%',        '0, 40%, 50%'],  // 6
+			[ '35, 70%, 30%',       '35, 70%, 50%'],  // 7
+			[ '90, 70%, 30%',       '90, 70%, 50%'],  // 8
+			['180, 70%, 40%',        '0, 0%, 100%'],  // 9
+		];
+
+	try {
+		if (!cs)
+			throw 1;
+
+		cs = JSON.parse(cs);
+	}
+	catch (ex) {
+		cs = JSON.parse(JSON.stringify(csd));
+	}
+
+	r.paint = function () {
+		for (var a = 0; a < 10; a++) {
+			var tr = QS(`#tcolors tr:nth-child(${a+1})`),
+				tds = tr.getElementsByTagName('td'),
+				rst = tr.getElementsByTagName('a')[0],
+				ins = tr.getElementsByTagName('input'),
+				tbg = ins[0],
+				tfg = ins[1],
+				bg = tbg.value || tbg.getAttribute('def'),
+				fg = tfg.value || tfg.getAttribute('def');
+
+			if (bg.split(/,/g).length < 4)
+				bg += ', 1';
+
+			if (fg.split(/,/g).length < 4)
+				fg += ', 1';
+
+			var cb = 'hsla(' + bg + ')',
+				cf = 'hsla(' + fg + ')';
+
+			tds[0].style.background = cb;
+			tds[0].style.color = cf;
+			(function(tbg, tfg) {
+				rst.onclick = function(e) {
+					ev(e);
+					tbg.value = tbg.getAttribute('def');
+					tfg.value = tfg.getAttribute('def');
+					r.paint();
+				};
+				tbg.oninput = tfg.oninput = function(e) {
+					r.paint();
+				};
+			})(tbg, tfg);
+
+			cs[a] = [bg,fg];
+			document.documentElement.style.setProperty('--b'+a, cb);
+			document.documentElement.style.setProperty('--f'+a, cf);
+			//alert(cb);
+		}
+		r.c = cs;
+		r.b = ns(cs, 0);
+		r.f = ns(cs, 1);
+		localStorage.setItem('bpc', JSON.stringify(cs));
+	};
+
+	var css = [];
+	for (var a = 0; a < 10; a++) {
+		var c = cs[a], d = csd[a];
+		html.push(`<tr>
+			<td id="cn${a}">${a}</td>
+			<td><input id="cb${a}" value="${c[0]}" def="${d[0]}" /></td>
+			<td><input id="cf${a}" value="${c[1]}" def="${d[1]}" /></td>
+			<td><a href="#" id="cr${a}">reset</a></td>
+		</tr>`);
+		css.push(`.sc${a}, .modal a.sc${a} {
+			background: var(--b${a});
+			color: var(--f${a});
+		}`);
+	}
+	ebi('tcolors').innerHTML = html.join('');
+	
+	var cso = document.createElement('style');
+	cso.innerHTML = css.join('\n');
+	cso.type = 'text/css';
+	document.getElementsByTagName('head')[0].appendChild(cso);
+
+	function ns(ca, n) {
+		var ret = {}, t = [];
+		for (var a = 0; a < 10; a++)
+			t.push(ret[a?a+'':'-'] = 'hsla(' + ca[a][n] + ')');
+		
+		//alert(t.join('\n'));
+		return ret;
+	}
+
+	r.paint();
+	return r;
+}();
 
 var enpic;
 setenpic(localStorage.getItem('enpic') != 'na');
@@ -1160,6 +1279,16 @@ function show_menu(e) {
 	ev(e);
 	hide_modals();
 	show_excl('vmenu');
+}
+function ev_cfg(e) {
+	ev(e);
+	hide_modals();
+	show_excl('vcfg');
+}
+function ev_cfg_colors(e) {
+	ev(e);
+	hide_modals();
+	show_excl('vcolors');
 }
 function show_chday(e) {
 	ev(e);
@@ -2515,8 +2644,8 @@ function show_map() {
 				var y = parseInt(tday['y'], 10) * sz/10;
 				
 				ctx.fillStyle = '#000';
-				if (tsel && sc_col[tsel['sc']])
-					ctx.fillStyle = sc_col[tsel['sc']];
+				if (tsel && cc.b[tsel['sc']])
+					ctx.fillStyle = cc.b[tsel['sc']];
 
 				if (tsel && tsel['done'])
 					ctx.fillStyle = '#121';
@@ -2591,7 +2720,7 @@ function show_map() {
 				
 				if (!shitty_canvas_performance && b == n_renders - 1) {
 					ctx.fillStyle = (!tsel || tsel['done']) ?
-						'#351' : sc_fcol[tsel['sc']];
+						'#351' : cc.f[tsel['sc']];
 					
 					ctx.save();
 					ctx.clip();
@@ -2619,7 +2748,7 @@ function show_map() {
 					continue;
 				
 				if (scored) 
-					ctx.fillStyle = sc_fcol[tsel['sc']];
+					ctx.fillStyle = cc.f[tsel['sc']];
 				else
 					ctx.fillStyle = '#351';
 				
@@ -2857,8 +2986,9 @@ function gen_navkeytxt(bid, loc) {
 		esc(tday['rom']);
 	
 	var cidx = tsel == null ? '-' : tsel['sc'];
-	obj.style.background = sc_col[cidx];
-	obj.style.color = sc_fcol[cidx];
+	obj.style.background = cc.b[cidx];
+	obj.style.color = cc.f[cidx];
+	//alert(cc.b[cidx]);
 }
 function gen_navkeys() {
 	var iday = get_iday();
@@ -2911,6 +3041,7 @@ function ev_srchcfg(e) {
 	hide_modals();
 	show_excl('vsrchcfg');
 }
+
 window.onkeydown = function(e) {
 	if (e.ctrlKey || e.altKey || e.metaKey || e.isComposing)
 		return;
@@ -2992,6 +3123,9 @@ ebi('bmenu_export').onclick = ev_export;
 ebi('export_download').onclick = ev_export_file;
 ebi('import_file').onchange = ev_import_file;
 ebi('bimport_text').onclick = ev_import_text;
+ebi('bmenu_settings').onclick = ev_cfg;
+ebi('bcfg_srch').onclick = ev_srchcfg;
+ebi('bcfg_colors').onclick = ev_cfg_colors;
 ebi('badd_done').onclick = ev_purchased;
 ebi('badd_rem').onclick = ev_remove;
 ebi('bdel_yes').onclick = ev_remove_ok;
@@ -3054,6 +3188,7 @@ lol(function() { lol(function() {
 //setTimeout(show_map, 10);
 
 //setTimeout(function() { open_addctx('1東G15b'); }, 10);
+//setTimeout(ev_cfg_colors, 100);
 
 
 /*
