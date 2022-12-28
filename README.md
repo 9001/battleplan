@@ -35,7 +35,7 @@ I'd really like to clean this up but that's not happening haha
 * once the website has loaded (and the database has been downloaded at some point), the webapp will no longer need an internet connection until you refresh the browser tab
 
 # use it offline: Android
-* install [termux](https://termux.com/)
+* install [termux](https://termux.com/) from [f-droid](https://f-droid.org/), **not from the playstore**
 * to either install or upgrade your offline bp installation, paste the following into your terminal and hit enter:  
   `pkg install -y wget; wget -qO- https://ocv.me/bp/101/bp-android.sh | bash`
 * to launch bp, paste this and hit enter:  

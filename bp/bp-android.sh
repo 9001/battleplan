@@ -30,7 +30,7 @@ done
 }
 
 cat >run <<'EOF'
-printf '\n\nbp is now available at:\nhttp://127.0.0.1:1616/\n\n(long-tap the screen, select "more" » "Select URL" and then long-tap the link there)\n\n'
+printf '\n\033[32m\nbp is now available at:\nhttp://127.0.0.1:1616/\n\033[36m\n(long-tap the screen, select "more" » "Select URL" and then long-tap the link there)\n\033[0m\n'
 cd ~/bp && python3 -m http.server 1616
 EOF
 chmod 755 run

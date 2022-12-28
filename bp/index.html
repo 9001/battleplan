@@ -922,7 +922,6 @@ catch(ex) {
 
 var cc = function() {
 	var r = {},
-		html = [],
 		cs = localStorage.getItem('bpc'),
 		csd = [
 			[  '0, 0%, 0%',         '90, 67%, 20%'],  // -
@@ -992,24 +991,28 @@ var cc = function() {
 		localStorage.setItem('bpc', JSON.stringify(cs));
 	};
 
-	var css = [];
-	for (var a = 0; a < 10; a++) {
-		var c = cs[a], d = csd[a];
-		html.push(`<tr>
-			<td id="cn${a}">${a}</td>
-			<td><input id="cb${a}" value="${c[0]}" def="${d[0]}" /></td>
-			<td><input id="cf${a}" value="${c[1]}" def="${d[1]}" /></td>
-			<td><a href="#" id="cr${a}">reset</a></td>
-		</tr>`);
-		css.push(`.sc${a}, .modal a.sc${a} {
-			background: var(--b${a});
-			color: var(--f${a});
-		}`);
-	}
-	ebi('tcolors').innerHTML = html.join('');
+	r.init = function (cs) {
+		r.cs = cs;
+		var html = [], css = [];
+		for (var a = 0; a < 10; a++) {
+			var c = cs[a], d = csd[a];
+			html.push(`<tr>
+				<td id="cn${a}">${a}</td>
+				<td><input id="cb${a}" value="${c[0]}" def="${d[0]}" /></td>
+				<td><input id="cf${a}" value="${c[1]}" def="${d[1]}" /></td>
+				<td><a href="#" id="cr${a}">reset</a></td>
+			</tr>`);
+			css.push(`.sc${a}, .modal a.sc${a} {
+				background: var(--b${a});
+				color: var(--f${a});
+			}`);
+		}
+		ebi('tcolors').innerHTML = html.join('');
+		return css;
+	};
 	
 	var cso = document.createElement('style');
-	cso.innerHTML = css.join('\n');
+	cso.innerHTML = r.init(cs).join('\n');
 	cso.type = 'text/css';
 	document.getElementsByTagName('head')[0].appendChild(cso);
 
@@ -2009,6 +2012,12 @@ function gen_export() {
 
 		ret['c101sel'+a].sort(locsort);
 	}
+
+	try {
+		ret['colors'] = JSON.parse(localStorage.getItem('bpc').replace(/ /g,''));
+	}
+	catch (ex) {}
+
 	return JSON.stringify(ret
 		).replace(/{"loc":"/g, '\n{"loc":"'
 		).replace(/}],"/g, '}],\n"'
@@ -2052,6 +2061,14 @@ function import_text(txt) {
 				localStorage.setItem(ck, packed);
 			}
 		};
+
+		try {
+			localStorage.setItem('bpc', JSON.stringify(iv.colors).replace(/ /g,'').replace(/,/,', '));
+			cc.init(iv.colors);
+			cc.paint();
+		}
+		catch (ex) {}
+
 		load_day(active_day);
 	})});
 }
