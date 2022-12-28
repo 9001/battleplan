@@ -860,6 +860,7 @@ var pending_day_db = null;
 var nfail = 0;
 var sortkey1 = 'loc';
 var sortkey2 = 'kan';
+var quickedit = false;
 var active_tab = null;
 var shitty_canvas_performance = false;  // TODO: set true for iOS
 
@@ -1274,6 +1275,11 @@ function hide_viewctls(e) {
 	ev_resize();
 }
 function show(html_id) {
+	try {
+		document.activeElement.blur();
+	}
+	catch (ex) {}
+
 	ebi(html_id).style.display = 'block';
 	if (scroll_obj)
 		scroll_obj.scrollTop = 0;
@@ -2343,15 +2349,24 @@ function ev_url_new_done(e) {
 	var loc = ebi('ladd_loc').textContent;
 	add_url(loc, txt);
 	ev_urls();
+	if (quickedit)
+		open_addctx(loc);
 }
 function ev_url_mod(e) {
 	ev(e);
-	var txt = this.textContent;
+	quickedit = false;
+	urlmod(this.textContent);
+}
+function urlmod(txt) {
 	ebi('turl_edit').value = txt;
 	ebi('lurl_cur').textContent = txt;
 	
 	hide_modals();
 	show('vurls_edit');
+	
+	var o = ebi('turl_edit');
+	o.focus();
+	o.selectionStart = o.selectionEnd = o.value.length;
 }
 function ev_url_edit_save(e) {
 	ev(e);
@@ -2376,6 +2391,8 @@ function ev_url_edit_save(e) {
 			tsel.url[a] = repl;
 			save_sel();
 			ev_urls();
+			if (quickedit)
+				open_addctx(loc);
 			return;
 		}
 	
@@ -2399,6 +2416,8 @@ function ev_url_delete(e) {
 	
 	save_sel();
 	ev_urls();
+	if (quickedit)
+		open_addctx(loc);
 }
 function full_localstore() {
 	var html = [];
@@ -2830,6 +2849,10 @@ function ev_cancel(e) {
 	restore_scroll(true);
 	
 	var backto = this.getAttribute('goto');
+	
+	if (backto == 'vurls' && quickedit)
+		backto = 'open_addctx';  // http://ocv.me/good.jpg
+
 	if (backto != null)
 		show(backto);
 	
@@ -2948,10 +2971,22 @@ function open_addctx(loc) {
 	//if (iday <= 0)
 	
 	ebi('addctxlinks').innerHTML = html.join('\n');
+	ebi('addctxlinks').onclick = ev_ctxlink_click;
 	ebi('trow_out').value = loc;
 	
 	gen_navkeys();
 	show_excl('addctx');
+}
+function ev_ctxlink_click(e) {
+	var href = e.target.getAttribute('href'),
+		ofs = href.indexOf('://');
+
+	if (ofs >= 3 && ofs <= 5)
+		return true;
+	
+	ev(e);
+	quickedit = true;
+	urlmod(e.target.getAttribute('href'));
 }
 
 function setenpic(en) {
