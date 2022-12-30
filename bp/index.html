@@ -455,13 +455,13 @@ h3 {
 .grid2+h3 {
 	margin: 0;
 }
-#vsrchcfg {
+.chkcfg {
 	text-align: center;
 }
-#vsrchcfg>* {
+.chkcfg>* {
 	margin: .5em;
 }
-#vsrchcfg>div {
+.chkcfg>div {
 	text-align: left;
 	line-height: 2.2em;
 	display: inline-block;
@@ -574,6 +574,7 @@ h3 {
 	<a href="#" class="bcancel">《 Cancel</a>
 	<a href="#" id="bcfg_srch">Configure search</a>
 	<a href="#" id="bcfg_colors">Configure colors</a>
+	<a href="#" id="bcfg_filtering">Configure filtering</a>
 </div>
 <div id="vcolors" class="modal">
 	<a href="#" class="bcancel">《 Apply</a>
@@ -752,7 +753,7 @@ h3 {
 	<p>if nothing else works, you can try deleting absolutely everything including your shopping-list and all data from previous comikets:</p>
 	<a href="#" id="purgeall">WIPE ALL DATA</a>
 </div>
-<div id="vsrchcfg" class="modal">
+<div id="vsrchcfg" class="modal chkcfg">
 	<a href="#" class="bcancel" invoke="ev_tsch_input">《 Apply</a>
 	<div>
 		<input type="checkbox" id="csrch_regex" defval="0">
@@ -776,6 +777,20 @@ h3 {
 		<input type="checkbox" id="csrch_url_twitter" defval="0">
 		<label for="csrch_url_twitter">search URLs: Twitter</label><br />
 	</div>
+</div>
+<div id="vfiltercfg" class="modal chkcfg">
+	<a href="#" class="bcancel">《 Apply</a>
+	<div>
+		<input type="checkbox" id="cshow_done" defval="1" reload="1">
+		<label for="cshow_done">show purchased</label><br />
+		
+		<input type="checkbox" id="cshow_skip" defval="1" reload="1">
+		<label for="cshow_skip">show deferred</label><br />
+		
+		<input type="checkbox" id="cshow_miss" defval="1" reload="1">
+		<label for="cshow_miss">show out-of-stock</label><br />
+	</div>
+	<p>conditionally hide entries from the shopping list</p>
 </div>
 <div id="site">
 	<div id="vtab">
@@ -1114,12 +1129,19 @@ function ev_cfg_bool_edit(e) {
 	window[name] = tv;
 	localStorage.setItem(name, tv ? '1' : '0');
 	tint_bool(name, tv);
+
+	if (that.getAttribute('reload'))
+		try {
+			refresh();
+			ev_cfg_filtering();
+		}
+		catch (ex) {}
 }
 
 var selskipmin;
 cfg_int('selskipmin', '0', 1);
 
-var csrch_opts = ebi('vsrchcfg').getElementsByTagName('input');
+var csrch_opts = QSA('.chkcfg input');
 for (var a = 0, aa = csrch_opts.length; a < aa; a++) {
 	var name = csrch_opts[a].getAttribute('id');
 	window[name] = 'global variable construction 101';
@@ -1324,6 +1346,11 @@ function ev_cfg_colors(e) {
 	ev(e);
 	hide_modals();
 	show_excl('vcolors');
+}
+function ev_cfg_filtering(e) {
+	ev(e);
+	hide_modals();
+	show_excl('vfiltercfg');
 }
 function show_chday(e) {
 	ev(e);
@@ -1752,6 +1779,11 @@ function draw_tbody(only_faved) {
 		var trclass = "sc" + score;
 		if (st)
 			trclass += ' ' + st;
+		
+		if ((st == 'done' && !cshow_done) ||
+			(st == 'skip' && !cshow_skip) ||
+			(st == 'miss' && !cshow_miss))
+			trclass += '" style="display:none';
 		
 		//var ypos = loc.slice(3);
 		html.push('<tr id="c' +
@@ -3223,6 +3255,7 @@ ebi('bimport_text').onclick = ev_import_text;
 ebi('bmenu_settings').onclick = ev_cfg;
 ebi('bcfg_srch').onclick = ev_srchcfg;
 ebi('bcfg_colors').onclick = ev_cfg_colors;
+ebi('bcfg_filtering').onclick = ev_cfg_filtering;
 ebi('badd_done').onclick = ev_purchased;
 ebi('badd_rem').onclick = ev_remove;
 ebi('bdel_yes').onclick = ev_remove_ok;
