@@ -246,6 +246,16 @@ tr.hil td {
 	background: repeating-linear-gradient(
 		45deg, #222, #222 10px, #2c2c2c 11px, #2c2c2c 20px);
 }
+#tb tr.skip td {
+	color: #8bf;
+	background: repeating-linear-gradient(
+		45deg, #222, #222 10px, #225 11px, #225 20px);
+}
+#tb tr.miss td {
+	color: #f66;
+	background: repeating-linear-gradient(
+		45deg, #222, #222 10px, #522 11px, #522 20px);
+}
 #ladd_kan, #ldel_kan {
 	display: block;
 	font-size: 1.5em;
@@ -845,6 +855,13 @@ var ROWS = [  // wall first, then right-to-left
 	"めつてとなにぬねのはひふ",  //w1t
 	"へほまみむ"  //w1b
 ];
+var ST = {
+	need: { key: "need", next: "done", c: "#642", txt: "🔔 Must Buy" },
+	done: { key: "done", next: "skip", c: "#462", txt: "💚 Purchased" },
+	skip: { key: "skip", next: "miss", c: "#246", txt: "⏰ Deferred" },
+	miss: { key: "miss", next: "need", c: "#621", txt: "💢 Sold Out" },
+};
+var STL = [ST.need, ST.done, ST.skip, ST.miss];
 
 var BOOTHS = [];
 var MAXNCOL = 0;
@@ -1141,9 +1158,12 @@ function hidetoast(div) {
 function nudgetoast(div) {
 	div.classList.remove('nudged');
 	if (div['bgcolor'])
-		div.style.background = '#' + div['bgcolor'];
+		div.style.background = div['bgcolor'];
 }
 function toast(html, bgcolor) {
+	for (var a of QSA('.toast'))
+		a.style.display = 'none';
+
 	var div = document.createElement('div');
 	div.innerHTML = html;
 	div.onclick = hidetoast;
@@ -1421,6 +1441,18 @@ function load_sel() {
 	}
 	
 	dbsel = JSON.parse(loaded);
+	
+	for (var a of dbsel) {
+		if (a.done) {
+			// upgrader for c101
+			delete a.done;
+			a.st = 'done';
+		}
+		if (!a.st)
+			// permanent
+			a.st = 'need';
+	}
+	
 	return true;
 }
 function save_sel() {
@@ -1704,15 +1736,13 @@ function draw_tbody(only_faved) {
 	for (var a = 0, aa = BOOTHS.length; a<aa; a++)
 	{
 		var loc = BOOTHS[a]['loc'];
-		var isdone = false;
+		var st = '';
 		var score = '-';
 		for (var b = 0, bb = dbsel.length; b<bb; b++)
 			if (loc == dbsel[b]['loc'])
 			{
 				score = dbsel[b]['sc'];
-				if (dbsel[b]['done'])
-					isdone = true;
-				
+				st = dbsel[b].st;
 				break;
 			}
 		
@@ -1720,8 +1750,8 @@ function draw_tbody(only_faved) {
 			continue;
 		
 		var trclass = "sc" + score;
-		if (isdone)
-			trclass += ' done';
+		if (st)
+			trclass += ' ' + st;
 		
 		//var ypos = loc.slice(3);
 		html.push('<tr id="c' +
@@ -1873,7 +1903,8 @@ function set_score(loc, score) {
 	
 	dbsel.push({
 		'loc': loc,
-		'sc': score
+		'sc': score,
+		'st': 'need',
 	});
 	save_sel();
 }
@@ -1919,9 +1950,10 @@ function ev_added() {
 			scores[scorekeys[a]] = 0;
 		
 		for (var a = 0; a < dbsel.length; a++) {
-			if (dbsel[a]['done'])
+			var st = dbsel[a].st;
+			if (st == 'done')
 				have++;
-			else {
+			else if (st != 'miss') {
 				todo++;
 				scores[dbsel[a]['sc']]++;
 			}
@@ -1953,9 +1985,10 @@ function ev_added() {
 				first_in_row = loc;
 			}
 			
-			if (dbsel[a]['done'])
+			var st = dbsel[a].st;
+			if (st == 'done')
 				have++;
-			else if (dbsel[a]['sc'] >= 5)
+			else if (st != 'miss' && dbsel[a].sc >= 5)
 				todo++;
 			
 			if (a == aa-1)  // :shrug:
@@ -2013,10 +2046,22 @@ function gen_export() {
 		ret['c101sel'+active_day] = dbsel;
 	}
 	for (var a = 1; a <= 4; a++) {
-		if (!ret['c101sel'+a])
+		var k = 'c101sel' + a;
+		if (!ret[k])
 			continue;
 
-		ret['c101sel'+a].sort(locsort);
+		ret[k].sort(locsort);
+		
+		for (var b of ret[k]) {
+			if (b.done) {
+				// upgrader for c101
+				delete b.done;
+				b.st = 'done';
+			}
+			if (b.st == 'need')
+				// permanent
+				delete b.st;
+		}
 	}
 
 	try {
@@ -2098,17 +2143,14 @@ function ev_purchased(e) {
 		ebi('ladd_kan').textContent + '<br />' +
 		ebi('ladd_rom').textContent;
 	
-	if (entry['done'])
-	{
-		delete entry['done'];
-		toast('NEED TO BUY ' + desc, '642');
-	}
-	else {
-		entry['done'] = 1;
-		toast('Purchased ' + desc, '472');
-	}
+	var st = ST[entry.st];
+	st = ST[st.next];
+	entry.st = st.key;
+	toast(st.txt + ' ' + desc, st.c);
+
 	save_sel();
 	refresh();
+	open_addctx(loc);
 }
 function ev_remove(e) {
 	ev(e);
@@ -2689,7 +2731,7 @@ function show_map() {
 				if (tsel && cc.b[tsel['sc']])
 					ctx.fillStyle = cc.b[tsel['sc']];
 
-				if (tsel && tsel['done'])
+				if (tsel && tsel.st != 'need')
 					ctx.fillStyle = '#121';
 				
 				/*ctx.beginPath();
@@ -2937,17 +2979,11 @@ function open_addctx(loc) {
 	ebi('ladd_kan').textContent = tday['kan']
 	ebi('ladd_rom').textContent = tday['rom']
 	ebi('ladd_loc').textContent = loc;
-	
-	if (tsel && tsel['done']) {
-		ebi('badd_done').textContent = '🔔 Set "Must Buy"';
-		ebi('badd_done').style.background =
-			'linear-gradient(90deg,#2c2c2c,#664422)';
-	}
-	else {
-		ebi('badd_done').textContent = '💚 Set "Purchased"';
-		ebi('badd_done').style.background =
-			'linear-gradient(90deg,#2c2c2c,#446622)';
-	}
+
+	var st = (tsel && ST[tsel.st]) || STL[0];
+	ebi('badd_done').textContent = st.txt;
+	ebi('badd_done').style.background =
+		'linear-gradient(90deg,#2c2c2c,' + st.c + ')';
 	
 	var html = [];
 	if (tsel && tsel['url'])
