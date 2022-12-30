@@ -3061,10 +3061,16 @@ function open_addctx(loc) {
 	show_excl('addctx');
 }
 function ev_ctxlink_click(e) {
-	var href = e.target.getAttribute('href'),
-		ofs = href.indexOf('://');
+	try {
+		var tn = e.target.tagName.toLowerCase(),
+			href = e.target.getAttribute('href'),
+			ofs = href.indexOf('://');
+	}
+	catch (ex) {
+		return true;
+	}
 
-	if (ofs >= 3 && ofs <= 5)
+	if (tn != 'a' || (ofs >= 3 && ofs <= 5))
 		return true;
 	
 	ev(e);
