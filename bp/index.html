@@ -884,6 +884,7 @@ var active_day = -1;
 var active_row;
 var dbday = [];
 var dbsel = [];
+var maplabels = [];
 var lol = window.requestAnimationFrame.bind(window);
 var render = null;  // fp
 var empty_row_msg = '???';
@@ -2615,6 +2616,7 @@ function show_map() {
 		for (var a = 0; a < rows.length; a++)
 			rowmm.push([99999,-99999,99999,-99999]);
 		
+		maplabels = [];
 		var booths = [];
 		for (var a = 0, aa = dbday.length; a < aa; a++) {
 			var tday = dbday[a];
@@ -2716,6 +2718,7 @@ function show_map() {
 				for (var c = 0; c < y.length; c++) {
 					var tw = ctx.measureText(rows[a]).width;
 					ctx.fillText(rows[a], x[b]-tw/2, y[c]);
+					maplabels.push([x[b], y[c], rows[a]]);
 				}
 		}
 		
@@ -2891,9 +2894,21 @@ function canpos() {
 			x = (e.clientX - rect.left) * scaleX,
 			y = (e.clientY - rect.top) * scaleY;
 	
-		alert(Math.floor(x) + '  ' + Math.floor(y));
+		console.log(Math.floor(x) + '  ' + Math.floor(y));
+		for (var a = 0; a < maplabels.length; a++) {
+			var mx = maplabels[a][0],
+				my = maplabels[a][1],
+				md = Math.abs(my - y);
+			
+			if (x >= mx && x < mx + 24 && md < 10) {
+				ev_row();
+				goto_row(maplabels[a][2]);
+				return;
+			}
+		}
 	};
 }
+canpos();
 function ev_savecan(e) {
 	ev(e);
 	if (!active_map)
