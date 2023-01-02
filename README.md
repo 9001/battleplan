@@ -1,7 +1,7 @@
 # battleplan
 offline comiket shopping list webapp
 
-**user's guide:** [MANUAL.md](MANUAL.md)
+**user's guide:** [MANUAL.md](MANUAL.md) -- also [discord](https://discord.gg/QhVWUs3)
 
 **live here:** https://ocv.me/bp/101/
 
