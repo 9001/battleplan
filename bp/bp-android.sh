@@ -2,7 +2,7 @@ set -e
 mkdir -p ~/bp/bp-readme
 cd ~/bp
 
-src=https://ocv.me/bp/101
+src=https://ocv.me/bp/102
 
 cat >files.list <<'EOF'
 index.html

@@ -2,7 +2,7 @@
 <!--
 
 	battleplan <ed@irc.rizon.net>, MIT-licensed
-	https://ocv.me/bp/101/
+	https://ocv.me/bp/102/
 
 -->
 <meta charset="utf-8">
@@ -1398,7 +1398,7 @@ function load_day(day) {
 	ebi('bmenu_day').innerHTML = '📆 Change day (now: ' + active_day + ')';
 	ebi('bmenu_dload').innerHTML = '📲 Download DB for Day ' + active_day;
 	
-	loaded = localStorage.getItem('z101day' + active_day);
+	loaded = localStorage.getItem('z102day' + active_day);
 	if (loaded == null) {
 		err_no_data();
 		return false;
@@ -1443,14 +1443,12 @@ function load_day(day) {
 			var d = dbsel[a].loc[0];
 			ds[d].push(dbsel[a]);
 		}
-		if (ds['1'].length)
-			fix_day2(ds);
 	}
 
 	ev_added();
 }
 function load_sel() {
-	loaded = localStorage.getItem('z101sel' + active_day);
+	loaded = localStorage.getItem('z102sel' + active_day);
 	if (loaded == null) {
 		dbsel = [];
 		inf([
@@ -1470,16 +1468,9 @@ function load_sel() {
 	
 	dbsel = JSON.parse(loaded);
 	
-	for (var a of dbsel) {
-		if (a.done) {
-			// upgrader for c101
-			delete a.done;
-			a.st = 'done';
-		}
+	for (var a of dbsel)
 		if (!a.st)
-			// permanent
 			a.st = 'need';
-	}
 	
 	return true;
 }
@@ -1487,31 +1478,12 @@ function save_sel() {
 	try {
 		var jsontxt = JSON.stringify(dbsel);
 		var packed = LZString.compressToUTF16(jsontxt);
-		localStorage.setItem('z101sel' + active_day, packed);
+		localStorage.setItem('z102sel' + active_day, packed);
 	}
 	catch (ex) {
 		busted_localstore = true;
 		alert("could not save your shopping list! you can rescue day " + active_day + " with the export feature until you refresh the website.\n\n(is your localStorage full?)");
 	}
-}
-function fix_day2(ds) {
-	// first version of c101 day2 also included day2 booths; transfer any ratings to day1
-	dbsel = ds['2'];
-	save_sel();
-	active_day = 1;
-	load_sel();
-	var v = ds['1'];
-	for (var a = 0; a < v.length; a++) {
-		var found = false;
-		for (var b = 0; b < dbsel.length; b++)
-			if (dbsel[b].loc == v[a].loc)
-				found = true;
-		if (!found)
-			dbsel.push(v[a]);
-	}
-	save_sel();
-	active_day = 2;
-	load_sel();
 }
 function showmsg(color, lines) {
 	var s1 = '<tr><td colspan="4" style="color:#' + color + '">';
@@ -1536,7 +1508,7 @@ function put_day_db(jsontxt) {
 		if (nfail-- > 0) throw 42;
 		localStorage.removeItem('day' + active_day);
 		localStorage.removeItem('zday' + active_day);
-		localStorage.setItem('z101day' + active_day, pending_day_db);
+		localStorage.setItem('z102day' + active_day, pending_day_db);
 	}
 	catch (ex) {
 		full_localstore();
@@ -2064,10 +2036,10 @@ function gen_export() {
 	var ret = {};
 	for (var a = 1; a <= 4; a++) {
 		try {
-			var kt = localStorage.getItem('z101sel'+a);
+			var kt = localStorage.getItem('z102sel'+a);
 			if (kt != null) {
 				var unpacked = LZString.decompressFromUTF16(kt);
-				ret['c101sel'+a] = JSON.parse(unpacked);
+				ret['c102sel'+a] = JSON.parse(unpacked);
 			}
 		}
 		catch(ex) {
@@ -2076,25 +2048,18 @@ function gen_export() {
 	}
 	if (busted_localstore) {
 		alert('emergency export of day ' + active_day + ' in effect');
-		ret['c101sel'+active_day] = dbsel;
+		ret['c102sel'+active_day] = dbsel;
 	}
 	for (var a = 1; a <= 4; a++) {
-		var k = 'c101sel' + a;
+		var k = 'c102sel' + a;
 		if (!ret[k])
 			continue;
 
 		ret[k].sort(locsort);
 		
-		for (var b of ret[k]) {
-			if (b.done) {
-				// upgrader for c101
-				delete b.done;
-				b.st = 'done';
-			}
+		for (var b of ret[k])
 			if (b.st == 'need')
-				// permanent
 				delete b.st;
-		}
 	}
 
 	try {
@@ -2135,8 +2100,8 @@ function import_text(txt) {
 			return;
 		}
 		for (var a = 1; a <= 4; a++) {
-			var uk = 'c101sel' + a;
-			var ck = 'z101sel' + a;
+			var uk = 'c102sel' + a;
+			var ck = 'z102sel' + a;
 			localStorage.removeItem(uk);
 			localStorage.removeItem(ck);
 			if (iv[uk]) {
@@ -2496,7 +2461,7 @@ function ev_url_delete(e) {
 }
 function full_localstore() {
 	var html = [];
-	var keys = ['z101day1','z101day2']; //,'z101day3','z101day4'];
+	var keys = ['z102day1','z102day2']; //,'z102day3','z102day4'];
 	for (var a = 0; a < keys.length; a++)
 		try {
 			var len = localStorage.getItem(keys[a]).length;
@@ -2918,7 +2883,7 @@ function ev_savecan(e) {
 		a = document.createElement('a');
 	
 	a.setAttribute('href', u);
-	a.setAttribute('download', 'c101-' + active_day + active_map + '.png');
+	a.setAttribute('download', 'c102-' + active_day + active_map + '.png');
 	a.click();
 	
 	show_map(active_map);

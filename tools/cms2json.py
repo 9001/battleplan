@@ -9,8 +9,8 @@ import shutil
 
 DAYS = "土 日".split()
 HALLS = "e123 e456 w12".split()
-CJ = "/home/ed/Downloads/c101/m"
-CI = "/home/ed/Downloads/c101/i"
+CJ = "notes/c102/jsons"
+CI = "notes/c102/thumbs/i"
 
 
 katsu = cutlet.Cutlet()

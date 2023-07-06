@@ -2,22 +2,40 @@
 currently the only data source so use this
 
 ## CMS: step by step
+
 * grab `genres.json` from https://webcatalog-free.circle.ms/Map/GetGenrePosition2
   * use it to discover halls / days; e123 e456 w12 / 1 2
+  * `jq . <GetGenrePosition2.json | sort | uniq | grep -E '"(hall|day)"'`
+
 * grab `map-{hall}.json` from https://webcatalog-free.circle.ms/Map/GetMapDataFromExcel?hall=$hall
+
 * grab `booth-{d}-{hall}.json` from https://webcatalog-free.circle.ms/Map/GetMapping2?day=Day$d&hall=$hall
-* magically obtain the circle info
-* preprocess pics
+
+* magically obtain the circle info; something like:
+  ```bash
+  jq . < booth-2-e123.json | grep A76a -A2  # wid:17313948 id:10073981 (wid=Id, id=CircleId)
+  for f in ../booth-*; do jq '.[].wid' < $f; done | sort | uniq | sed -r 's#(.*)#https://webcatalog-free.circle.ms/Circle/\1/DetailJson#' | wget ⋯ --post-data '' -nv -i-
+  find -name DetailJson\* | while IFS= read -r f; do mv -nv $f $(jq .Id $f).json; done
+  find -name \*.json | while IFS= read -r f; do jq -r '.WebCircleCutUrls[0] // .CircleCutUrls[0], .WebCircleCutUrls[1] // .CircleCutUrls[1]' $f; done | grep -vE ^null | sed -r 's#^#https://webcatalog-free.circle.ms#' | uniq | tee thumbs.txt
+  sort thumbs.txt | uniq | wget ⋯ -nv -i- 2>&1 | tee thumbs.log
+  cat thumbs.log | awk -F/ '/CachedImage.* -> "/{v=$NF;sub(/[^"]+"/,"",v);sub(/".*/,"",v);print$6" "v}' | while read wid fn; do mv -vn "$fn" "$wid.png"; done
   ```
-  rm -rf i; mkdir i; cp -pR 1/*/*.png 2/*/*.png i/
-  find i -iname '*.png' | while IFS= read -r x; do convert $x -shave 7x7 +repage $x.png; mv $x.png $x; pngquant --strip --nofs --quality 50 --speed 1 --skip-if-larger - <$x >tf; [ -s tf ] && mv tf $x; done
+  (heads up -- conjoined booths have both pics in both booths, so look at the URL to decide which goes where)
+
+* preprocess pics; assumes you're in folder `o` with originals and sibling folder `i` holds processed output
+  ```bash
+  find -iname \*.png | sort | while IFS= read -r x; do [ -e ../i/$x ] && continue; echo -n "$x "; convert $x -shave 7x7 +repage $x.png; pngquant --strip --nofs --quality 50 --speed 1 --skip-if-larger - <$x.png >tf; [ -s tf ] && mv tf ../i/$x || mv $x.png ../i/$x; done; rm -- *.png.png
   ```
-* ```
+
+* install kanji-hiragana-romaji translator
+  ```bash
   yum install mecab-devel
   python3 -m pip install --user -U fugashi[unidic] cutlet
   python3 -m unidic download
   ```
+
 * `./cms2json.py`
+
 * `tar -c i | zstd -T0 -9 > i.tzst`
 
 ----
