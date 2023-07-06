@@ -17,7 +17,7 @@ cat files.list | sed -r "s@^@$src/@" | wget -Ni-
 
 while true; do
     echo
-    read -u1 -n1 -rp 'download pictures (226 MiB)? y/n: ' r
+    read -u1 -n1 -rp 'download pictures (236 MiB)? y/n: ' r
     echo
     case $r in
         [Yy]* ) pics=1; break;;
@@ -26,6 +26,7 @@ while true; do
 done
 [ $pics ] && {
     command -v zstd || pkg install -y zstd
+    rm -rf i
     wget -O- $src/i.tzst | zstd -d | tar -x
 }
 
