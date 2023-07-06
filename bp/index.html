@@ -1371,7 +1371,10 @@ function ev_chday(e) {
 		load_day(nday);
 	})});
 }
-function err_no_data() {
+function err_no_data(loc) {
+	if (loc && confirm('Need to download database for Day ' + active_day + '.\n\nDownload size is around 2.5 MiB.\n\nStart download?'))
+		return ev_dload();
+
 	warn([
 		"<strong>== Day " + active_day + " database not downloaded ==</strong>",
 		"Use the menu button top right;",
@@ -1380,8 +1383,17 @@ function err_no_data() {
 	]);
 }
 function load_day(day) {
-	var loaded;
-	
+	var loaded = null,
+		hash = window.location.hash;
+
+	if (hash) {
+		hash = decodeURIComponent(hash.slice(1));
+		if (RLOC.exec(hash))
+			day = hash.slice(0, 1);
+		else
+			hash = null;
+	}
+
 	if (day === undefined)
 	{
 		loaded = localStorage.getItem('activeday');
@@ -1400,7 +1412,7 @@ function load_day(day) {
 	
 	loaded = localStorage.getItem('z102day' + active_day);
 	if (loaded == null) {
-		err_no_data();
+		err_no_data(hash);
 		return false;
 	}
 	
@@ -1446,6 +1458,9 @@ function load_day(day) {
 	}
 
 	ev_added();
+
+	if (hash)
+		open_addctx(hash);
 }
 function load_sel() {
 	loaded = localStorage.getItem('z102sel' + active_day);
@@ -2287,9 +2302,9 @@ function ev_tsch_input(e) {
 	BOOTHS.sort(locsort);
 	
 	var info = BOOTHS.length + ' results';
-	if (BOOTHS.length > 100) {
-		BOOTHS.splice(100, 999999);
-		info = 'Over 100 results';
+	if (BOOTHS.length > 573) {
+		BOOTHS.splice(573, 999999);
+		info = 'Over 573 results';
 	}
 	ebi('srchinf').textContent = info;
 	
@@ -3024,6 +3039,14 @@ function open_addctx(loc) {
 	
 	gen_navkeys();
 	show_excl('addctx');
+
+	try {
+		var url = document.location.pathname + document.location.search + '#' + loc;
+		history.replaceState(url, url, url);
+	}
+	catch (ex) {
+		document.location.hash = loc;
+	}
 }
 function ev_ctxlink_click(e) {
 	try {
@@ -3057,6 +3080,9 @@ function setenpic(en) {
 }
 function drawpic(loc) {
 	loc = loc || ebi('ladd_loc').textContent;
+	if (!RLOC.exec(loc))
+		return;
+
 	ebi('addctxpic').innerHTML = enpic ? '<img src="i/' + loc + '.png" />' : '';
 }
 
