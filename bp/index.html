@@ -770,6 +770,9 @@ h3 {
 		<input type="checkbox" id="csrch_loc" defval="1">
 		<label for="csrch_loc">search location (カ04)</label><br />
 		
+		<input type="checkbox" id="csrch_notes" defval="1">
+		<label for="csrch_notes">search notes</label><br />
+		
 		<input type="checkbox" id="csrch_url_all" defval="0">
 		<label for="csrch_url_all">search URLs: All</label><br />
 		
@@ -2239,7 +2242,8 @@ function ev_srch(e) {
 function ev_tsch_input(e) {
 	ev(e);
 	var txt = ebi('tsrch').value.toLowerCase();
-	
+	var boo2 = [];
+
 	if (csrch_regex) {
 		var re = new RegExp(txt, 'u');
 		BOOTHS = dbday.filter(o => {
@@ -2270,6 +2274,20 @@ function ev_tsch_input(e) {
 			
 			return false;
 		});
+
+		if (csrch_notes)
+			for (var ds of dbsel)
+				if (ds.url && ds.url.length)
+					for (var du of ds.url)
+						if (re.exec(du)) {
+							var loc = ds.loc;
+							for (var dd of dbday)
+								if (dd.loc == loc) {
+									boo2.push(dd);
+									break;
+								}
+							break;
+						}
 	}
 	else {
 		BOOTHS = dbday.filter(o => {
@@ -2300,6 +2318,29 @@ function ev_tsch_input(e) {
 			
 			return false;
 		});
+
+		if (csrch_notes)
+			for (var ds of dbsel)
+				if (ds.url && ds.url.length)
+					for (var du of ds.url)
+						if (du.toLowerCase().indexOf(txt) !== -1) {
+							var loc = ds.loc;
+							for (var dd of dbday)
+								if (dd.loc == loc) {
+									boo2.push(dd);
+									break;
+								}
+							break;
+						}
+	}
+	for (var a of boo2) {
+		var add = true;
+		for (var b of BOOTHS)
+			if (a.loc == b.loc)
+				add = false;
+
+		if (add)
+			BOOTHS.push(a);
 	}
 	BOOTHS.sort(locsort);
 	
