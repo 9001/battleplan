@@ -942,6 +942,19 @@ function ev(e) {
 		e.preventDefault();
 }
 
+function sethash(v) {
+	try {
+		var url = document.location.pathname + document.location.search;
+		if (v)
+			url += '#' + v;
+
+		history.replaceState(url, url, url);
+	}
+	catch (ex) {
+		document.location.hash = v;
+	}
+}
+
 
 try {
 	active_row = localStorage.getItem('activerow');
@@ -2154,6 +2167,7 @@ function ev_import_text(e) {
 	import_text(ebi('timport_text').value);
 }
 function ev_purchased(e) {
+	ev(e);
 	var loc = ebi('ladd_loc').textContent;
 	var entry = get_tsel(loc, true);
 	
@@ -2961,6 +2975,8 @@ function ev_cancel(e) {
 	restore_scroll(true);
 	
 	var backto = this.getAttribute('goto');
+	if (!backto)
+		sethash('');
 	
 	if (backto == 'vurls' && quickedit)
 		backto = 'addctx';  // http://ocv.me/good.jpg
@@ -3082,14 +3098,7 @@ function open_addctx(loc) {
 	
 	gen_navkeys();
 	show_excl('addctx');
-
-	try {
-		var url = document.location.pathname + document.location.search + '#' + loc;
-		history.replaceState(url, url, url);
-	}
-	catch (ex) {
-		document.location.hash = loc;
-	}
+	sethash(loc);
 }
 function ev_ctxlink_click(e) {
 	try {
