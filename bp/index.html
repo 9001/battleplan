@@ -1381,6 +1381,7 @@ function isvis(html_id) {
 }
 function ev_chday(e) {
 	ev(e);
+	sethash('');
 	hide_modals();
 	var words = this.innerHTML.split(' ');
 	var nday = parseInt(words[words.length-1], 10);
