@@ -8,19 +8,20 @@ import shutil
 
 
 DAYS = "土 日".split()
-HALLS = "e123 e456 w12".split()
-CJ = "notes/c102/jsons"
-CI = "notes/c102/thumbs/i"
+HALLS = "e123 e456 e7 w12".split()
+CB = "../notes/c103"
+CJ = CB + "/i"
+CI = CB + "/i"
 
 
 katsu = cutlet.Cutlet()
 
 
 def gen(nday, cday, hall):
-    with open(f"map-{hall}.json", "rb") as f:
+    with open(f"{CB}/map-{hall}.json", "rb") as f:
         hj = json.loads(f.read().decode("utf-8", "replace"))
     
-    with open(f"booth-{nday}-{hall}.json", "rb") as f:
+    with open(f"{CB}/booth-{nday}-{hall}.json", "rb") as f:
         bj = json.loads(f.read().decode("utf-8", "replace"))
 
     kan_ew = "東" if hall.startswith("e") else "西"
@@ -80,7 +81,7 @@ def main():
 
     # create ROWS for the webapp
     for hall in HALLS:
-        with open(f"map-{hall}.json", "rb") as f:
+        with open(f"{CB}/map-{hall}.json", "rb") as f:
             hj = json.loads(f.read().decode("utf-8", "replace"))
         
         rows = {}

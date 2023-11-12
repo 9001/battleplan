@@ -2,7 +2,7 @@
 <!--
 
 	battleplan <ed@irc.rizon.net>, MIT-licensed
-	https://ocv.me/bp/102/
+	https://ocv.me/bp/103/
 
 -->
 <meta charset="utf-8">
@@ -143,6 +143,7 @@ a {
 	background: #333;
 	padding: .1em .2em;
 	text-decoration: none;
+	min-width: 1em;
 }
 #vrowlistb hr {
 	border-top: 1px solid #333;
@@ -548,7 +549,7 @@ h3 {
 			><input id="trow_out" value="parser out"
 			></div>
 		
-		<input id="tsrch" class="viewctl" value="stroemer" sample="stroemer" />
+		<input id="tsrch" class="viewctl" value="nema 10" sample="nema 10" />  <!-- c103 -->
 		<div id="srchinfb" class="viewctl">
 			<span id="srchinf">
 				<!-- will contain search results info -->
@@ -609,7 +610,7 @@ h3 {
 		Dec 28,29,30,31 in 2019
 		sat sun mon tue 土 日 月 火
 	-->
-	<a href="#" id="bmenu_day1">土 / 1</a>
+	<a href="#" id="bmenu_day1">土 / 1</a>  <!-- c103 -->
 	<a href="#" id="bmenu_day2">日 / 2</a>
 	<!--a href="#" id="bmenu_day3">月 / 3</a>
 	<a href="#" id="bmenu_day4">火 / 4</a-->
@@ -729,8 +730,9 @@ h3 {
 <div id="vmaphall" class="modal">
 	<!-- 東|123|456|西 -->
 	<a href="#" class="bcancel">《 Cancel</a>
-	<a href="#" id="bmaphall_e123">東123</a>
+	<a href="#" id="bmaphall_e123">東123</a>  <!-- c103 -->
 	<a href="#" id="bmaphall_e456">東456</a>
+	<a href="#" id="bmaphall_e7">東7</a>
 	<a href="#" id="bmaphall_w12">西12</a>
 	<!--a href="#" id="bmaphall_w34">西34</a-->
 	<a href="#" id="bzoom">zoom</a>
@@ -861,8 +863,9 @@ window.onerror = function(msg, url, lineNo, columnNo, error) {
 
 // だけど僕はそのままの
 
-var DAYS = ['土', '日'];  //, '月', '火'];
-var HALLS = ['e1','e2','e3','e4','e5','e6','w1a','w1b','w2a','w2b'];
+var DAYS = ['土', '日'];  //, '月', '火'];  //c103
+var HALLS = ['e1','e2','e3','e4','e5','e6','e7a','e7b','w1a','w1b','w2a','w2b'];
+var WALLS = 'Aスaあめ';
 var ROWS = [  // wall first, then right-to-left
 	"ABCDEFGHIJKLM",  //e1
 	"NOPQRSTUVWXYZ",  //e2
@@ -870,11 +873,14 @@ var ROWS = [  // wall first, then right-to-left
 	"スセソタチツテトナニヌネノ",  //e6
 	"ハパヒピフプヘペホポマミム",  //e5
 	"メモヤユヨラリルレロワヲ",  //e4
-	"あきくけこさしすせそたち",  //w2t
+	"abcdefghijklm", //e7a/top
+	"nopqrstuvw", //e7b
+	"あきくけこさしすせそたち",  //w2a/top
 	"いうえおか",  //w2b
-	"めつてとなにぬねのはひふ",  //w1t
+	"めつてとなにぬねのはひふ",  //w1a/top
 	"へほまみむ"  //w1b
 ];
+var HRD = {}; for (var a = 0; a < HALLS.length; a++) HRD[HALLS[a]] = ROWS[a];
 var ST = {
 	need: { key: "need", next: "done", c: "#642", txt: "🔔 Must Buy" },
 	done: { key: "done", next: "skip", c: "#462", txt: "💚 Purchased" },
@@ -1417,7 +1423,7 @@ function load_day(day) {
 	{
 		loaded = localStorage.getItem('activeday');
 		if (loaded == null)
-			active_day = 2;
+			active_day = 1;  //c103
 		else
 			active_day = parseInt(loaded, 10);
 	}
@@ -1429,7 +1435,7 @@ function load_day(day) {
 	ebi('bmenu_day').innerHTML = '📆 Change day (now: ' + active_day + ')';
 	ebi('bmenu_dload').innerHTML = '📲 Download DB for Day ' + active_day;
 	
-	loaded = localStorage.getItem('z102day' + active_day);
+	loaded = localStorage.getItem('z103day' + active_day);
 	if (loaded == null) {
 		err_no_data(hash);
 		return false;
@@ -1456,8 +1462,10 @@ function load_day(day) {
 			if (rday != active_day) continue;
 			if (rrow != ALLROWS[a]) continue;
 			
+			//if (!ncols) console.log("%s starts at %d", ALLROWS[a], b);
 			ncols++;
 		}
+		//console.log("%d cols in %s", ncols, ALLROWS[a]);
 		if (MAXNCOL < ncols)
 			MAXNCOL = ncols;
 	}
@@ -1468,21 +1476,13 @@ function load_day(day) {
 
 	load_sel();
 
-	if (active_day == 2) {
-		var ds = {'1': [], '2': []}
-		for (var a = 0; a < dbsel.length; a++) {
-			var d = dbsel[a].loc[0];
-			ds[d].push(dbsel[a]);
-		}
-	}
-
 	ev_added();
 
 	if (hash)
 		open_addctx(hash);
 }
 function load_sel() {
-	loaded = localStorage.getItem('z102sel' + active_day);
+	loaded = localStorage.getItem('z103sel' + active_day);
 	if (loaded == null) {
 		dbsel = [];
 		inf([
@@ -1512,7 +1512,7 @@ function save_sel() {
 	try {
 		var jsontxt = JSON.stringify(dbsel);
 		var packed = LZString.compressToUTF16(jsontxt);
-		localStorage.setItem('z102sel' + active_day, packed);
+		localStorage.setItem('z103sel' + active_day, packed);
 	}
 	catch (ex) {
 		busted_localstore = true;
@@ -1542,7 +1542,7 @@ function put_day_db(jsontxt) {
 		if (nfail-- > 0) throw 42;
 		localStorage.removeItem('day' + active_day);
 		localStorage.removeItem('zday' + active_day);
-		localStorage.setItem('z102day' + active_day, pending_day_db);
+		localStorage.setItem('z103day' + active_day, pending_day_db);
 	}
 	catch (ex) {
 		full_localstore();
@@ -2070,10 +2070,10 @@ function gen_export() {
 	var ret = {};
 	for (var a = 1; a <= 4; a++) {
 		try {
-			var kt = localStorage.getItem('z102sel'+a);
+			var kt = localStorage.getItem('z103sel'+a);
 			if (kt != null) {
 				var unpacked = LZString.decompressFromUTF16(kt);
-				ret['c102sel'+a] = JSON.parse(unpacked);
+				ret['c103sel'+a] = JSON.parse(unpacked);
 			}
 		}
 		catch(ex) {
@@ -2082,10 +2082,10 @@ function gen_export() {
 	}
 	if (busted_localstore) {
 		alert('emergency export of day ' + active_day + ' in effect');
-		ret['c102sel'+active_day] = dbsel;
+		ret['c103sel'+active_day] = dbsel;
 	}
 	for (var a = 1; a <= 4; a++) {
-		var k = 'c102sel' + a;
+		var k = 'c103sel' + a;
 		if (!ret[k])
 			continue;
 
@@ -2134,8 +2134,8 @@ function import_text(txt) {
 			return;
 		}
 		for (var a = 1; a <= 4; a++) {
-			var uk = 'c102sel' + a;
-			var ck = 'z102sel' + a;
+			var uk = 'c103sel' + a;
+			var ck = 'z103sel' + a;
 			localStorage.removeItem(uk);
 			localStorage.removeItem(ck);
 			if (iv[uk]) {
@@ -2391,10 +2391,11 @@ function ev_trowin_input(e) {
 		// var UF = 'ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺ';
 		// var LF = 'ａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚ';
 		
-		var find =
-			tl(m[1], LH+LF+UF, UH+UH+UH) +
+		var find =  //c103 has e7/lowercase-latin; use case-Sensitive
+			//tl(m[1], LH+LF+UF, UH+UH+UH) +  //first glyph case-insensitive
+			tl(m[1], LF+UF, LH+UH) +  //first glyph case-Sensitive
 			tl(m[2], DF, DH) +
-			tl(m[3], UH+UF+LF, LH+LH+LH);
+			tl(m[3], UH+UF+LF, LH+LH+LH);  // second glyph is just [ab]
 		
 		ebi('trow_out').value = find;
 		
@@ -2534,7 +2535,7 @@ function ev_url_delete(e) {
 }
 function full_localstore() {
 	var html = [];
-	var keys = ['z102day1','z102day2']; //,'z102day3','z102day4'];
+	var keys = ['z103day1','z103day2']; //,'z103day3','z103day4'];
 	for (var a = 0; a < keys.length; a++)
 		try {
 			var len = localStorage.getItem(keys[a]).length;
@@ -2622,7 +2623,7 @@ function show_map() {
 	
 	lol(function() { lol(function() {
 		var sz = 12, // box size; webcata uses 10
-			font1 = '24px sans-serif',
+			font1 = '24px monospace',
 			font2 = '8px sans-serif';
 		
 		var mainhall = active_map;
@@ -2634,6 +2635,9 @@ function show_map() {
 		
 		if (mainhall == '東456')
 			subhalls = ['e4','e5','e6'];
+		
+		if (mainhall == '東7')
+			subhalls = ['e7a','e7b'];
 		
 		if (mainhall == '西12')
 			subhalls = ['w1a','w1b','w2a','w2b'];
@@ -2696,6 +2700,7 @@ function show_map() {
 		ctx.fillStyle = '#573';
 		ctx.font = font1;
 		for (var a = 0; a < rows.length; a++) {
+			var row = rows[a];
 			var minx = rowmm[a][0];
 			var maxx = rowmm[a][1];
 			var miny = rowmm[a][2];
@@ -2731,7 +2736,7 @@ function show_map() {
 			if (maxy - miny < 26 * sz)
 				y = 11.8 * sz;
 			else if (miny < 20 * sz)
-				y = (miny + (maxy-miny)/1.9) + sz * 0.5;  //e123,456
+				y = (miny + (maxy-miny)/1.9) + -sz * 0.15;  //e123,456
 			else
 				y = (miny + (maxy-miny)/1.82) + sz * 0.5;
 
@@ -2746,6 +2751,38 @@ function show_map() {
 				];
 			}
 
+			// c103
+			if (row == "Q") y -= sz * 0.1;
+			if ((HRD.w1a + HRD.w2a).indexOf(row) + 1) {
+				y = sz * 10.7;
+				if (WALLS.indexOf(row) + 1) {
+					y = [sz * 1.3, sz * 41.5];
+					x = [sz * 47.5, sz * 89.5];
+					if (HRD.w2a.indexOf(row) + 1)
+						x = [sz*0.5, sz * 43];
+				}
+			}
+			if ((HRD.w1b + HRD.w2b).indexOf(row) + 1) {
+				y = sz * 53.7;
+				if (WALLS.indexOf(row) + 1) {
+					y = sz * 50;
+					x = [sz * 47.5, sz * 89.5];
+					if (HRD.w2a.indexOf(row) + 1)
+						x = [sz*0.5, sz * 43];
+				}
+			}
+			if (HRD.e7a.indexOf(row) + 1) {
+				y = sz * 19.7;
+				if (WALLS.indexOf(row) + 1) {
+					y = [sz * 3.5, sz * 54.5];
+					x = [sz * 2.5, sz * 43.5];
+				}
+			}
+			if (HRD.e7b.indexOf(row) + 1) {
+				y = sz * 48.6;
+				if (row == "n") y = sz * 42.5;
+			}
+
 			if (!Array.isArray(x))
 				x = [x];
 			
@@ -2754,9 +2791,9 @@ function show_map() {
 			
 			for (var b = 0; b < x.length; b++)
 				for (var c = 0; c < y.length; c++) {
-					var tw = ctx.measureText(rows[a]).width;
-					ctx.fillText(rows[a], x[b]-tw/2, y[c]);
-					maplabels.push([x[b], y[c], rows[a]]);
+					var tw = ctx.measureText(row).width;
+					ctx.fillText(row, x[b]-tw/2, y[c]);
+					maplabels.push([x[b], y[c], row]);
 				}
 		}
 		
@@ -2956,7 +2993,7 @@ function ev_savecan(e) {
 		a = document.createElement('a');
 	
 	a.setAttribute('href', u);
-	a.setAttribute('download', 'c102-' + active_day + active_map + '.png');
+	a.setAttribute('download', 'c103-' + active_day + active_map + '.png');
 	a.click();
 	
 	show_map(active_map);
@@ -3340,10 +3377,8 @@ ebi('bsave').onclick = ev_savecan;
 ebi('bmaphall_e123').onclick = ev_showmap
 ebi('bmaphall_e456').onclick = ev_showmap
 ebi('bmaphall_w12').onclick = ev_showmap
-try {
-	ebi('bmaphall_w34').onclick = ev_showmap
-}
-catch(ex) { }
+try { ebi('bmaphall_w34').onclick = ev_showmap; } catch(ex) { }
+try { ebi('bmaphall_e7').onclick = ev_showmap; } catch(ex) { }
 ebi('bqnote').onclick = ev_add_qnote;
 ebi('tqnote').onfocus = ev_focus;
 ebi('tqnote').onblur = ev_blur;
@@ -3379,6 +3414,7 @@ lol(function() { lol(function() {
 //ev_map_sel_hall();
 
 //active_map = '東123';
+//active_map = '東7';
 //active_map = '西12';
 //setTimeout(show_map, 10);
 

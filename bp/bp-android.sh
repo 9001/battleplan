@@ -2,7 +2,7 @@ set -e
 mkdir -p ~/bp/bp-readme
 cd ~/bp
 
-src=https://ocv.me/bp/102
+src=https://ocv.me/bp/103
 
 cat >files.list <<'EOF'
 index.html
@@ -17,7 +17,7 @@ cat files.list | sed -r "s@^@$src/@" | wget -Ni-
 
 while true; do
     echo
-    read -u1 -n1 -rp 'download pictures (236 MiB)? y/n: ' r
+    read -u1 -n1 -rp 'download pictures (288 MiB)? y/n: ' r
     echo
     case $r in
         [Yy]* ) pics=1; break;;
@@ -31,7 +31,7 @@ done
 }
 
 cat >run <<'EOF'
-printf '\n\033[32m\nbp is now available at:\nhttp://127.0.0.1:1616/\n\033[36m\n(long-tap the screen, select "more" » "Select URL" and then long-tap the link there)\n\033[0m\n'
+printf '\n\033[32m\nbattleplan is now available at:\nhttp://127.0.0.1:1616/\n\033[36m\n(long-tap the screen, select "more" » "Select URL" and then long-tap the link there)\n\033[0m\n'
 cd ~/bp && python3 -m http.server 1616
 EOF
 chmod 755 run
@@ -44,7 +44,7 @@ python3 -V || pkg install -y python
 cat <<'EOF'
 
 
-bp has finished installing.
+battleplan has finished installing.
 to launch bp, run this command:
 
     ~/bp/run
