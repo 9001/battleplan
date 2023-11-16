@@ -8,6 +8,7 @@ The main menu is opened by clicking the top-right blue `=` icon. Some of the ite
 * ⭕ shows the complete list of circles
 * 📂 to restore shopping list from a backup
 * 💾 to create a backup of your shopping list
+* ⚙️ for settings (table/grid-view, ...)
 * 📆 to select which day to work on
 * 📲 to download database for the current day
 
@@ -24,6 +25,8 @@ The comiket organizers may release updates to the database over time, so redownl
 # 🔍 `01. Yonder Voice — SEEKING.flac`
 
 If you want to add a particular circle to your shopping list, you can use the 🔍search view. The default search term will be "stroemer", replace this with a circle name. Search results will be immediately displayed below.
+
+By default, this is displayed as a plaintext list, but you can enable pictures (or change to grid-view) in "settings" 🠞 "configure list view".
 
 Click a search result to modify its shopping list entry (described two sections further down).
 

@@ -257,6 +257,22 @@ tr.hil td {
 	background: repeating-linear-gradient(
 		45deg, #222, #222 10px, #522 11px, #522 20px);
 }
+#tb.g tr {
+	display: inline-block;
+}
+#tb.g td {
+	display: block;
+	max-width: 166px;
+	padding: .2em;
+}
+#tb.g td:first-child {
+	float: left;
+	padding-right: 1em;
+}
+#tb.nt td:nth-child(3),
+#tb.nt td:nth-child(4) {
+	display: none;
+}
 #ladd_kan, #ldel_kan {
 	display: block;
 	font-size: 1.5em;
@@ -576,6 +592,7 @@ h3 {
 	<a href="#" class="bcancel">《 Cancel</a>
 	<a href="#" id="bcfg_srch">Configure search</a>
 	<a href="#" id="bcfg_colors">Configure colors</a>
+	<a href="#" id="bcfg_grid">Configure list view</a>
 	<a href="#" id="bcfg_filtering">Configure filtering</a>
 </div>
 <div id="vcolors" class="modal">
@@ -785,16 +802,30 @@ h3 {
 		<label for="csrch_url_twitter">search URLs: Twitter</label><br />
 	</div>
 </div>
+<div id="vgridcfg" class="modal chkcfg">
+	<a href="#" class="bcancel">《 Apply</a>
+	<div>
+		<input type="checkbox" id="show_grid" defval="0" reload="ev_cfg_grid">
+		<label for="show_grid">show as grid</label><br />
+
+		<input type="checkbox" id="show_pics" defval="0" reload="ev_cfg_grid">
+		<label for="show_pics">show pics in list</label><br />
+
+		<input type="checkbox" id="hide_text" defval="0" reload="ev_cfg_grid">
+		<label for="hide_text">hide text in list</label><br />
+	</div>
+	<p>how to display booths in the shopping list, search results, and row browser</p>
+</div>
 <div id="vfiltercfg" class="modal chkcfg">
 	<a href="#" class="bcancel">《 Apply</a>
 	<div>
-		<input type="checkbox" id="cshow_done" defval="1" reload="1">
+		<input type="checkbox" id="cshow_done" defval="1" reload="ev_cfg_filtering">
 		<label for="cshow_done">show purchased</label><br />
 		
-		<input type="checkbox" id="cshow_skip" defval="1" reload="1">
+		<input type="checkbox" id="cshow_skip" defval="1" reload="ev_cfg_filtering">
 		<label for="cshow_skip">show deferred</label><br />
 		
-		<input type="checkbox" id="cshow_miss" defval="1" reload="1">
+		<input type="checkbox" id="cshow_miss" defval="1" reload="ev_cfg_filtering">
 		<label for="cshow_miss">show out-of-stock</label><br />
 	</div>
 	<p>conditionally hide entries from the shopping list</p>
@@ -802,7 +833,7 @@ h3 {
 <div id="site">
 	<div id="vtab">
 		<table>
-			<thead>
+			<thead id="th">
 				<tr>
 					<td>#</td> <!-- score -->
 					<td>loc</td> <!-- day/row/col -->
@@ -1155,10 +1186,11 @@ function ev_cfg_bool_edit(e) {
 	localStorage.setItem(name, tv ? '1' : '0');
 	tint_bool(name, tv);
 
-	if (that.getAttribute('reload'))
+	var f = that.getAttribute('reload');
+	if (f)
 		try {
 			refresh();
-			ev_cfg_filtering();
+			window[f]();
 		}
 		catch (ex) {}
 }
@@ -1372,6 +1404,11 @@ function ev_cfg_colors(e) {
 	hide_modals();
 	show_excl('vcolors');
 }
+function ev_cfg_grid(e) {
+	ev(e);
+	hide_modals();
+	show_excl('vgridcfg');
+}
 function ev_cfg_filtering(e) {
 	ev(e);
 	hide_modals();
@@ -1524,6 +1561,8 @@ function showmsg(color, lines) {
 	var s2 = '</td></tr>';
 	lines.unshift('&nbsp;');
 	ebi('tb').innerHTML = s1 + lines.join(s2+s1) + s2;
+	ebi('tb').classList.remove('g');
+	ebi('tb').classList.remove('nt');
 	hide_modals();
 	hide_viewctls();
 }
@@ -1799,7 +1838,9 @@ function draw_tbody(only_faved) {
 			score + '</td><td>' +
 			BOOTHS[a]['loc'] + '</td><td>' +
 			esc(BOOTHS[a]['kan']) + '</td><td>' +
-			esc(BOOTHS[a]['rom']) + '</td></tr>');
+			esc(BOOTHS[a]['rom']) + '</td>' +
+			(show_pics ? '<td><img src="i/' + BOOTHS[a]['loc'] + '.png" /></td>' : '') +
+			'</tr>');
 	}
 	
 	if (html.length == 0)
@@ -1812,7 +1853,10 @@ function draw_tbody(only_faved) {
 	}
 	
 	ebi('tb').innerHTML = html.join('\n');
-	
+	ebi('tb').classList[show_grid ? 'add' : 'remove']('g');
+	ebi('tb').classList[hide_text ? 'add' : 'remove']('nt');
+	ebi('th').style.display = show_grid ? 'none' : '';
+
 	var rows = ebi('tb').getElementsByTagName('tr');
 	for (var a = 0, aa = rows.length; a<aa; a++)
 	{
@@ -1951,6 +1995,8 @@ function ev_score(e) {
 	ev(e);
 	var loc = ebi('ladd_loc').textContent;
 	var score = this.textContent;
+	if (this.classList.contains('act'))
+		score = '-';
 	
 	set_score(loc, score);
 	hide_modals();
@@ -3310,8 +3356,15 @@ window.onkeydown = function(e) {
 	if (k.indexOf('Digit') === 0) {
 		var n = parseInt(k.slice(-1));
 
-		if (isvis('addctx'))
-			return ebi('badd_r' + n).onclick();
+		if (isvis('addctx')) {
+			try {
+				if (n == 0)
+					n = QS('#addctxscore a.act').getAttribute('id').slice(-1);
+
+				return ebi('badd_r' + n).onclick();
+			}
+			catch (ex) { }
+		}
 		
 		if (isvis('vmaphall'))
 			return QS('#vmaphall>a:nth-child(' + (n+1) + ')').onclick();
@@ -3357,6 +3410,7 @@ ebi('bimport_text').onclick = ev_import_text;
 ebi('bmenu_settings').onclick = ev_cfg;
 ebi('bcfg_srch').onclick = ev_srchcfg;
 ebi('bcfg_colors').onclick = ev_cfg_colors;
+ebi('bcfg_grid').onclick = ev_cfg_grid;
 ebi('bcfg_filtering').onclick = ev_cfg_filtering;
 ebi('badd_done').onclick = ev_purchased;
 ebi('badd_rem').onclick = ev_remove;

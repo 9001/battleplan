@@ -13,8 +13,8 @@ this was thrown together in a rush starting one week before comiket, and this de
 I'd really like to clean this up but that's not happening haha
 
 # features
-* browse booths at comiket
-* search for circles
+* browse booths at comiket (list or picture-grid)
+* search for circles (name, romaji, twitter, booth#, ...)
 * add booths to your shopping list by rating them from 1-9
 * shopping list is color-coded according to score and sorted by rows, same order as in the comiket hall
 * draw your shopping list onto the comiket map in realtime, right on your phone
