@@ -1450,6 +1450,9 @@ function load_day(day) {
 
 	if (hash) {
 		hash = decodeURIComponent(hash.slice(1));
+		if (hash.indexOf('c') === 0 && RLOC.exec(hash.slice(1)))
+			hash = hash.slice(1);
+
 		if (RLOC.exec(hash))
 			day = hash.slice(0, 1);
 		else
@@ -1886,16 +1889,17 @@ function draw_th() {
 	var html = [];
 	for (var a = 0; a < BOOTHS.length; a += step)
 	{
-		var sbooth = BOOTHS[a]['loc'].slice(3);
+		var booth = BOOTHS[a]['loc'],
+			sbooth = booth.slice(3);
 		
 		// please don't look
-		var ypos = parseInt(sbooth.slice(3, 5), 10);
+		var ypos = parseInt(sbooth, 10);
 		if (ypos > 3)
 			ypos -= 3;
 		
 		var scrpos = '00' + ypos;
 		scrpos = scrpos.slice(-2);
-		scrpos = sbooth.slice(0, 3) + scrpos + sbooth.slice(5);
+		scrpos = booth.slice(0, 3) + scrpos + booth.slice(5);
 		// it's ok now
 		
 		if (a == 0)
