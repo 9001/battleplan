@@ -2019,6 +2019,10 @@ function ev_score(e) {
 		
 		open_addctx(nextbooth);
 	}
+	else {
+		restore_scroll(true);
+		sethash('');
+	}
 }
 function ev_added() {
 	hide_viewctls();
