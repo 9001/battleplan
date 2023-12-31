@@ -6,6 +6,7 @@ The main menu is opened by clicking the top-right blue `=` icon. Some of the ite
 * 🔍 opens the search feature
 * ⽥ opens the row browser
 * ⭕ shows the complete list of circles
+* 🏬 shows sold-out booths (akiba / day3)
 * 📂 to restore shopping list from a backup
 * 💾 to create a backup of your shopping list
 * ⚙️ for settings (table/grid-view, ...)
@@ -87,3 +88,10 @@ Please make backups of your shopping list! Do that with the 💾export feature i
 💾download button, or select all of the text in the textbox below.
 
 To restore your shopping list, select 📂import in the main menu. Then, click the *"Browse..."* button to select a backup file. You may optionally paste the wall of text in the textbox below, followed by pressing the "📃 text import" button.
+
+
+# 🏬 `06. CROW'SCLAW - Missing Pieces.flac`
+
+Akiba / day3 mode; a list of everything you couldn't get during comiket itself (sold-out / deferred)
+
+*note: the list will only include entries from the current day*

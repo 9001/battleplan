@@ -21,7 +21,7 @@ I'd really like to clean this up but that's not happening haha
 * downloads all the booths to your web browser localStorage (cache) for less data consumption, similarly saves your shopping list to localStorage as well, no dependency on any sort of server
 * from the shopping list page: switch an entry between purchased and todo with two taps, or browse the links in the catalog, or add additional links (crossfades) and notes, change rating, etc
 * copy an entire tweet into the "paste here" field on the "Show all booths" page to automatically detect the first comiket booth and display it below -- try this example: 2日目(日曜日)東シ-81aにて頒布予定です。
-* note: you need to have bp set to the correct day first
+  * note: you need to have bp set to the correct day first
 * export your shopping list to a json file which can be imported to a laptop or whatever (currently imports will overwrite the current shopping list, a merge feature will be added)
 * possible to do all this fully offline by saving the html file and json files to your phone
 

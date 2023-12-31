@@ -488,6 +488,7 @@ h3 {
 	padding: .6em;
 	background: #000;
 }
+#vakitype p,
 #vcolors p {
 	padding: 0;
 	margin: 1em;
@@ -581,6 +582,7 @@ h3 {
 	<a href="#" id="bmenu_srch">🔍 Search for circle</a>
 	<a href="#" id="bmenu_row">⽥ Show all booths</a> <!-- ⺇ -->
 	<a href="#" id="bmenu_cir">⭕ Show all circles (slow!!)</a>
+	<a href="#" id="bmenu_akiba">🏬 Show sold-out / deferred</a>
 	<a href="#" id="bmenu_import">📂 Import your list</a>
 	<a href="#" id="bmenu_export">💾 Export your list</a>
 	<a href="#" id="bmenu_settings">⚙️ Settings</a>
@@ -637,6 +639,14 @@ h3 {
 	<a href="#" class="bcancel">《 Cancel</a>
 	<a href="#" id="bmenu_cirkan">Sort by Kanji</a>
 	<a href="#" id="bmenu_cirrom">Sort by Romaji</a>
+</div>
+<div id="vakitype" class="modal">
+	<a href="#" class="bcancel">《 Cancel</a>
+	<a href="#" id="bmenu_akikan">Sort by Kanji</a>
+	<a href="#" id="bmenu_akirom">Sort by Romaji</a>
+	<p>akiba / day3 mode; everything you weren't able to get during comiket</p>
+	<!-- c103 ^ -->
+	<p><em>note: the list will only include entries from the current day</em></p>
 </div>
 <div id="vdl" class="modal">
 	downloading database for day <span id="dl_day">N</span> ...<br /><br />
@@ -894,6 +904,7 @@ window.onerror = function(msg, url, lineNo, columnNo, error) {
 
 // だけど僕はそのままの
 
+var NDAYS = 2;  //c103
 var DAYS = ['土', '日'];  //, '月', '火'];  //c103
 var HALLS = ['e1','e2','e3','e4','e5','e6','e7a','e7b','w1a','w1b','w2a','w2b'];
 var WALLS = 'Aスaあめ';
@@ -1729,6 +1740,43 @@ function ev_cirrom() {
 	};
 	ev_cir((a,b) => (a.rom.localeCompare(b.rom)), false);
 }
+function ev_akiba(sortfunc) {
+	hide_viewctls();
+	render = function() {
+	};
+	inf(['drawing UI']);
+	lol(function() { lol(function() {
+		var dday = [], ksel = {};
+		for (var a = 0; a < dbsel.length; a++)
+			ksel[dbsel[a].loc] = dbsel[a];
+
+		for (var a = 0; a < dbday.length; a++) {
+			var sel = ksel[dbday[a].loc];
+			if (!sel || (sel.st != 'skip' && sel.st != 'miss'))
+				continue;
+
+			dday.push(dbday[a]);
+		}
+
+		var html = [];
+		empty_row_msg = 'nothing to display in this list';
+		BOOTHS = dday;
+		BOOTHS.sort(sortfunc);
+		draw_tbody(false);
+	})});
+}
+function ev_akikan() {
+	hide_viewctls();
+	render = function() {
+	};
+	ev_akiba((a,b) => (a.kan.localeCompare(b.kan)), false);
+}
+function ev_akirom() {
+	hide_viewctls();
+	render = function() {
+	};
+	ev_akiba((a,b) => (a.rom.localeCompare(b.rom)), false);
+}
 function ev_row(e) {
 	ev(e);
 	render = function() {
@@ -1747,6 +1795,10 @@ function ev_cirtype() {
 	//inf(['window cleared for performance reasons']);
 	hide_modals();
 	show('vcirtype');
+}
+function ev_akitype() {
+	hide_modals();
+	show('vakitype');
 }
 function ev_listrows() {
 	hide_modals();
@@ -2589,15 +2641,12 @@ function ev_url_delete(e) {
 }
 function full_localstore() {
 	var html = [];
-	var keys = ['z103day1','z103day2']; //,'z103day3','z103day4'];
-	for (var a = 0; a < keys.length; a++)
+	for (var a = 0; a < NDAYS; a++)
 		try {
-			var len = localStorage.getItem(keys[a]).length;
-			var trait = 'uncompressed';
-			if (keys[a].indexOf('z') == 0)
-				trait = '';
-			
-			html.push('<a href="#" skey="' + keys[a] + '">' + trait + ' day ' + keys[a].slice(keys[a].length-1) + ' (' + Math.round(len/1024) + ' KiB)</a>');
+			var k = 'z103day' + (a+1),
+				len = localStorage.getItem(k).length;
+
+			html.push('<a href="#" skey="' + k + '">day ' + (a+1) + ' (' + Math.round(len/1024) + ' KiB)</a>');
 		}
 		catch(ex) { }
 	
@@ -3398,6 +3447,9 @@ ebi('bmenu_dload').onclick = ev_dload;
 ebi('bmenu_cir').onclick = ev_cirtype;
 ebi('bmenu_cirkan').onclick = ev_cirkan;
 ebi('bmenu_cirrom').onclick = ev_cirrom;
+ebi('bmenu_akiba').onclick = ev_akitype;
+ebi('bmenu_akikan').onclick = ev_akikan;
+ebi('bmenu_akirom').onclick = ev_akirom;
 ebi('tbmenu_row').onclick = ev_row;
 ebi('bmenu_row').onclick = ev_row;
 ebi('tbmenu_srch').onclick = ev_srch;
