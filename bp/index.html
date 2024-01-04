@@ -2051,9 +2051,7 @@ function ev_score(e) {
 	ev(e);
 	var loc = ebi('ladd_loc').textContent;
 	var score = this.textContent;
-	if (this.classList.contains('act'))
-		score = '-';
-	
+
 	set_score(loc, score);
 	hide_modals();
 	toast_tab([
