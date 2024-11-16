@@ -2,7 +2,7 @@ set -e
 mkdir -p ~/bp/bp-readme
 cd ~/bp
 
-src=https://ocv.me/bp/103
+src=https://ocv.me/bp/105
 
 cat >files.list <<'EOF'
 index.html
@@ -17,7 +17,7 @@ cat files.list | sed -r "s@^@$src/@" | wget -Ni-
 
 while true; do
     echo
-    read -u1 -n1 -rp 'download pictures (288 MiB)? y/n: ' r
+    read -u1 -n1 -rp 'download pictures (320 MiB)? y/n: ' r
     echo
     case $r in
         [Yy]* ) pics=1; break;;

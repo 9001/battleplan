@@ -7,9 +7,9 @@ import os
 import shutil
 
 
-DAYS = "土 日".split()
+DAYS = "日 月".split()
 HALLS = "e123 e456 e7 w12".split()
-CB = "../notes/c103"
+CB = "../notes/c105"
 CJ = CB + "/i"
 CI = CB + "/i"
 
