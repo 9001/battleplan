@@ -2,7 +2,7 @@
 <!--
 
 	battleplan <ed@irc.rizon.net>, MIT-licensed
-	https://ocv.me/bp/105/
+	https://ocv.me/bp/106/
 
 -->
 <meta charset="utf-8">
@@ -451,6 +451,14 @@ canvas {
 	height: 100%;
 	background: #000;
 }
+div.ci {
+	overflow: hidden;
+	display: inline-block;
+	line-height: 0;
+}
+div.ci>img {
+	margin: -6px;
+}
 #bqnote {
 	margin: 1em;
 }
@@ -566,7 +574,7 @@ h3 {
 			><input id="trow_out" value="parser out"
 			></div>
 		
-		<input id="tsrch" class="viewctl" value="kyuutai" sample="kyuutai" />  <!-- c105 -->
+		<input id="tsrch" class="viewctl" value="reimei" sample="reimei" />  <!-- c106 -->
 		<div id="srchinfb" class="viewctl">
 			<span id="srchinf">
 				<!-- will contain search results info -->
@@ -629,8 +637,8 @@ h3 {
 		Dec 28,29,30,31 in 2019
 		sat sun mon tue 土 日 月 火
 	-->
-	<a href="#" id="bmenu_day1">日 / 1</a>  <!-- c105 -->
-	<a href="#" id="bmenu_day2">月 / 2</a>
+	<a href="#" id="bmenu_day1">土 / 1</a>  <!-- c106 -->
+	<a href="#" id="bmenu_day2">日 / 2</a>
 	<!--a href="#" id="bmenu_day3">月 / 3</a>
 	<a href="#" id="bmenu_day4">火 / 4</a-->
 	<a href="#" id="dbg">debug</a>
@@ -645,7 +653,7 @@ h3 {
 	<a href="#" id="bmenu_akikan">Sort by Kanji</a>
 	<a href="#" id="bmenu_akirom">Sort by Romaji</a>
 	<p>akiba / day3 mode; everything you weren't able to get during comiket</p>
-	<!-- c105 ^ -->
+	<!-- c106 ^ -->
 	<p><em>note: the list will only include entries from the current day</em></p>
 </div>
 <div id="vdl" class="modal">
@@ -757,11 +765,11 @@ h3 {
 <div id="vmaphall" class="modal">
 	<!-- 東|123|456|西 -->
 	<a href="#" class="bcancel">《 Cancel</a>
-	<a href="#" id="bmaphall_e123">東123</a>  <!-- c105 -->
-	<a href="#" id="bmaphall_e456">東456</a>
-	<a href="#" id="bmaphall_e7">東7</a>
-	<a href="#" id="bmaphall_w12">西12</a>
-	<!--a href="#" id="bmaphall_w34">西34</a-->
+	<!-- a href="#" id="bmaphall_e123">e東123</a -->  <!-- c106 -->
+	<a href="#" id="bmaphall_e456">e東456</a>
+	<a href="#" id="bmaphall_e7">e東7</a>
+	<a href="#" id="bmaphall_w12">w西12</a>
+	<a href="#" id="bmaphall_s12">s南12</a>
 	<a href="#" id="bzoom">zoom</a>
 	<a href="#" id="bsave">save as image</a>
 </div>
@@ -909,21 +917,20 @@ window.onerror = function(msg, url, lineNo, columnNo, error) {
 
 // だけど僕はそのままの
 
-var CN = 105;
+var CN = 106;
 var cCN = 'c'+CN;
 var zCN = 'z'+CN;
-var DAYS = ['日', '月'];  //, '月', '火'];  //c105
-var HALLS = ['e1','e2','e3','e4','e5','e6','e7a','e7b','w1a','w1b','w2a','w2b'];
-var WALLS = 'Aスaあめ';
+var DAYS = ['土', '日'];  //, '月', '火'];  //c106
+var HALLS = ['e6','e5','e4','e7a','e7b','s2','s1','w2a','w2b','w1a','w1b'];
+var WALLS = 'aAアあめ';
 var ROWS = [  // wall first, then right-to-left
-	"ABCDEFGHIJKLM",  //e1
-	"NOPQRSTUVWXYZ",  //e2
-	"アイウエオカキクケコサシ",  //e3
-	"スセソタチツテトナニヌネノ",  //e6
-	"ハパヒピフプヘペホポマミム",  //e5
-	"メモヤユヨラリルレロワヲ",  //e4
-	"abcdefghijklm", //e7a/top
-	"nopqrstuvw", //e7b
+	"アイウエオカキクケコサシス",  //e6
+	"セソタチツテトナニヌネノハ",  //e5
+	"ヒフヘホマミムメモヤユヨ",  //e4
+	"ABCDEFGHIJKLM", //e7a/top
+	"NOPQRSTUVW", //e7b
+	"abcdefghij", //s2
+	"klmnopqrst", //s1
 	"あきくけこさしすせそたち",  //w2a/top
 	"いうえおか",  //w2b
 	"めつてとなにぬねのはひふ",  //w1a/top
@@ -1014,7 +1021,7 @@ function sethash(v) {
 try {
 	active_row = localStorage.getItem('activerow');
 	if (active_row == null)
-		active_row = 'テ'; //c105
+		active_row = 'イ'; //c106
 }
 catch(ex) {
 	croak('could not read from localStorage; need this for the list of circles/booths');
@@ -1481,7 +1488,7 @@ function load_day(day) {
 	{
 		loaded = localStorage.getItem('activeday');
 		if (loaded == null)
-			active_day = 2;  //c105
+			active_day = 2;  //c106
 		else
 			active_day = parseInt(loaded, 10);
 	}
@@ -1901,7 +1908,7 @@ function draw_tbody(only_faved) {
 			BOOTHS[a]['loc'] + '</td><td>' +
 			esc(BOOTHS[a]['kan']) + '</td><td>' +
 			esc(BOOTHS[a]['rom']) + '</td>' +
-			(show_pics ? '<td><img src="i/' + BOOTHS[a]['loc'] + '.png" /></td>' : '') +
+			(show_pics ? '<td><div class="ci"><img src="i/' + BOOTHS[a]['loc'] + '.webp" /></div></td>' : '') +
 			'</tr>');
 	}
 	
@@ -2502,7 +2509,7 @@ function ev_trowin_input(e) {
 		// var UF = 'ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺ';
 		// var LF = 'ａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚ';
 		
-		var find =  //c105 has e7/lowercase-latin; use case-Sensitive
+		var find =  //c106 has e7/lowercase-latin; use case-Sensitive
 			//tl(m[1], LH+LF+UF, UH+UH+UH) +  //first glyph case-insensitive
 			tl(m[1], LF+UF, LH+UH) +  //first glyph case-Sensitive
 			tl(m[2], DF, DH) +
@@ -2750,6 +2757,9 @@ function show_map() {
 		if (mainhall == '西12')
 			subhalls = ['w1a','w1b','w2a','w2b'];
 		
+		if (mainhall == '南12')
+			subhalls = ['s1','s2'];
+		
 		for (var a = 0; a < HALLS.length; a++)
 			for (var b = 0; b < subhalls.length; b++)
 				if (HALLS[a] == subhalls[b])
@@ -2828,15 +2838,15 @@ function show_map() {
 				ctx.lineTo(100 * sz, 32 * sz);
 				ctx.stroke();
 			}
-			else if (mainhall != '東7') {
+			else if (mainhall != '東7' && mainhall != '南12') {
 				ctx.beginPath();
 				ctx.moveTo(38.5 * sz, 0);
 				ctx.lineTo(38.5 * sz, 100 * sz);
 				ctx.stroke();
 
 				ctx.beginPath();
-				ctx.moveTo(74.5 * sz, 0);
-				ctx.lineTo(74.5 * sz, 100 * sz);
+				ctx.moveTo(77.5 * sz, 0);
+				ctx.lineTo(77.5 * sz, 100 * sz);
 				ctx.stroke();
 			}
 
@@ -2859,7 +2869,7 @@ function show_map() {
 				];
 			}
 
-			// c105
+			// c106
 			if (row == "Q") y -= sz * 0.1;
 			if ((HRD.w1a + HRD.w2a).indexOf(row) + 1) {
 				y = sz * 11.6;
@@ -2887,8 +2897,15 @@ function show_map() {
 				}
 			}
 			if (HRD.e7b.indexOf(row) + 1) {
-				y = sz * 48.3;
+				y = sz * 48.5;
 				if (row == "n") y = sz * 42.5;
+			}
+			if ((HRD.s1 + HRD.s2).indexOf(row) + 1) {
+				if (WALLS.indexOf(row) + 1) {
+					y = [sz * 3.5, sz * 18];
+					x = [sz * 0.5, sz * 60];
+				}
+				else y = sz * 11.5;
 			}
 
 			if (!Array.isArray(x))
@@ -3065,7 +3082,7 @@ function show_map() {
 }
 function ev_showmap(e) {
 	ev(e);
-	active_map = this.textContent;
+	active_map = this.textContent.slice(1);
 	show_map();
 }
 function canpos() {
@@ -3281,7 +3298,7 @@ function drawpic(loc) {
 	if (!RLOC.exec(loc))
 		return;
 
-	ebi('addctxpic').innerHTML = enpic ? '<img src="i/' + loc + '.png" />' : '';
+	ebi('addctxpic').innerHTML = enpic ? '<div class="ci"><img src="i/' + loc + '.webp" /></div>' : '';
 }
 
 function ev_selskipmin_edit(e) {
@@ -3493,9 +3510,10 @@ ebi('tbmenu_map').onclick = ev_map_sel_hall;
 ebi('bmenu_map').onclick = ev_map_sel_hall;
 ebi('bzoom').onclick = function () { show_excl('vzoom'); };
 ebi('bsave').onclick = ev_savecan;
-ebi('bmaphall_e123').onclick = ev_showmap
+try { ebi('bmaphall_e123').onclick = ev_showmap; } catch(ex) { } //reclining ;_;
 ebi('bmaphall_e456').onclick = ev_showmap
 ebi('bmaphall_w12').onclick = ev_showmap
+try { ebi('bmaphall_s12').onclick = ev_showmap; } catch(ex) { }
 try { ebi('bmaphall_w34').onclick = ev_showmap; } catch(ex) { }
 try { ebi('bmaphall_e7').onclick = ev_showmap; } catch(ex) { }
 ebi('bqnote').onclick = ev_add_qnote;
@@ -3536,6 +3554,7 @@ lol(function() { lol(function() {
 })});
 
 //ev_row();
+//setTimeout(ev_row, 222);
 //ev_import();
 //ev_map_sel_hall();
 
@@ -3543,6 +3562,7 @@ lol(function() { lol(function() {
 //active_map = '東456';
 //active_map = '東7';
 //active_map = '西12';
+//active_map = '南12';
 //setTimeout(show_map, 10);
 
 //setTimeout(function() { open_addctx('1東G15b'); }, 10);

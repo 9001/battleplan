@@ -32,7 +32,7 @@ currently the only data source so use this
   cat {1..4}/thumbs.txt | sort | uniq > thumbs.txt
   cat thumbs.txt | wget --header='Cookie: ⋯'  -nv -i- 2>&1 | tee thumbs.log
   tar -c . | zstd --long=31 -T0 -9 >../v2.tzst  # backup just in case
-  cat thumbs.log | awk -F/ '/CachedImage.* -> "/{v=$NF;sub(/[^"]+"/,"",v);sub(/".*/,"",v);print$6" "v}' | while read wid fn; do mv -vn "$fn" "../o/$wid.png"; done
+  cat thumbs.log | awk -F/ '/CachedImage.* -> "/{v=$NF;sub(/[^"]+"/,"",v);sub(/".*/,"",v);print$6" "v}' | while read wid fn; do mv -vn "$fn" "../o/$wid.webm"; done
   ```
   * heads up -- conjoined booths have both pics in both booths, so look at the URL to decide which goes where
   * and sometimes there's mistakes in the circlems data with the same wid being used for multiple pics, easy to spot since there's stray files in the folder after the final rename step above,  
@@ -43,11 +43,6 @@ currently the only data source so use this
     https://webcatalog-free.circle.ms/Spa/CachedImage/18004154/2/0186c618-4c48-476b-e405-08db97daf671/3901101511702
     ```
     just fix it by renaming `3908605552869` to `../o/18004153.png` which they probably will in the next update
-
-* preprocess pics; assumes you're in folder `o` with originals and sibling folder `i` holds processed output
-  ```bash
-  find -iname \*.png | sort | while IFS= read -r x; do [ -e ../i/$x ] && continue; echo -n "$x "; convert $x -shave 7x7 +repage $x.png; pngquant --strip --nofs --quality 50 --speed 1 --skip-if-larger - <$x.png >tf; [ -s tf ] && mv tf ../i/$x || mv $x.png ../i/$x; done; rm -- *.png.png
-  ```
 
 * install kanji-hiragana-romaji translator
   ```bash

@@ -7,9 +7,9 @@ import os
 import shutil
 
 
-DAYS = "日 月".split()
-HALLS = "e123 e456 e7 w12".split()
-CB = "../notes/c105"
+DAYS = "土 日".split()
+HALLS = "e456 e7 w12 s12".split()
+CB = "../notes/c106"
 CJ = CB + "/i"
 CI = CB + "/i"
 
@@ -61,9 +61,9 @@ def gen(nday, cday, hall):
             ent["url"] = urls
         
         ret.append(ent)
-        po = f"i/{ent['loc']}.png"
+        po = f"i/{ent['loc']}.webp"
         if not os.path.exists(po):
-            pi = f"{CI}/{ids['wid']}.png"
+            pi = f"{CI}/{ids['wid']}.webp"
             shutil.copy2(pi, po)
     
     return ret
