@@ -3522,6 +3522,13 @@ for (var a=0; a<t.length; a++)
 window.onresize = ev_resize;
 
 
+(function() {
+	var v = document.location + '';
+	if (v.slice(0, 5) == 'http:' && v.indexOf('ocv.me') + 1)
+		document.location = 'https' + v.slice(4);
+})();
+
+
 // state init
 inf(['resuming previous session ...']);
 lol(function() { lol(function() {
